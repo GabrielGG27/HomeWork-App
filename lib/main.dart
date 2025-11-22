@@ -141,44 +141,40 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     }
   }
 
+  // FUNCIÓN PARA AGRUPAR LAS TAREAS POR FECHA
+  Map<String, List<Homework>> _groupHomeworkByDate(List<Homework> homeworkList) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
+    final endOfWeek = today.add(const Duration(days: 7)); // 7 días desde hoy
 
+    final Map<String, List<Homework>> groups = {
+      'Vencidas': [],
+      'Hoy': [],
+      'Mañana': [],
+      'Esta semana': [],
+      'Próximamente': [],
+    };
 
-// FUNCIÓN PARA AGRUPAR LAS TAREAS POR FECHA
+    for (final hw in homeworkList) {
+      final due = DateTime(hw.dueDate.year, hw.dueDate.month, hw.dueDate.day);
 
-Map<String, List<Homework>> _groupHomeworkByDate(List<Homework> homeworkList) {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final tomorrow = today.add(const Duration(days: 1));
-  final endOfWeek = today.add(const Duration(days: 7)); // 👈 7 días desde hoy
-
-  final Map<String, List<Homework>> groups = {
-    'Vencidas': [],
-    'Hoy': [],
-    'Mañana': [],
-    'Esta semana': [],
-    'Próximamente': [],
-  };
-
-  for (final hw in homeworkList) {
-    final due = DateTime(hw.dueDate.year, hw.dueDate.month, hw.dueDate.day);
-    
-    if (due.isBefore(today)) {
-      groups['Vencidas']!.add(hw);
-    } else if (due.isAtSameMomentAs(today)) {
-      groups['Hoy']!.add(hw);
-    } else if (due.isAtSameMomentAs(tomorrow)) {
-      groups['Mañana']!.add(hw);
-    } else if (due.isAfter(tomorrow) && !due.isAfter(endOfWeek)) {
-      // Entre pasado mañana y dentro de 7 días (incluido el día 7)
-      groups['Esta semana']!.add(hw);
-    } else if (due.isAfter(endOfWeek)) {
-      groups['Próximamente']!.add(hw);
+      if (due.isBefore(today)) {
+        groups['Vencidas']!.add(hw);
+      } else if (due.isAtSameMomentAs(today)) {
+        groups['Hoy']!.add(hw);
+      } else if (due.isAtSameMomentAs(tomorrow)) {
+        groups['Mañana']!.add(hw);
+      } else if (due.isAfter(tomorrow) && !due.isAfter(endOfWeek)) {
+        groups['Esta semana']!.add(hw);
+      } else if (due.isAfter(endOfWeek)) {
+        groups['Próximamente']!.add(hw);
+      }
     }
-  }
 
-  groups.removeWhere((key, value) => value.isEmpty);
-  return groups;
-}
+    groups.removeWhere((key, value) => value.isEmpty);
+    return groups;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -194,7 +190,9 @@ Map<String, List<Homework>> _groupHomeworkByDate(List<Homework> homeworkList) {
             ],
           ),
         ),
-        floatingActionButton: FloatingActionButton(
+
+        // FAB extendido con texto
+        floatingActionButton: FloatingActionButton.extended(
           onPressed: () async {
             final homework = await Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const AddHomeworkScreen()),
@@ -203,7 +201,16 @@ Map<String, List<Homework>> _groupHomeworkByDate(List<Homework> homeworkList) {
               _addHomework(homework);
             }
           },
-          child: const Icon(Icons.add),
+          icon: const Icon(
+            Icons.add,
+          ),
+          label: const Text(
+            'Nueva',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
         body: FutureBuilder<List<Homework>>(
           future: _homeworkFuture,
@@ -219,11 +226,15 @@ Map<String, List<Homework>> _groupHomeworkByDate(List<Homework> homeworkList) {
             pending.sort((a, b) => a.dueDate.compareTo(b.dueDate));
             completed.sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
-            return TabBarView(
-              children: [
-                _buildHomeworkList(context, pending, allHomework, true),
-                _buildHomeworkList(context, completed, allHomework, false),
-              ],
+            // 👇 AÑADIDO: Padding inferior para evitar que el FAB tape el contenido
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 80.0),
+              child: TabBarView(
+                children: [
+                  _buildHomeworkList(context, pending, allHomework, true),
+                  _buildHomeworkList(context, completed, allHomework, false),
+                ],
+              ),
             );
           },
         ),
@@ -231,7 +242,7 @@ Map<String, List<Homework>> _groupHomeworkByDate(List<Homework> homeworkList) {
     );
   }
 
-      Widget _buildHomeworkList(
+  Widget _buildHomeworkList(
     BuildContext context,
     List<Homework> filteredList,
     List<Homework> fullList,
@@ -486,7 +497,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                       _selectedTime.minute,
                     );
                     final homework = Homework(
-                      id: widget.homework?.id, // 👈 Conserva el ID al editar
+                      id: widget.homework?.id,
                       title: _titleController.text,
                       subject: _subjectController.text,
                       dueDate: due,
