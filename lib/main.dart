@@ -176,6 +176,41 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     return groups;
   }
 
+  // 👇 NUEVO: Función para confirmar y borrar tareas completadas
+  void _confirmClearCompleted(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Vaciar tareas completadas?'),
+        content: const Text('Se eliminarán todas las tareas marcadas como completadas. Esta acción no se puede deshacer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _clearCompletedTasks();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _clearCompletedTasks() async {
+    final allTasks = await _loadHomework();
+    final pendingTasks = allTasks.where((task) => !task.isCompleted).toList();
+    await _saveHomework(pendingTasks);
+    setState(() {
+      _homeworkFuture = _loadHomework();
+    });
+  }
+
+  // BUILD
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -190,8 +225,6 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             ],
           ),
         ),
-
-        // FAB extendido con texto
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () async {
             final homework = await Navigator.of(context).push(
@@ -201,15 +234,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               _addHomework(homework);
             }
           },
-          icon: const Icon(
-            Icons.add,
-          ),
+          icon: const Icon(Icons.add),
           label: const Text(
             'Nueva',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
         body: FutureBuilder<List<Homework>>(
@@ -226,9 +254,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             pending.sort((a, b) => a.dueDate.compareTo(b.dueDate));
             completed.sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
-            // 👇 AÑADIDO: Padding inferior para evitar que el FAB tape el contenido
             return Padding(
-              padding: const EdgeInsets.only(bottom: 80.0),
+              padding: const EdgeInsets.only(bottom: 80.0), // espacio para el FAB
               child: TabBarView(
                 children: [
                   _buildHomeworkList(context, pending, allHomework, true),
@@ -241,6 +268,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
       ),
     );
   }
+
+
+
+  // FUNCIÓN PARA CONSTRUIR LA LISTA DE TAREAS
 
   Widget _buildHomeworkList(
     BuildContext context,
@@ -264,7 +295,6 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
           final sectionTitle = grouped.keys.elementAt(sectionIndex);
           final sectionTasks = grouped.values.elementAt(sectionIndex);
 
-          // Define estilo por sección
           Color textColor;
           IconData icon;
           double fontSize;
@@ -350,10 +380,37 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
         },
       );
     } else {
-      // Completadas: lista simple (sin agrupación por ahora)
+      // Completadas: lista con botón de vaciar al final
+      if (filteredList.isEmpty) {
+        return Center(
+          child: Text('No hay tareas completadas'),
+        );
+      }
+
       return ListView.builder(
-        itemCount: filteredList.length,
+        // +1 para incluir el botón de vaciar
+        itemCount: filteredList.length + 1,
         itemBuilder: (context, index) {
+          // Si es el último elemento → botón de vaciar
+          if (index == filteredList.length) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton.icon(
+                onPressed: () => _confirmClearCompleted(context),
+                icon: const Icon(Icons.delete_forever, color: Colors.white),
+                label: const Text(
+                  'Vaciar tareas completadas',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red[700],
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
+              ),
+            );
+          }
+
+          // De lo contrario, muestra la tarea
           final hw = filteredList[index];
           final formattedDate = DateFormat('MMM dd, yyyy – hh:mm a').format(hw.dueDate);
           return Card(
