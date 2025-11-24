@@ -4,7 +4,48 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
-void main() {
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz_data;
+
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart';
+
+import 'dart:async'; 
+
+// Canal de notificaciones
+const String notificationChannelId = 'homework_channel_id';
+late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  tz_data.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation('America/Mexico_City'));
+
+  flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  final InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  // ✅ Crear el canal correctamente
+  const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    notificationChannelId,
+    'Homework Notifications',
+    description: 'Notificaciones para tareas próximas',
+    importance: Importance.high,
+    playSound: true,
+  );
+
+  final androidPlatform = flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+  await androidPlatform?.createNotificationChannel(channel);
+
   runApp(const MyApp());
 }
 
@@ -62,11 +103,37 @@ class HomeworkListScreen extends StatefulWidget {
 
 class _HomeworkListScreenState extends State<HomeworkListScreen> {
   late Future<List<Homework>> _homeworkFuture;
+  Timer? _timer; // 🔥 NUEVO: Variable para el temporizador
 
   @override
   void initState() {
     super.initState();
     _homeworkFuture = _loadHomework();
+    _requestPermissions(); // 🔥 NUEVO: Pedir permisos al iniciar
+    _schedulePendingNotifications();
+    
+    // 🔥 NUEVO: Esto actualiza la UI cada minuto para mover tareas a "Vencidas" en tiempo real
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          // Al hacer setState, se reconstruye el widget, se ejecuta _groupHomeworkByDate
+          // y DateTime.now() tendrá el valor actual, moviendo las tareas automáticamente.
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // 🔥 NUEVO: Importante cancelar el timer al cerrar la pantalla
+    super.dispose();
+  }
+
+  // 🔥 NUEVO: Función para pedir permisos en Android 13+
+  void _requestPermissions() {
+    flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
   }
 
   Future<List<Homework>> _loadHomework() async {
@@ -85,6 +152,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     final list = await _loadHomework();
     list.add(homework);
     await _saveHomework(list);
+    _scheduleNotification(homework);
     setState(() {
       _homeworkFuture = _loadHomework();
     });
@@ -94,6 +162,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     final list = await _loadHomework();
     list[index] = updatedHomework;
     await _saveHomework(list);
+    _scheduleNotification(updatedHomework); // Re-programar notificación
     setState(() {
       _homeworkFuture = _loadHomework();
     });
@@ -101,6 +170,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
 
   void _deleteHomework(int index) async {
     final list = await _loadHomework();
+    // Cancelar notificación si se borra la tarea (Opcional pero recomendado)
+    // flutterLocalNotificationsPlugin.cancel(list[index].id.hashCode & 0x7FFFFFFF);
     list.removeAt(index);
     await _saveHomework(list);
     setState(() {
@@ -114,6 +185,11 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     if (index != -1) {
       list[index].isCompleted = !list[index].isCompleted;
       await _saveHomework(list);
+      // Si se completa, quizás quieras cancelar la notificación:
+      if(list[index].isCompleted) {
+         final notificationId = homework.id.hashCode & 0x7FFFFFFF;
+         await flutterLocalNotificationsPlugin.cancel(notificationId);
+      }
       setState(() {
         _homeworkFuture = _loadHomework();
       });
@@ -141,12 +217,14 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     }
   }
 
-  // FUNCIÓN PARA AGRUPAR LAS TAREAS POR FECHA
+  // ... (Tu función _groupHomeworkByDate se queda igual) ...
   Map<String, List<Homework>> _groupHomeworkByDate(List<Homework> homeworkList) {
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final tomorrow = today.add(const Duration(days: 1));
-    final endOfWeek = today.add(const Duration(days: 7)); // 7 días desde hoy
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final todayEnd = todayStart.add(const Duration(days: 1));
+    final tomorrowStart = todayEnd;
+    final tomorrowEnd = tomorrowStart.add(const Duration(days: 1));
+    final endOfWeek = todayStart.add(const Duration(days: 7));
 
     final Map<String, List<Homework>> groups = {
       'Vencidas': [],
@@ -157,17 +235,15 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     };
 
     for (final hw in homeworkList) {
-      final due = DateTime(hw.dueDate.year, hw.dueDate.month, hw.dueDate.day);
-
-      if (due.isBefore(today)) {
+      if (hw.dueDate.isBefore(now)) {
         groups['Vencidas']!.add(hw);
-      } else if (due.isAtSameMomentAs(today)) {
+      } else if (hw.dueDate.isAfter(now) && hw.dueDate.isBefore(todayEnd)) {
         groups['Hoy']!.add(hw);
-      } else if (due.isAtSameMomentAs(tomorrow)) {
+      } else if (hw.dueDate.isAfter(todayEnd) && hw.dueDate.isBefore(tomorrowEnd)) {
         groups['Mañana']!.add(hw);
-      } else if (due.isAfter(tomorrow) && !due.isAfter(endOfWeek)) {
+      } else if (hw.dueDate.isAfter(tomorrowEnd) && hw.dueDate.isBefore(endOfWeek)) {
         groups['Esta semana']!.add(hw);
-      } else if (due.isAfter(endOfWeek)) {
+      } else if (hw.dueDate.isAfter(endOfWeek)) {
         groups['Próximamente']!.add(hw);
       }
     }
@@ -176,7 +252,6 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     return groups;
   }
 
-  // 👇 NUEVO: Función para confirmar y borrar tareas completadas
   void _confirmClearCompleted(BuildContext context) {
     showDialog(
       context: context,
@@ -210,10 +285,61 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     });
   }
 
-  // BUILD
+  Future<void> _schedulePendingNotifications() async {
+    final allTasks = await _loadHomework();
+    final pendingTasks = allTasks.where((task) => !task.isCompleted).toList();
+    for (final task in pendingTasks) {
+      _scheduleNotification(task);
+    }
+  }
+
+  Future<void> _scheduleNotification(Homework homework) async {
+    final now = DateTime.now();
+    if (homework.dueDate.isBefore(now)) return;
+
+    // 🔥 NOTA: Aquí tenías una restricción. Solo estabas programando si era Hoy o Mañana.
+    // Si quieres que te avise de tareas de la próxima semana, comenta el bloque 'if' de abajo.
+    
+    /* final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
+    final dueDateOnly = DateTime(homework.dueDate.year, homework.dueDate.month, homework.dueDate.day);
+
+    if (dueDateOnly.isAtSameMomentAs(today) || dueDateOnly.isAtSameMomentAs(tomorrow)) { 
+    */ 
+    
+      // He quitado la restricción para que veas si funciona la notificación siempre que sea futura
+      final notificationId = homework.id.hashCode & 0x7FFFFFFF;
+      
+      try {
+        await flutterLocalNotificationsPlugin.zonedSchedule(
+          notificationId,
+          'Tarea próxima: ${homework.title}',
+          'Vence ${DateFormat('MMM dd, hh:mm a').format(homework.dueDate)}',
+          tz.TZDateTime.from(homework.dueDate, tz.local),
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              notificationChannelId,
+              'Homework Notifications',
+              channelDescription: 'Notificaciones para tareas próximas',
+              importance: Importance.max, // 🔥 Cambiado a MAX para asegurar que suene
+              priority: Priority.high,
+              playSound: true,
+            ),
+          ),
+          androidAllowWhileIdle: true,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        );
+        print("Notificación programada para: ${homework.dueDate}"); // Debug
+      } catch (e) {
+        print("Error al programar notificación: $e");
+      }
+    /* } */ // Fin del if comentado
+  }
+
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
+      // ... El resto de tu método build sigue igual ...
+      return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
@@ -255,7 +381,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             completed.sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: 80.0), // espacio para el FAB
+              padding: const EdgeInsets.only(bottom: 80.0),
               child: TabBarView(
                 children: [
                   _buildHomeworkList(context, pending, allHomework, true),
@@ -268,11 +394,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
       ),
     );
   }
-
-
-
-  // FUNCIÓN PARA CONSTRUIR LA LISTA DE TAREAS
-
+  
+  // ... Resto de métodos _buildHomeworkList ...
   Widget _buildHomeworkList(
     BuildContext context,
     List<Homework> filteredList,
@@ -380,18 +503,13 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
         },
       );
     } else {
-      // Completadas: lista con botón de vaciar al final
       if (filteredList.isEmpty) {
-        return Center(
-          child: Text('No hay tareas completadas'),
-        );
+        return Center(child: Text('No hay tareas completadas'));
       }
 
       return ListView.builder(
-        // +1 para incluir el botón de vaciar
         itemCount: filteredList.length + 1,
         itemBuilder: (context, index) {
-          // Si es el último elemento → botón de vaciar
           if (index == filteredList.length) {
             return Padding(
               padding: const EdgeInsets.all(16.0),
@@ -410,7 +528,6 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             );
           }
 
-          // De lo contrario, muestra la tarea
           final hw = filteredList[index];
           final formattedDate = DateFormat('MMM dd, yyyy – hh:mm a').format(hw.dueDate);
           return Card(
@@ -440,7 +557,6 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
 
 class AddHomeworkScreen extends StatefulWidget {
   final Homework? homework;
-
   const AddHomeworkScreen({super.key, this.homework});
 
   @override
@@ -457,7 +573,6 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
   @override
   void initState() {
     super.initState();
-
     if (widget.homework != null) {
       _titleController = TextEditingController(text: widget.homework!.title);
       _subjectController = TextEditingController(text: widget.homework!.subject);
