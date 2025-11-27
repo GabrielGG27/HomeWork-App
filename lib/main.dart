@@ -622,14 +622,20 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
   bool _enableNotification = true;
   int _notificationOffset = 0;
 
+  List<String> _subjects = [];
+  String? _selectedSubject;
+  final String _createNewSubjectLabel = 'Crear nueva materia...';
+
   @override
   void initState() {
     super.initState();
+    _loadSubjects();
     if (widget.homework != null) {
       _titleController = TextEditingController(text: widget.homework!.title);
       _subjectController = TextEditingController(
         text: widget.homework!.subject,
       );
+      _selectedSubject = widget.homework!.subject;
       _selectedDate = widget.homework!.dueDate;
       _selectedTime = TimeOfDay.fromDateTime(widget.homework!.dueDate);
       _enableNotification = widget.homework!.enableNotification;
@@ -642,6 +648,70 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       _selectedTime = TimeOfDay.now();
       _enableNotification = true;
       _notificationOffset = 0;
+    }
+  }
+
+  Future<void> _loadSubjects() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _subjects = prefs.getStringList('subjects') ?? [];
+      // Ensure the current subject is in the list if editing
+      if (widget.homework != null &&
+          !_subjects.contains(widget.homework!.subject)) {
+        _subjects.add(widget.homework!.subject);
+      }
+    });
+  }
+
+  Future<void> _saveSubjects() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('subjects', _subjects);
+  }
+
+  Future<void> _addNewSubject() async {
+    String? newSubject = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        String value = '';
+        return AlertDialog(
+          title: const Text('Nueva materia'),
+          content: TextField(
+            autofocus: true,
+            decoration: const InputDecoration(hintText: 'Nombre de la materia'),
+            onChanged: (text) {
+              value = text;
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, value),
+              child: const Text('Guardar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (newSubject != null && newSubject.trim().isNotEmpty) {
+      setState(() {
+        if (!_subjects.contains(newSubject)) {
+          _subjects.add(newSubject);
+          _saveSubjects();
+        }
+        _selectedSubject = newSubject;
+        _subjectController.text = newSubject;
+      });
+    } else {
+      // Reset selection if cancelled or empty
+      setState(() {
+        _selectedSubject = _subjectController.text.isNotEmpty
+            ? _subjectController.text
+            : null;
+      });
     }
   }
 
@@ -693,11 +763,41 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                   validator: (value) =>
                       value?.isEmpty == true ? 'Enter a title' : null,
                 ),
-                TextFormField(
-                  controller: _subjectController,
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: _subjects.contains(_selectedSubject)
+                      ? _selectedSubject
+                      : null,
                   decoration: const InputDecoration(labelText: 'Subject'),
+                  items: [
+                    ..._subjects.map(
+                      (s) => DropdownMenuItem(value: s, child: Text(s)),
+                    ),
+                    DropdownMenuItem(
+                      value: _createNewSubjectLabel,
+                      child: Row(
+                        children: const [
+                          Icon(Icons.add, size: 20),
+                          SizedBox(width: 8),
+                          Text('Crear nueva materia...'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value == _createNewSubjectLabel) {
+                      _addNewSubject();
+                    } else {
+                      setState(() {
+                        _selectedSubject = value;
+                        _subjectController.text = value ?? '';
+                      });
+                    }
+                  },
                   validator: (value) =>
-                      value?.isEmpty == true ? 'Enter a subject' : null,
+                      (value == null && _subjectController.text.isEmpty)
+                      ? 'Select or create a subject'
+                      : null,
                 ),
                 const SizedBox(height: 20),
                 Row(
@@ -771,7 +871,8 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                 const SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: () {
-                    if (_formKey.currentState!.validate()) {
+                    if (_formKey.currentState!.validate() &&
+                        _subjectController.text.isNotEmpty) {
                       final due = DateTime(
                         _selectedDate.year,
                         _selectedDate.month,
@@ -789,6 +890,12 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                         notificationOffset: _notificationOffset,
                       );
                       Navigator.of(context).pop(homework);
+                    } else if (_subjectController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please select a subject'),
+                        ),
+                      );
                     }
                   },
                   child: Text(widget.homework != null ? 'Update' : 'Save'),
