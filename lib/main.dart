@@ -108,7 +108,8 @@ class Homework {
 }
 
 class HomeworkListScreen extends StatefulWidget {
-  const HomeworkListScreen({super.key});
+  final String? subjectFilter;
+  const HomeworkListScreen({super.key, this.subjectFilter});
 
   @override
   State<HomeworkListScreen> createState() => _HomeworkListScreenState();
@@ -117,11 +118,13 @@ class HomeworkListScreen extends StatefulWidget {
 class _HomeworkListScreenState extends State<HomeworkListScreen> {
   late Future<List<Homework>> _homeworkFuture;
   Timer? _timer;
+  List<String> _subjects = [];
 
   @override
   void initState() {
     super.initState();
     _homeworkFuture = _loadHomework();
+    _loadSubjects();
     _requestPermissions(); // 🔥 NUEVO: Pedir permisos al iniciar
     _schedulePendingNotifications();
 
@@ -158,6 +161,13 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     return data.map((item) => Homework.fromJson(jsonDecode(item))).toList();
   }
 
+  Future<void> _loadSubjects() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _subjects = prefs.getStringList('subjects') ?? [];
+    });
+  }
+
   Future<void> _saveHomework(List<Homework> homeworkList) async {
     final prefs = await SharedPreferences.getInstance();
     final data = homeworkList.map((h) => jsonEncode(h.toJson())).toList();
@@ -171,6 +181,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     _scheduleNotification(homework);
     setState(() {
       _homeworkFuture = _loadHomework();
+      _loadSubjects(); // Reload subjects in case a new one was added
     });
   }
 
@@ -181,6 +192,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     _scheduleNotification(updatedHomework); // Re-programar notificación
     setState(() {
       _homeworkFuture = _loadHomework();
+      _loadSubjects(); // Reload subjects
     });
   }
 
@@ -367,16 +379,60 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ... El resto de tu método build sigue igual ...
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Homework Tracker'),
+          title: Text(widget.subjectFilter ?? 'Homework Tracker'),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Pendientes'),
               Tab(text: 'Completadas'),
+            ],
+          ),
+        ),
+        drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(color: Colors.blue),
+                child: Text(
+                  'Materias',
+                  style: TextStyle(color: Colors.white, fontSize: 24),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.list),
+                title: const Text('Todas las tareas'),
+                onTap: () {
+                  Navigator.pop(context); // Close drawer
+                  // If we are already in a filtered view, pop back to main
+                  if (widget.subjectFilter != null) {
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+              const Divider(),
+              if (_subjects.isEmpty)
+                const ListTile(title: Text('No hay materias guardadas'))
+              else
+                ..._subjects.map(
+                  (subject) => ListTile(
+                    leading: const Icon(Icons.book),
+                    title: Text(subject),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              HomeworkListScreen(subjectFilter: subject),
+                        ),
+                      );
+                    },
+                  ),
+                ),
             ],
           ),
         ),
@@ -405,8 +461,19 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             }
             final allHomework = snapshot.data!;
 
-            final pending = allHomework.where((h) => !h.isCompleted).toList();
-            final completed = allHomework.where((h) => h.isCompleted).toList();
+            // Filter by subject if needed
+            final filteredHomework = widget.subjectFilter != null
+                ? allHomework
+                      .where((h) => h.subject == widget.subjectFilter)
+                      .toList()
+                : allHomework;
+
+            final pending = filteredHomework
+                .where((h) => !h.isCompleted)
+                .toList();
+            final completed = filteredHomework
+                .where((h) => h.isCompleted)
+                .toList();
 
             pending.sort((a, b) => a.dueDate.compareTo(b.dueDate));
             completed.sort((a, b) => a.dueDate.compareTo(b.dueDate));
@@ -426,7 +493,6 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     );
   }
 
-  // ... Resto de métodos _buildHomeworkList ...
   Widget _buildHomeworkList(
     BuildContext context,
     List<Homework> filteredList,
@@ -477,7 +543,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               fontSize = 23;
               break;
             case 'Próximamente':
-              textColor = Colors.grey[700]!;
+              textColor = const Color(0xFF00bb2d);
               icon = Icons.date_range;
               fontSize = 23;
               break;
