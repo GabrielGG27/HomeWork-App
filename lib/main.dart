@@ -407,9 +407,14 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                 title: const Text('Todas las tareas'),
                 onTap: () {
                   Navigator.pop(context); // Close drawer
-                  // If we are already in a filtered view, pop back to main
+                  // If we are in a filtered view, replace current screen with main screen
                   if (widget.subjectFilter != null) {
-                    Navigator.pop(context);
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (context) => const HomeworkListScreen(),
+                      ),
+                      (route) => route.isFirst,
+                    );
                   }
                 },
               ),
@@ -421,15 +426,24 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                   (subject) => ListTile(
                     leading: const Icon(Icons.book),
                     title: Text(subject),
-                    onTap: () {
+                    onTap: () async {
                       Navigator.pop(context);
-                      Navigator.push(
+                      // Await the pushed filtered screen so we can refresh when it returns.
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
                               HomeworkListScreen(subjectFilter: subject),
                         ),
                       );
+                      // When returning from the filtered screen, reload homework and subjects
+                      // so the main "All tasks" list reflects any additions/changes made there.
+                      if (mounted) {
+                        setState(() {
+                          _homeworkFuture = _loadHomework();
+                          _loadSubjects();
+                        });
+                      }
                     },
                   ),
                 ),
