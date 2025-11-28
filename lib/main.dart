@@ -377,6 +377,55 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     }
   }
 
+  // NEW: helper to confirm & delete a subject
+  Future<void> _deleteSubject(String subject) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar materia'),
+        content: Text(
+          '¿Eliminar la materia "$subject"? Esta acción removerá la materia de la lista de materias. Las tareas no se eliminarán automáticamente.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final current = prefs.getStringList('subjects') ?? [];
+    current.remove(subject);
+    await prefs.setStringList('subjects', current);
+
+    if (mounted) {
+      setState(() {
+        _subjects = current;
+        _homeworkFuture = _loadHomework();
+      });
+    }
+
+    // Close drawer if still open
+    Navigator.pop(context);
+
+    // If user is viewing the deleted subject, go back to All tasks
+    if (widget.subjectFilter == subject) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (ctx) => const HomeworkListScreen()),
+        (route) => route.isFirst,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -426,6 +475,11 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                   (subject) => ListTile(
                     leading: const Icon(Icons.book),
                     title: Text(subject),
+                    // NEW: delete button per subject
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _deleteSubject(subject),
+                    ),
                     onTap: () async {
                       Navigator.pop(context);
                       // Await the pushed filtered screen so we can refresh when it returns.
