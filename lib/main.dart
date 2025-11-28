@@ -6,13 +6,14 @@ import 'package:intl/intl.dart';
 
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart';
 
 import 'dart:async';
 
-// Canal de notificaciones
+// Notification channel
 const String notificationChannelId = 'homework_channel_id';
 late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
@@ -20,10 +21,19 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   tz_data.initializeTimeZones();
-  tz.setLocalLocation(tz.getLocation('America/Mexico_City'));
-
+  // Try to use the device timezone (works for international users).
+  // Requires adding dependency: flutter_native_timezone in pubspec.yaml
+  // e.g. flutter_native_timezone: ^2.0.0
+  try {
+    final String deviceTimeZone = await FlutterNativeTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(deviceTimeZone));
+  } catch (e) {
+    // Fallback to UTC if timezone lookup fails
+    tz.setLocalLocation(tz.getLocation('UTC'));
+  }
+  
   flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
+  
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -37,7 +47,7 @@ void main() async {
   const AndroidNotificationChannel channel = AndroidNotificationChannel(
     notificationChannelId,
     'Homework Notifications',
-    description: 'Notificaciones para tareas próximas',
+    description: 'Notifications for upcoming homework assignments',
     importance: Importance.high,
     playSound: true,
   );
@@ -57,7 +67,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Homework Tracker',
+      title: 'HomeWork App',
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
@@ -125,15 +135,14 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     super.initState();
     _homeworkFuture = _loadHomework();
     _loadSubjects();
-    _requestPermissions(); // 🔥 NUEVO: Pedir permisos al iniciar
+    _requestPermissions(); // NEW: request notification permissions on start
     _schedulePendingNotifications();
 
-    // 🔥 NUEVO: Esto actualiza la UI cada minuto para mover tareas a "Vencidas" en tiempo real
+    // NEW: update UI every minute so overdue tasks move automatically
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       if (mounted) {
         setState(() {
-          // Al hacer setState, se reconstruye el widget, se ejecuta _groupHomeworkByDate
-          // y DateTime.now() tendrá el valor actual, moviendo las tareas automáticamente.
+          // setState triggers rebuild and _groupHomeworkByDate will use current DateTime
         });
       }
     });
@@ -146,7 +155,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     super.dispose();
   }
 
-  // 🔥 NUEVO: Función para pedir permisos en Android 13+
+  // NEW: request Android 13+ notifications permission
   void _requestPermissions() {
     flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
@@ -198,7 +207,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
 
   void _deleteHomework(int index) async {
     final list = await _loadHomework();
-    // Cancelar notificación si se borra la tarea (Opcional pero recomendado)
+    // Cancel notification if the task is deleted (optional but recommended)
     // flutterLocalNotificationsPlugin.cancel(list[index].id.hashCode & 0x7FFFFFFF);
     list.removeAt(index);
     await _saveHomework(list);
@@ -213,7 +222,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     if (index != -1) {
       list[index].isCompleted = !list[index].isCompleted;
       await _saveHomework(list);
-      // Si se completa, quizás quieras cancelar la notificación:
+      // If completed, you may want to cancel the notification:
       if (list[index].isCompleted) {
         final notificationId = homework.id.hashCode & 0x7FFFFFFF;
         await flutterLocalNotificationsPlugin.cancel(notificationId);
@@ -245,7 +254,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     }
   }
 
-  // ... (Tu función _groupHomeworkByDate se queda igual) ...
+  // ... (Your _groupHomeworkByDate function remains the same) ...
   Map<String, List<Homework>> _groupHomeworkByDate(
     List<Homework> homeworkList,
   ) {
@@ -257,26 +266,26 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     final endOfWeek = todayStart.add(const Duration(days: 7));
 
     final Map<String, List<Homework>> groups = {
-      'Vencidas': [],
-      'Hoy': [],
-      'Mañana': [],
-      'Esta semana': [],
-      'Próximamente': [],
+      'Overdue Assignments': [],
+      'Today': [],
+      'Tomorrow': [],
+      'This Week': [],
+      'Upcoming': [],
     };
 
     for (final hw in homeworkList) {
       if (hw.dueDate.isBefore(now)) {
-        groups['Vencidas']!.add(hw);
+        groups['Overdue Assignments']!.add(hw);
       } else if (hw.dueDate.isAfter(now) && hw.dueDate.isBefore(todayEnd)) {
-        groups['Hoy']!.add(hw);
+        groups['Today']!.add(hw);
       } else if (hw.dueDate.isAfter(todayEnd) &&
           hw.dueDate.isBefore(tomorrowEnd)) {
-        groups['Mañana']!.add(hw);
+        groups['Tomorrow']!.add(hw);
       } else if (hw.dueDate.isAfter(tomorrowEnd) &&
           hw.dueDate.isBefore(endOfWeek)) {
-        groups['Esta semana']!.add(hw);
+        groups['This Week']!.add(hw);
       } else if (hw.dueDate.isAfter(endOfWeek)) {
-        groups['Próximamente']!.add(hw);
+        groups['Upcoming']!.add(hw);
       }
     }
 
@@ -288,14 +297,14 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('¿Vaciar tareas completadas?'),
+        title: const Text('Clear Completed Assignments?'),
         content: const Text(
-          'Se eliminarán todas las tareas marcadas como completadas. Esta acción no se puede deshacer.',
+          'All assignments marked as completed will be deleted. This action cannot be undone.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -304,7 +313,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text(
-              'Eliminar',
+              'Delete',
               style: TextStyle(color: Colors.white),
             ),
           ),
@@ -331,20 +340,20 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   }
 
   Future<void> _scheduleNotification(Homework homework) async {
-    // 1. Verificar si las notificaciones están habilitadas para esta tarea
+    // 1. Check if notifications are enabled for this task
     if (!homework.enableNotification) {
       final notificationId = homework.id.hashCode & 0x7FFFFFFF;
       await flutterLocalNotificationsPlugin.cancel(notificationId);
       return;
     }
 
-    // 2. Calcular la fecha/hora de la notificación
+    // 2. Calculate scheduled date/time for the notification
     final scheduledDate = homework.dueDate.subtract(
       Duration(minutes: homework.notificationOffset),
     );
     final now = DateTime.now();
 
-    // 3. Si la fecha programada ya pasó, no hacer nada
+    // 3. If scheduled time is in the past, do nothing
     if (scheduledDate.isBefore(now)) return;
 
     final notificationId = homework.id.hashCode & 0x7FFFFFFF;
@@ -352,14 +361,14 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     try {
       await flutterLocalNotificationsPlugin.zonedSchedule(
         notificationId,
-        'Tarea próxima: ${homework.title}',
-        'Vence ${DateFormat('MMM dd, hh:mm a').format(homework.dueDate)}',
-        tz.TZDateTime.from(scheduledDate, tz.local), // Usar scheduledDate
+        'Upcoming assignment: ${homework.title}',
+        'Due ${DateFormat('MMM dd, hh:mm a').format(homework.dueDate)}',
+        tz.TZDateTime.from(scheduledDate, tz.local), // Use local timezone
         const NotificationDetails(
           android: AndroidNotificationDetails(
             notificationChannelId,
             'Homework Notifications',
-            channelDescription: 'Notificaciones para tareas próximas',
+            channelDescription: 'Notifications for upcoming homework tasks',
             importance: Importance.max,
             priority: Priority.high,
             playSound: true,
@@ -370,10 +379,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             UILocalNotificationDateInterpretation.absoluteTime,
       );
       print(
-        "Notificación programada para: $scheduledDate (Vence: ${homework.dueDate})",
+        "Notification scheduled for: $scheduledDate (Due: ${homework.dueDate})",
       );
     } catch (e) {
-      print("Error al programar notificación: $e");
+      print("Error scheduling notification: $e");
     }
   }
 
@@ -382,19 +391,19 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Eliminar materia'),
+        title: const Text('Delete Subject'),
         content: Text(
-          '¿Eliminar la materia "$subject"? Esta acción removerá la materia de la lista de materias. Las tareas no se eliminarán automáticamente.',
+          'Delete the subject "$subject"? This action will remove the subject from the subject list. Tasks will not be automatically deleted.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Eliminar'),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -432,11 +441,11 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.subjectFilter ?? 'Homework Tracker'),
+          title: Text(widget.subjectFilter ?? 'HomeWork App'),
           bottom: const TabBar(
             tabs: [
-              Tab(text: 'Pendientes'),
-              Tab(text: 'Completadas'),
+              Tab(text: 'Pending'),
+              Tab(text: 'Completed'),
             ],
           ),
         ),
@@ -447,13 +456,13 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               const DrawerHeader(
                 decoration: BoxDecoration(color: Colors.blue),
                 child: Text(
-                  'Materias',
+                  'Subjects',
                   style: TextStyle(color: Colors.white, fontSize: 24),
                 ),
               ),
               ListTile(
                 leading: const Icon(Icons.list),
-                title: const Text('Todas las tareas'),
+                title: const Text('All Assignments'),
                 onTap: () {
                   Navigator.pop(context); // Close drawer
                   // If we are in a filtered view, replace current screen with main screen
@@ -469,7 +478,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               ),
               const Divider(),
               if (_subjects.isEmpty)
-                const ListTile(title: Text('No hay materias guardadas'))
+                const ListTile(title: Text('No saved subjects'))
               else
                 ..._subjects.map(
                   (subject) => ListTile(
@@ -517,7 +526,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
           },
           icon: const Icon(Icons.add),
           label: const Text(
-            'Nueva',
+            'New',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
@@ -571,8 +580,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
       return Center(
         child: Text(
           isPendingTab
-              ? 'No hay tareas pendientes'
-              : 'No hay tareas completadas',
+              ? 'No pending assignments'
+              : 'No completed assignments',
         ),
       );
     }
@@ -590,27 +599,27 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
           double fontSize;
 
           switch (sectionTitle) {
-            case 'Vencidas':
+            case 'Overdue Assignments':
               textColor = Colors.red[800]!;
               icon = Icons.hourglass_empty;
               fontSize = 23;
               break;
-            case 'Hoy':
+            case 'Today':
               textColor = Colors.red;
               icon = Icons.warning;
               fontSize = 23;
               break;
-            case 'Mañana':
+            case 'Tomorrow':
               textColor = Colors.orange;
               icon = Icons.calendar_today;
               fontSize = 23;
               break;
-            case 'Esta semana':
+            case 'This Week':
               textColor = const Color.fromARGB(250, 245, 225, 10);
               icon = Icons.calendar_view_week;
               fontSize = 23;
               break;
-            case 'Próximamente':
+            case 'Upcoming':
               textColor = const Color(0xFF00bb2d);
               icon = Icons.date_range;
               fontSize = 23;
@@ -681,7 +690,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
       );
     } else {
       if (filteredList.isEmpty) {
-        return Center(child: Text('No hay tareas completadas'));
+        return Center(child: Text('No completed assignments'));
       }
 
       return ListView.builder(
@@ -694,7 +703,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                 onPressed: () => _confirmClearCompleted(context),
                 icon: const Icon(Icons.delete_forever, color: Colors.white),
                 label: const Text(
-                  'Vaciar tareas completadas',
+                  'Clear completed assignments',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -758,7 +767,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
 
   List<String> _subjects = [];
   String? _selectedSubject;
-  final String _createNewSubjectLabel = 'Crear nueva materia...';
+  final String _createNewSubjectLabel = 'Create new subject...';
 
   @override
   void initState() {
@@ -808,10 +817,10 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       builder: (context) {
         String value = '';
         return AlertDialog(
-          title: const Text('Nueva materia'),
+          title: const Text('New Subject'),
           content: TextField(
             autofocus: true,
-            decoration: const InputDecoration(hintText: 'Nombre de la materia'),
+            decoration: const InputDecoration(hintText: 'Subject Name'),
             onChanged: (text) {
               value = text;
             },
@@ -819,11 +828,11 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, value),
-              child: const Text('Guardar'),
+              child: const Text('Save'),
             ),
           ],
         );
@@ -913,7 +922,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                         children: const [
                           Icon(Icons.add, size: 20),
                           SizedBox(width: 8),
-                          Text('Crear nueva materia...'),
+                          Text('Create new subject...'),
                         ],
                       ),
                     ),
@@ -956,7 +965,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                 ),
                 const SizedBox(height: 20),
                 SwitchListTile(
-                  title: const Text('Recibir notificación'),
+                  title: const Text('Receive notification'),
                   value: _enableNotification,
                   onChanged: (value) {
                     setState(() {
@@ -968,7 +977,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                   DropdownButtonFormField<int>(
                     value: _notificationOffset,
                     decoration: const InputDecoration(
-                      labelText: 'Anticipación',
+                      labelText: 'Notification Offset',
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 8,
@@ -977,22 +986,22 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                     items: const [
                       DropdownMenuItem(
                         value: 0,
-                        child: Text('A la hora de vencimiento'),
+                        child: Text('At due time'),
                       ),
                       DropdownMenuItem(
                         value: 10,
-                        child: Text('10 minutos antes'),
+                        child: Text('10 minutes before'),
                       ),
                       DropdownMenuItem(
                         value: 30,
-                        child: Text('30 minutos antes'),
+                        child: Text('30 minutes before'),
                       ),
-                      DropdownMenuItem(value: 60, child: Text('1 hora antes')),
+                      DropdownMenuItem(value: 60, child: Text('1 hour before')),
                       DropdownMenuItem(
                         value: 120,
-                        child: Text('2 horas antes'),
+                        child: Text('2 hours before'),
                       ),
-                      DropdownMenuItem(value: 1440, child: Text('1 día antes')),
+                      DropdownMenuItem(value: 1440, child: Text('1 day before')),
                     ],
                     onChanged: (value) {
                       if (value != null) {
