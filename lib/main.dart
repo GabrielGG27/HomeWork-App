@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
-import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart';
@@ -21,11 +21,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   tz_data.initializeTimeZones();
-  // Try to use the device timezone (works for international users).
-  // Requires adding dependency: flutter_native_timezone in pubspec.yaml
-  // e.g. flutter_native_timezone: ^2.0.0
+  // Try to use the device timezone via flutter_timezone package.
   try {
-    final String deviceTimeZone = await FlutterNativeTimezone.getLocalTimezone();
+    final tzInfo = await FlutterTimezone.getLocalTimezone();
+    final deviceTimeZone = tzInfo?.identifier ?? 'UTC';
     tz.setLocalLocation(tz.getLocation(deviceTimeZone));
   } catch (e) {
     // Fallback to UTC if timezone lookup fails
