@@ -84,6 +84,10 @@ class Homework {
   bool isCompleted;
   bool enableNotification;
   int notificationOffset;
+  // NEW: important flag
+  bool isImportant;
+  // NEW: description field
+  String description;
 
   Homework({
     required this.title,
@@ -92,6 +96,8 @@ class Homework {
     this.isCompleted = false,
     this.enableNotification = true,
     this.notificationOffset = 0,
+    this.isImportant = false, // default false
+    this.description = '',
     String? id,
   }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
 
@@ -103,6 +109,8 @@ class Homework {
     'isCompleted': isCompleted,
     'enableNotification': enableNotification,
     'notificationOffset': notificationOffset,
+    'isImportant': isImportant, // persist
+    'description': description,
   };
 
   factory Homework.fromJson(Map<String, dynamic> json) => Homework(
@@ -113,12 +121,19 @@ class Homework {
     isCompleted: json['isCompleted'],
     enableNotification: json['enableNotification'] ?? true,
     notificationOffset: json['notificationOffset'] ?? 0,
+    isImportant: json['isImportant'] ?? false, // read back
+    description: json['description'] ?? '',
   );
 }
 
 class HomeworkListScreen extends StatefulWidget {
   final String? subjectFilter;
-  const HomeworkListScreen({super.key, this.subjectFilter});
+  final bool showImportant; // NEW: flag to show only important tasks
+  const HomeworkListScreen({
+    super.key,
+    this.subjectFilter,
+    this.showImportant = false,
+  });
 
   @override
   State<HomeworkListScreen> createState() => _HomeworkListScreenState();
@@ -440,7 +455,11 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.subjectFilter ?? 'HomeWork App'),
+          title: Text(
+            widget.showImportant
+                ? 'Important'
+                : (widget.subjectFilter ?? 'HomeWork App'),
+          ),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Pending'),
@@ -464,8 +483,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                 title: const Text('All Assignments'),
                 onTap: () {
                   Navigator.pop(context); // Close drawer
-                  // If we are in a filtered view, replace current screen with main screen
-                  if (widget.subjectFilter != null) {
+                  // If we are in a filtered view (subject or important), replace current screen with main screen
+                  if (widget.subjectFilter != null || widget.showImportant) {
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(
                         builder: (context) => const HomeworkListScreen(),
@@ -475,7 +494,30 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                   }
                 },
               ),
-              const Divider(),
+              // NEW: Important filter entry
+              ListTile(
+                leading: const Icon(Icons.priority_high, color: Colors.red),
+                title: const Text('Important'),
+                onTap: () async {
+                  Navigator.pop(context); // close drawer
+                  // open Important filtered screen and await return
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const HomeworkListScreen(showImportant: true),
+                    ),
+                  );
+                  // Refresh when returning
+                  if (mounted) {
+                    setState(() {
+                      _homeworkFuture = _loadHomework();
+                      _loadSubjects();
+                    });
+                  }
+                },
+              ),
+               const Divider(),
               if (_subjects.isEmpty)
                 const ListTile(title: Text('No saved subjects'))
               else
@@ -536,23 +578,34 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             final allHomework = snapshot.data!;
+ 
+            // Filter according to subjectFilter or important flag
+            late final List<Homework> filteredHomework;
+            if (widget.showImportant) {
+              filteredHomework = allHomework.where((h) => h.isImportant).toList();
+            } else if (widget.subjectFilter != null) {
+              filteredHomework = allHomework
+                  .where((h) => h.subject == widget.subjectFilter)
+                  .toList();
+            } else {
+              filteredHomework = allHomework;
+            }
+ 
+             final pending = filteredHomework
+                 .where((h) => !h.isCompleted)
+                 .toList();
+             final completed = filteredHomework
+                 .where((h) => h.isCompleted)
+                 .toList();
 
-            // Filter by subject if needed
-            final filteredHomework = widget.subjectFilter != null
-                ? allHomework
-                      .where((h) => h.subject == widget.subjectFilter)
-                      .toList()
-                : allHomework;
-
-            final pending = filteredHomework
-                .where((h) => !h.isCompleted)
-                .toList();
-            final completed = filteredHomework
-                .where((h) => h.isCompleted)
-                .toList();
-
-            pending.sort((a, b) => a.dueDate.compareTo(b.dueDate));
-            completed.sort((a, b) => a.dueDate.compareTo(b.dueDate));
+            // NEW: sort important first, then by due date
+            int importanceCompare(Homework a, Homework b) {
+              if (a.isImportant && !b.isImportant) return -1;
+              if (!a.isImportant && b.isImportant) return 1;
+              return a.dueDate.compareTo(b.dueDate);
+            }
+            pending.sort(importanceCompare);
+            completed.sort(importanceCompare);
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 80.0),
@@ -654,7 +707,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               ),
               ...sectionTasks.map((hw) {
                 final formattedDate = DateFormat(
-                  'MMM dd, yyyy – hh:mm a',
+                  'MMM dd, yyyy - hh:mm a',
                 ).format(hw.dueDate);
                 return Card(
                   margin: const EdgeInsets.symmetric(
@@ -667,15 +720,49 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                       value: hw.isCompleted,
                       onChanged: (value) => _toggleCompleted(hw),
                     ),
-                    title: Text(
-                      hw.title,
-                      style: TextStyle(
-                        decoration: hw.isCompleted
-                            ? TextDecoration.lineThrough
-                            : null,
-                      ),
+                    title: Row(
+                      children: [
+                        if (hw.isImportant)
+                          const Padding(
+                            padding: EdgeInsets.only(right: 8.0),
+                            child: Text(
+                              '!!!', // choose '!' or '!!!'
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        Expanded(
+                          child: Text(
+                            hw.title,
+                            style: TextStyle(
+                              decoration: hw.isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    subtitle: Text('${hw.subject} • $formattedDate'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('${hw.subject} • $formattedDate'),
+                        if (hw.description.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              hw.description,
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () => _deleteFromFullList(hw, fullList),
@@ -730,9 +817,27 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                 value: hw.isCompleted,
                 onChanged: (value) => _toggleCompleted(hw),
               ),
-              title: Text(
-                hw.title,
-                style: const TextStyle(decoration: TextDecoration.lineThrough),
+              title: Row(
+                children: [
+                  if (hw.isImportant)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 8.0),
+                      child: Text(
+                        '!!!',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  Expanded(
+                    child: Text(
+                      hw.title,
+                      style: const TextStyle(decoration: TextDecoration.lineThrough),
+                    ),
+                  ),
+                ],
               ),
               subtitle: Text('${hw.subject} • $formattedDate'),
               trailing: IconButton(
@@ -759,10 +864,13 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _subjectController;
+  late TextEditingController _descriptionController;
   late DateTime _selectedDate;
   late TimeOfDay _selectedTime;
   bool _enableNotification = true;
   int _notificationOffset = 0;
+  // NEW: important flag for the form
+  bool _isImportant = false;
 
   List<String> _subjects = [];
   String? _selectedSubject;
@@ -777,19 +885,23 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       _subjectController = TextEditingController(
         text: widget.homework!.subject,
       );
+      _descriptionController = TextEditingController(text: widget.homework!.description);
       _selectedSubject = widget.homework!.subject;
       _selectedDate = widget.homework!.dueDate;
       _selectedTime = TimeOfDay.fromDateTime(widget.homework!.dueDate);
       _enableNotification = widget.homework!.enableNotification;
       _notificationOffset = widget.homework!.notificationOffset;
+      _isImportant = widget.homework!.isImportant; // load existing flag
     } else {
       _titleController = TextEditingController();
       _subjectController = TextEditingController();
+      _descriptionController = TextEditingController();
       final now = DateTime.now();
       _selectedDate = DateTime(now.year, now.month, now.day);
       _selectedTime = TimeOfDay.now();
       _enableNotification = true;
       _notificationOffset = 0;
+      _isImportant = false;
     }
   }
 
@@ -861,6 +973,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
   void dispose() {
     _titleController.dispose();
     _subjectController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -941,6 +1054,13 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                       ? 'Select or create a subject'
                       : null,
                 ),
+                const SizedBox(height: 16),
+                // MOVED: single-line description field (same style as title)
+                TextFormField(
+                  controller: _descriptionController,
+                  decoration: const InputDecoration(labelText: 'Description'),
+                  // optional: no validator so it's not required
+                ),
                 const SizedBox(height: 20),
                 Row(
                   children: [
@@ -1010,6 +1130,17 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                       }
                     },
                   ),
+                const SizedBox(height: 20),
+                // NEW: important toggle
+                SwitchListTile(
+                  title: const Text('Mark as important'),
+                  value: _isImportant,
+                  onChanged: (value) {
+                    setState(() {
+                      _isImportant = value;
+                    });
+                  },
+                ),
                 const SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: () {
@@ -1030,6 +1161,8 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                         isCompleted: widget.homework?.isCompleted ?? false,
                         enableNotification: _enableNotification,
                         notificationOffset: _notificationOffset,
+                        isImportant: _isImportant, // pass flag
+                        description: _descriptionController.text.trim(),
                       );
                       Navigator.of(context).pop(homework);
                     } else if (_subjectController.text.isEmpty) {
