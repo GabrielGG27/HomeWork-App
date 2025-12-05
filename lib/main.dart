@@ -9,9 +9,11 @@ import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:flutter_timezone/flutter_timezone.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart';
 
 import 'dart:async';
+
+//emojis
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 
 // Notification channel
 const String notificationChannelId = 'homework_channel_id';
@@ -30,9 +32,9 @@ void main() async {
     // Fallback to UTC if timezone lookup fails
     tz.setLocalLocation(tz.getLocation('UTC'));
   }
-  
+
   flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  
+
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -126,6 +128,9 @@ class Homework {
   );
 }
 
+
+//Homework List Screen
+
 class HomeworkListScreen extends StatefulWidget {
   final String? subjectFilter;
   final bool showImportant; // NEW: flag to show only important tasks
@@ -143,6 +148,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   late Future<List<Homework>> _homeworkFuture;
   Timer? _timer;
   List<String> _subjects = [];
+  Map<String, int> _subjectIcons = {};
 
   @override
   void initState() {
@@ -188,6 +194,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _subjects = prefs.getStringList('subjects') ?? [];
+      final iconsJson = prefs.getString('subject_icons');
+      if (iconsJson != null) {
+        _subjectIcons = Map<String, int>.from(jsonDecode(iconsJson));
+      }
     });
   }
 
@@ -326,10 +336,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               _clearCompletedTasks();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -430,9 +437,18 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     current.remove(subject);
     await prefs.setStringList('subjects', current);
 
+    // Remove icon
+    final iconsJson = prefs.getString('subject_icons');
+    if (iconsJson != null) {
+      final icons = Map<String, dynamic>.from(jsonDecode(iconsJson));
+      icons.remove(subject);
+      await prefs.setString('subject_icons', jsonEncode(icons));
+    }
+
     if (mounted) {
       setState(() {
         _subjects = current;
+        _subjectIcons.remove(subject);
         _homeworkFuture = _loadHomework();
       });
     }
@@ -517,13 +533,20 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                   }
                 },
               ),
-               const Divider(),
+              const Divider(),
               if (_subjects.isEmpty)
                 const ListTile(title: Text('No saved subjects'))
               else
                 ..._subjects.map(
                   (subject) => ListTile(
-                    leading: const Icon(Icons.book),
+                    leading: Icon(
+                      _subjectIcons.containsKey(subject)
+                          ? IconData(
+                              _subjectIcons[subject]!,
+                              fontFamily: 'MaterialIcons',
+                            )
+                          : Icons.book,
+                    ),
                     title: Text(subject),
                     // NEW: delete button per subject
                     trailing: IconButton(
@@ -578,11 +601,13 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             final allHomework = snapshot.data!;
- 
+
             // Filter according to subjectFilter or important flag
             late final List<Homework> filteredHomework;
             if (widget.showImportant) {
-              filteredHomework = allHomework.where((h) => h.isImportant).toList();
+              filteredHomework = allHomework
+                  .where((h) => h.isImportant)
+                  .toList();
             } else if (widget.subjectFilter != null) {
               filteredHomework = allHomework
                   .where((h) => h.subject == widget.subjectFilter)
@@ -590,13 +615,13 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             } else {
               filteredHomework = allHomework;
             }
- 
-             final pending = filteredHomework
-                 .where((h) => !h.isCompleted)
-                 .toList();
-             final completed = filteredHomework
-                 .where((h) => h.isCompleted)
-                 .toList();
+
+            final pending = filteredHomework
+                .where((h) => !h.isCompleted)
+                .toList();
+            final completed = filteredHomework
+                .where((h) => h.isCompleted)
+                .toList();
 
             // NEW: sort important first, then by due date
             int importanceCompare(Homework a, Homework b) {
@@ -604,6 +629,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               if (!a.isImportant && b.isImportant) return 1;
               return a.dueDate.compareTo(b.dueDate);
             }
+
             pending.sort(importanceCompare);
             completed.sort(importanceCompare);
 
@@ -631,9 +657,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     if (filteredList.isEmpty) {
       return Center(
         child: Text(
-          isPendingTab
-              ? 'No pending assignments'
-              : 'No completed assignments',
+          isPendingTab ? 'No pending assignments' : 'No completed assignments',
         ),
       );
     }
@@ -834,7 +858,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                   Expanded(
                     child: Text(
                       hw.title,
-                      style: const TextStyle(decoration: TextDecoration.lineThrough),
+                      style: const TextStyle(
+                        decoration: TextDecoration.lineThrough,
+                      ),
                     ),
                   ),
                 ],
@@ -851,6 +877,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     }
   }
 }
+
+
+// Add/Edit Homework Screen
 
 class AddHomeworkScreen extends StatefulWidget {
   final Homework? homework;
@@ -873,6 +902,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
   bool _isImportant = false;
 
   List<String> _subjects = [];
+  Map<String, int> _subjectIcons = {};
   String? _selectedSubject;
   final String _createNewSubjectLabel = 'Create new subject...';
 
@@ -885,7 +915,9 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       _subjectController = TextEditingController(
         text: widget.homework!.subject,
       );
-      _descriptionController = TextEditingController(text: widget.homework!.description);
+      _descriptionController = TextEditingController(
+        text: widget.homework!.description,
+      );
       _selectedSubject = widget.homework!.subject;
       _selectedDate = widget.homework!.dueDate;
       _selectedTime = TimeOfDay.fromDateTime(widget.homework!.dueDate);
@@ -909,6 +941,10 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _subjects = prefs.getStringList('subjects') ?? [];
+      final iconsJson = prefs.getString('subject_icons');
+      if (iconsJson != null) {
+        _subjectIcons = Map<String, int>.from(jsonDecode(iconsJson));
+      }
       // Ensure the current subject is in the list if editing
       if (widget.homework != null &&
           !_subjects.contains(widget.homework!.subject)) {
@@ -920,40 +956,124 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
   Future<void> _saveSubjects() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('subjects', _subjects);
+    await prefs.setString('subject_icons', jsonEncode(_subjectIcons));
   }
 
   Future<void> _addNewSubject() async {
-    String? newSubject = await showDialog<String>(
+    // Define available icons
+    final List<IconData> availableIcons = [
+      Icons.book,
+      Icons.menu_book_rounded,
+      Icons.calculate,
+      Icons.science,
+      Icons.computer,
+      Icons.local_restaurant,
+      Icons.language,
+      Icons.brush,
+      Icons.music_note,
+      Icons.sports_soccer,
+      Icons.code,
+      Icons.palette,
+      Icons.work,
+      Icons.school,
+      Icons.lightbulb,
+    ];
+
+    IconData selectedIcon = Icons.book;
+
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) {
         String value = '';
-        return AlertDialog(
-          title: const Text('New Subject'),
-          content: TextField(
-            autofocus: true,
-            decoration: const InputDecoration(hintText: 'Subject Name'),
-            onChanged: (text) {
-              value = text;
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, value),
-              child: const Text('Save'),
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('New Subject'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    autofocus: true,
+                    decoration: const InputDecoration(hintText: 'Subject Name'),
+                    onChanged: (text) {
+                      value = text;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Select Icon:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 150, // Limit height for scrolling if needed
+                    width: double.maxFinite,
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 5,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                          ),
+                      itemCount: availableIcons.length,
+                      itemBuilder: (context, index) {
+                        final icon = availableIcons[index];
+                        final isSelected = selectedIcon == icon;
+                        return InkWell(
+                          onTap: () {
+                            setState(() => selectedIcon = icon);
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Colors.blue.withOpacity(0.2)
+                                  : null,
+                              shape: BoxShape.circle,
+                              border: isSelected
+                                  ? Border.all(color: Colors.blue, width: 2)
+                                  : null,
+                            ),
+                            child: Icon(
+                              icon,
+                              color: isSelected ? Colors.blue : Colors.grey,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, {
+                    'name': value,
+                    'icon': selectedIcon.codePoint,
+                  }),
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
 
-    if (newSubject != null && newSubject.trim().isNotEmpty) {
+    if (result != null &&
+        result['name'] != null &&
+        result['name'].toString().trim().isNotEmpty) {
+      final newSubject = result['name'].toString().trim();
+      final iconCodePoint = result['icon'] as int;
+
       setState(() {
         if (!_subjects.contains(newSubject)) {
           _subjects.add(newSubject);
+          _subjectIcons[newSubject] = iconCodePoint;
           _saveSubjects();
         }
         _selectedSubject = newSubject;
@@ -1103,10 +1223,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                       ),
                     ),
                     items: const [
-                      DropdownMenuItem(
-                        value: 0,
-                        child: Text('At due time'),
-                      ),
+                      DropdownMenuItem(value: 0, child: Text('At due time')),
                       DropdownMenuItem(
                         value: 10,
                         child: Text('10 minutes before'),
@@ -1120,7 +1237,10 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                         value: 120,
                         child: Text('2 hours before'),
                       ),
-                      DropdownMenuItem(value: 1440, child: Text('1 day before')),
+                      DropdownMenuItem(
+                        value: 1440,
+                        child: Text('1 day before'),
+                      ),
                     ],
                     onChanged: (value) {
                       if (value != null) {
