@@ -128,7 +128,6 @@ class Homework {
   );
 }
 
-
 //Homework List Screen
 
 class HomeworkListScreen extends StatefulWidget {
@@ -773,7 +772,34 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${hw.subject} • $formattedDate'),
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '${hw.subject} ',
+                                style: const TextStyle(color: Colors.black54),
+                              ),
+                              WidgetSpan(
+                                alignment: PlaceholderAlignment.middle,
+                                child: Icon(
+                                  _subjectIcons.containsKey(hw.subject)
+                                      ? IconData(
+                                          _subjectIcons[hw.subject]!,
+                                          fontFamily: 'MaterialIcons',
+                                        )
+                                      : Icons.book,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              TextSpan(
+                                text: ' • $formattedDate',
+                                style: const TextStyle(color: Colors.black54),
+                              ),
+                            ],
+                          ),
+                          // overflow: TextOverflow.ellipsis, // Allow wrapping so time is visible
+                        ),
                         if (hw.description.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 4.0),
@@ -865,7 +891,34 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                   ),
                 ],
               ),
-              subtitle: Text('${hw.subject} • $formattedDate'),
+              subtitle: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '${hw.subject} ',
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+                    WidgetSpan(
+                      alignment: PlaceholderAlignment.middle,
+                      child: Icon(
+                        _subjectIcons.containsKey(hw.subject)
+                            ? IconData(
+                                _subjectIcons[hw.subject]!,
+                                fontFamily: 'MaterialIcons',
+                              )
+                            : Icons.book,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' • $formattedDate',
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+                  ],
+                ),
+                // overflow: TextOverflow.ellipsis, // Allow wrapping so time is visible
+              ),
               trailing: IconButton(
                 icon: const Icon(Icons.delete, color: Colors.red),
                 onPressed: () => _deleteFromFullList(hw, fullList),
@@ -877,7 +930,6 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     }
   }
 }
-
 
 // Add/Edit Homework Screen
 
