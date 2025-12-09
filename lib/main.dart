@@ -1041,61 +1041,65 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
           builder: (context, setState) {
             return AlertDialog(
               title: const Text('New Subject'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    autofocus: true,
-                    decoration: const InputDecoration(hintText: 'Subject Name'),
-                    onChanged: (text) {
-                      value = text;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Select Icon:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 150, // Limit height for scrolling if needed
-                    width: double.maxFinite,
-                    child: GridView.builder(
-                      shrinkWrap: true,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 5,
-                            crossAxisSpacing: 8,
-                            mainAxisSpacing: 8,
-                          ),
-                      itemCount: availableIcons.length,
-                      itemBuilder: (context, index) {
-                        final icon = availableIcons[index];
-                        final isSelected = selectedIcon == icon;
-                        return InkWell(
-                          onTap: () {
-                            setState(() => selectedIcon = icon);
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? Colors.blue.withOpacity(0.2)
-                                  : null,
-                              shape: BoxShape.circle,
-                              border: isSelected
-                                  ? Border.all(color: Colors.blue, width: 2)
-                                  : null,
+              content: SizedBox(
+                width: double.maxFinite,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        autofocus: true,
+                        decoration: const InputDecoration(
+                          hintText: 'Subject Name',
+                        ),
+                        onChanged: (text) {
+                          value = text;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Select Icon:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 5,
+                              crossAxisSpacing: 8,
+                              mainAxisSpacing: 8,
                             ),
-                            child: Icon(
-                              icon,
-                              color: isSelected ? Colors.blue : Colors.grey,
+                        itemCount: availableIcons.length,
+                        itemBuilder: (context, index) {
+                          final icon = availableIcons[index];
+                          final isSelected = selectedIcon == icon;
+                          return InkWell(
+                            onTap: () {
+                              setState(() => selectedIcon = icon);
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.blue.withOpacity(0.2)
+                                    : null,
+                                shape: BoxShape.circle,
+                                border: isSelected
+                                    ? Border.all(color: Colors.blue, width: 2)
+                                    : null,
+                              ),
+                              child: Icon(
+                                icon,
+                                color: isSelected ? Colors.blue : Colors.grey,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -1177,177 +1181,182 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       appBar: AppBar(
         title: Text(widget.homework != null ? 'Edit Homework' : 'Add Homework'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(labelText: 'Title'),
-                  validator: (value) =>
-                      value?.isEmpty == true ? 'Enter a title' : null,
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _subjects.contains(_selectedSubject)
-                      ? _selectedSubject
-                      : null,
-                  decoration: const InputDecoration(labelText: 'Subject'),
-                  items: [
-                    ..._subjects.map(
-                      (s) => DropdownMenuItem(value: s, child: Text(s)),
-                    ),
-                    DropdownMenuItem(
-                      value: _createNewSubjectLabel,
-                      child: Row(
-                        children: const [
-                          Icon(Icons.add, size: 20),
-                          SizedBox(width: 8),
-                          Text('Create new subject...'),
-                        ],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _titleController,
+                    decoration: const InputDecoration(labelText: 'Title'),
+                    validator: (value) =>
+                        value?.isEmpty == true ? 'Enter a title' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: _subjects.contains(_selectedSubject)
+                        ? _selectedSubject
+                        : null,
+                    decoration: const InputDecoration(labelText: 'Subject'),
+                    items: [
+                      ..._subjects.map(
+                        (s) => DropdownMenuItem(value: s, child: Text(s)),
                       ),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value == _createNewSubjectLabel) {
-                      _addNewSubject();
-                    } else {
-                      setState(() {
-                        _selectedSubject = value;
-                        _subjectController.text = value ?? '';
-                      });
-                    }
-                  },
-                  validator: (value) =>
-                      (value == null && _subjectController.text.isEmpty)
-                      ? 'Select or create a subject'
-                      : null,
-                ),
-                const SizedBox(height: 16),
-                // MOVED: single-line description field (same style as title)
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description'),
-                  // optional: no validator so it's not required
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ListTile(
-                        title: const Text('Due Date'),
-                        subtitle: Text(
-                          DateFormat('MMM dd, yyyy').format(_selectedDate),
+                      DropdownMenuItem(
+                        value: _createNewSubjectLabel,
+                        child: Row(
+                          children: const [
+                            Icon(Icons.add, size: 20),
+                            SizedBox(width: 8),
+                            Text('Create new subject...'),
+                          ],
                         ),
-                        onTap: () => _selectDate(context),
-                      ),
-                    ),
-                    Expanded(
-                      child: ListTile(
-                        title: const Text('Due Time'),
-                        subtitle: Text(_selectedTime.format(context)),
-                        onTap: () => _selectTime(context),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                SwitchListTile(
-                  title: const Text('Receive notification'),
-                  value: _enableNotification,
-                  onChanged: (value) {
-                    setState(() {
-                      _enableNotification = value;
-                    });
-                  },
-                ),
-                if (_enableNotification)
-                  DropdownButtonFormField<int>(
-                    value: _notificationOffset,
-                    decoration: const InputDecoration(
-                      labelText: 'Notification Offset',
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 0, child: Text('At due time')),
-                      DropdownMenuItem(
-                        value: 10,
-                        child: Text('10 minutes before'),
-                      ),
-                      DropdownMenuItem(
-                        value: 30,
-                        child: Text('30 minutes before'),
-                      ),
-                      DropdownMenuItem(value: 60, child: Text('1 hour before')),
-                      DropdownMenuItem(
-                        value: 120,
-                        child: Text('2 hours before'),
-                      ),
-                      DropdownMenuItem(
-                        value: 1440,
-                        child: Text('1 day before'),
                       ),
                     ],
                     onChanged: (value) {
-                      if (value != null) {
+                      if (value == _createNewSubjectLabel) {
+                        _addNewSubject();
+                      } else {
                         setState(() {
-                          _notificationOffset = value;
+                          _selectedSubject = value;
+                          _subjectController.text = value ?? '';
                         });
                       }
                     },
+                    validator: (value) =>
+                        (value == null && _subjectController.text.isEmpty)
+                        ? 'Select or create a subject'
+                        : null,
                   ),
-                const SizedBox(height: 20),
-                // NEW: important toggle
-                SwitchListTile(
-                  title: const Text('Mark as important'),
-                  value: _isImportant,
-                  onChanged: (value) {
-                    setState(() {
-                      _isImportant = value;
-                    });
-                  },
-                ),
-                const SizedBox(height: 30),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate() &&
-                        _subjectController.text.isNotEmpty) {
-                      final due = DateTime(
-                        _selectedDate.year,
-                        _selectedDate.month,
-                        _selectedDate.day,
-                        _selectedTime.hour,
-                        _selectedTime.minute,
-                      );
-                      final homework = Homework(
-                        id: widget.homework?.id,
-                        title: _titleController.text,
-                        subject: _subjectController.text,
-                        dueDate: due,
-                        isCompleted: widget.homework?.isCompleted ?? false,
-                        enableNotification: _enableNotification,
-                        notificationOffset: _notificationOffset,
-                        isImportant: _isImportant, // pass flag
-                        description: _descriptionController.text.trim(),
-                      );
-                      Navigator.of(context).pop(homework);
-                    } else if (_subjectController.text.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please select a subject'),
+                  const SizedBox(height: 16),
+                  // MOVED: single-line description field (same style as title)
+                  TextFormField(
+                    controller: _descriptionController,
+                    decoration: const InputDecoration(labelText: 'Description'),
+                    // optional: no validator so it's not required
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ListTile(
+                          title: const Text('Due Date'),
+                          subtitle: Text(
+                            DateFormat('MMM dd, yyyy').format(_selectedDate),
+                          ),
+                          onTap: () => _selectDate(context),
                         ),
-                      );
-                    }
-                  },
-                  child: Text(widget.homework != null ? 'Update' : 'Save'),
-                ),
-              ],
+                      ),
+                      Expanded(
+                        child: ListTile(
+                          title: const Text('Due Time'),
+                          subtitle: Text(_selectedTime.format(context)),
+                          onTap: () => _selectTime(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  SwitchListTile(
+                    title: const Text('Receive notification'),
+                    value: _enableNotification,
+                    onChanged: (value) {
+                      setState(() {
+                        _enableNotification = value;
+                      });
+                    },
+                  ),
+                  if (_enableNotification)
+                    DropdownButtonFormField<int>(
+                      value: _notificationOffset,
+                      decoration: const InputDecoration(
+                        labelText: 'Notification Offset',
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 0, child: Text('At due time')),
+                        DropdownMenuItem(
+                          value: 10,
+                          child: Text('10 minutes before'),
+                        ),
+                        DropdownMenuItem(
+                          value: 30,
+                          child: Text('30 minutes before'),
+                        ),
+                        DropdownMenuItem(
+                          value: 60,
+                          child: Text('1 hour before'),
+                        ),
+                        DropdownMenuItem(
+                          value: 120,
+                          child: Text('2 hours before'),
+                        ),
+                        DropdownMenuItem(
+                          value: 1440,
+                          child: Text('1 day before'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _notificationOffset = value;
+                          });
+                        }
+                      },
+                    ),
+                  const SizedBox(height: 20),
+                  // NEW: important toggle
+                  SwitchListTile(
+                    title: const Text('Mark as important'),
+                    value: _isImportant,
+                    onChanged: (value) {
+                      setState(() {
+                        _isImportant = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 30),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate() &&
+                          _subjectController.text.isNotEmpty) {
+                        final due = DateTime(
+                          _selectedDate.year,
+                          _selectedDate.month,
+                          _selectedDate.day,
+                          _selectedTime.hour,
+                          _selectedTime.minute,
+                        );
+                        final homework = Homework(
+                          id: widget.homework?.id,
+                          title: _titleController.text,
+                          subject: _subjectController.text,
+                          dueDate: due,
+                          isCompleted: widget.homework?.isCompleted ?? false,
+                          enableNotification: _enableNotification,
+                          notificationOffset: _notificationOffset,
+                          isImportant: _isImportant, // pass flag
+                          description: _descriptionController.text.trim(),
+                        );
+                        Navigator.of(context).pop(homework);
+                      } else if (_subjectController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please select a subject'),
+                          ),
+                        );
+                      }
+                    },
+                    child: Text(widget.homework != null ? 'Update' : 'Save'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
