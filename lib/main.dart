@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:homework_app/icons_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
@@ -540,10 +541,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                   (subject) => ListTile(
                     leading: Icon(
                       _subjectIcons.containsKey(subject)
-                          ? IconData(
-                              _subjectIcons[subject]!,
-                              fontFamily: 'MaterialIcons',
-                            )
+                          ? getIconFromCodePoint(_subjectIcons[subject]!)
                           : Icons.book,
                     ),
                     title: Text(subject),
@@ -783,9 +781,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                                 alignment: PlaceholderAlignment.middle,
                                 child: Icon(
                                   _subjectIcons.containsKey(hw.subject)
-                                      ? IconData(
+                                      ? getIconFromCodePoint(
                                           _subjectIcons[hw.subject]!,
-                                          fontFamily: 'MaterialIcons',
                                         )
                                       : Icons.book,
                                   size: 16,
@@ -902,10 +899,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                       alignment: PlaceholderAlignment.middle,
                       child: Icon(
                         _subjectIcons.containsKey(hw.subject)
-                            ? IconData(
-                                _subjectIcons[hw.subject]!,
-                                fontFamily: 'MaterialIcons',
-                              )
+                            ? getIconFromCodePoint(_subjectIcons[hw.subject]!)
                             : Icons.book,
                         size: 16,
                         color: Colors.grey,
@@ -1013,23 +1007,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
 
   Future<void> _addNewSubject() async {
     // Define available icons
-    final List<IconData> availableIcons = [
-      Icons.book,
-      Icons.menu_book_rounded,
-      Icons.calculate,
-      Icons.science,
-      Icons.computer,
-      Icons.local_restaurant,
-      Icons.language,
-      Icons.brush,
-      Icons.music_note,
-      Icons.sports_soccer,
-      Icons.code,
-      Icons.palette,
-      Icons.work,
-      Icons.school,
-      Icons.lightbulb,
-    ];
+    final List<IconData> availableIcons = kAvailableIcons;
 
     IconData selectedIcon = Icons.book;
 
