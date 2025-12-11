@@ -1,0 +1,146 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class AppLocalizationsEn extends AppLocalizations {
+  AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get appTitle => 'HomeWork App';
+
+  @override
+  String get pending => 'Pending';
+
+  @override
+  String get completed => 'Completed';
+
+  @override
+  String get subjects => 'Subjects';
+
+  @override
+  String get allAssignments => 'All Assignments';
+
+  @override
+  String get important => 'Important';
+
+  @override
+  String get noSavedSubjects => 'No saved subjects';
+
+  @override
+  String get newButton => 'New';
+
+  @override
+  String get deleteAssignment => 'Delete';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get update => 'Update';
+
+  @override
+  String get title => 'Title';
+
+  @override
+  String get subject => 'Subject';
+
+  @override
+  String get description => 'Description';
+
+  @override
+  String get dueDate => 'Due Date';
+
+  @override
+  String get dueTime => 'Due Time';
+
+  @override
+  String get receiveNotification => 'Receive notification';
+
+  @override
+  String get notificationOffset => 'Notification Offset';
+
+  @override
+  String get markAsImportant => 'Mark as important';
+
+  @override
+  String get deleteSubject => 'Delete Subject';
+
+  @override
+  String deleteSubjectConfirmation(String subject) {
+    return 'Delete the subject \"$subject\"? This action will remove the subject from the subject list. Tasks will not be automatically deleted.';
+  }
+
+  @override
+  String get clearCompletedTitle => 'Clear Completed Assignments?';
+
+  @override
+  String get clearCompletedMessage =>
+      'All assignments marked as completed will be deleted. This action cannot be undone.';
+
+  @override
+  String get clearCompletedButton => 'Clear completed assignments';
+
+  @override
+  String get noPendingAssignments => 'No pending assignments';
+
+  @override
+  String get noCompletedAssignments => 'No completed assignments';
+
+  @override
+  String get sectionOverdue => 'Overdue Assignments';
+
+  @override
+  String get sectionToday => 'Today';
+
+  @override
+  String get sectionTomorrow => 'Tomorrow';
+
+  @override
+  String get sectionThisWeek => 'This Week';
+
+  @override
+  String get sectionUpcoming => 'Upcoming';
+
+  @override
+  String get createNewSubject => 'Create new subject...';
+
+  @override
+  String get selectIcon => 'Select Icon:';
+
+  @override
+  String get subjectName => 'Subject Name';
+
+  @override
+  String get enterTitleValidator => 'Enter a title';
+
+  @override
+  String get selectSubjectValidator => 'Select or create a subject';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get atDueTime => 'At due time';
+
+  @override
+  String minutesBefore(int minutes) {
+    return '$minutes minutes before';
+  }
+
+  @override
+  String get hourBefore => '1 hour before';
+
+  @override
+  String hoursBefore(int hours) {
+    return '$hours hours before';
+  }
+
+  @override
+  String get dayBefore => '1 day before';
+}

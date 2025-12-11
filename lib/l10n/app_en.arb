@@ -1,0 +1,66 @@
+{
+  "appTitle": "HomeWork App",
+  "pending": "Pending",
+  "completed": "Completed",
+  "subjects": "Subjects",
+  "allAssignments": "All Assignments",
+  "important": "Important",
+  "noSavedSubjects": "No saved subjects",
+  "newButton": "New",
+  "deleteAssignment": "Delete",
+  "cancel": "Cancel",
+  "save": "Save",
+  "update": "Update",
+  "title": "Title",
+  "subject": "Subject",
+  "description": "Description",
+  "dueDate": "Due Date",
+  "dueTime": "Due Time",
+  "receiveNotification": "Receive notification",
+  "notificationOffset": "Notification Offset",
+  "markAsImportant": "Mark as important",
+  "deleteSubject": "Delete Subject",
+  "deleteSubjectConfirmation": "Delete the subject \"{subject}\"? This action will remove the subject from the subject list. Tasks will not be automatically deleted.",
+  "@deleteSubjectConfirmation": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "clearCompletedTitle": "Clear Completed Assignments?",
+  "clearCompletedMessage": "All assignments marked as completed will be deleted. This action cannot be undone.",
+  "clearCompletedButton": "Clear completed assignments",
+  "noPendingAssignments": "No pending assignments",
+  "noCompletedAssignments": "No completed assignments",
+  "sectionOverdue": "Overdue Assignments",
+  "sectionToday": "Today",
+  "sectionTomorrow": "Tomorrow",
+  "sectionThisWeek": "This Week",
+  "sectionUpcoming": "Upcoming",
+  "createNewSubject": "Create new subject...",
+  "selectIcon": "Select Icon:",
+  "subjectName": "Subject Name",
+  "enterTitleValidator": "Enter a title",
+  "selectSubjectValidator": "Select or create a subject",
+  "language": "Language",
+  "atDueTime": "At due time",
+  "minutesBefore": "{minutes} minutes before",
+  "@minutesBefore": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "hourBefore": "1 hour before",
+  "hoursBefore": "{hours} hours before",
+  "@hoursBefore": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "dayBefore": "1 day before"
+}

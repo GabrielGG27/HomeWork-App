@@ -9,6 +9,8 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:flutter_timezone/flutter_timezone.dart';
 
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'dart:async';
@@ -63,17 +65,64 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+
+  static void setLocale(BuildContext context, Locale newLocale) {
+    _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
+    state?.setLocale(newLocale);
+  }
+}
+
+class _MyAppState extends State<MyApp> {
+  Locale? _locale;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocale();
+  }
+
+  Future<void> _loadLocale() async {
+    final prefs = await SharedPreferences.getInstance();
+    final languageCode = prefs.getString('languageCode');
+    if (languageCode != null) {
+      setState(() {
+        _locale = Locale(languageCode);
+      });
+    }
+  }
+
+  void setLocale(Locale value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('languageCode', value.languageCode);
+    setState(() {
+      _locale = value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'HomeWork App',
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
+      locale: _locale,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'), // English
+        Locale('es'), // Spanish
+      ],
       home: const HomeworkListScreen(),
     );
   }
@@ -290,26 +339,26 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     final endOfWeek = todayStart.add(const Duration(days: 7));
 
     final Map<String, List<Homework>> groups = {
-      'Overdue Assignments': [],
-      'Today': [],
-      'Tomorrow': [],
-      'This Week': [],
-      'Upcoming': [],
+      'overdue': [],
+      'today': [],
+      'tomorrow': [],
+      'week': [],
+      'upcoming': [],
     };
 
     for (final hw in homeworkList) {
       if (hw.dueDate.isBefore(now)) {
-        groups['Overdue Assignments']!.add(hw);
+        groups['overdue']!.add(hw);
       } else if (hw.dueDate.isAfter(now) && hw.dueDate.isBefore(todayEnd)) {
-        groups['Today']!.add(hw);
+        groups['today']!.add(hw);
       } else if (hw.dueDate.isAfter(todayEnd) &&
           hw.dueDate.isBefore(tomorrowEnd)) {
-        groups['Tomorrow']!.add(hw);
+        groups['tomorrow']!.add(hw);
       } else if (hw.dueDate.isAfter(tomorrowEnd) &&
           hw.dueDate.isBefore(endOfWeek)) {
-        groups['This Week']!.add(hw);
+        groups['week']!.add(hw);
       } else if (hw.dueDate.isAfter(endOfWeek)) {
-        groups['Upcoming']!.add(hw);
+        groups['upcoming']!.add(hw);
       }
     }
 
@@ -321,14 +370,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear Completed Assignments?'),
-        content: const Text(
-          'All assignments marked as completed will be deleted. This action cannot be undone.',
-        ),
+        title: Text(AppLocalizations.of(context)!.clearCompletedTitle),
+        content: Text(AppLocalizations.of(context)!.clearCompletedMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -336,7 +383,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               _clearCompletedTasks();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            child: Text(
+              AppLocalizations.of(context)!.deleteAssignment,
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -412,19 +462,19 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Subject'),
+        title: Text(AppLocalizations.of(context)!.deleteSubject),
         content: Text(
-          'Delete the subject "$subject"? This action will remove the subject from the subject list. Tasks will not be automatically deleted.',
+          AppLocalizations.of(context)!.deleteSubjectConfirmation(subject),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context)!.deleteAssignment),
           ),
         ],
       ),
@@ -473,104 +523,134 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
         appBar: AppBar(
           title: Text(
             widget.showImportant
-                ? 'Important'
-                : (widget.subjectFilter ?? 'HomeWork App'),
+                ? AppLocalizations.of(context)!.important
+                : (widget.subjectFilter ??
+                      AppLocalizations.of(context)!.appTitle),
           ),
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'Pending'),
-              Tab(text: 'Completed'),
+              Tab(text: AppLocalizations.of(context)!.pending),
+              Tab(text: AppLocalizations.of(context)!.completed),
             ],
           ),
         ),
         drawer: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
+          child: Column(
             children: [
-              const DrawerHeader(
-                decoration: BoxDecoration(color: Colors.blue),
-                child: Text(
-                  'Subjects',
-                  style: TextStyle(color: Colors.white, fontSize: 24),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.list),
-                title: const Text('All Assignments'),
-                onTap: () {
-                  Navigator.pop(context); // Close drawer
-                  // If we are in a filtered view (subject or important), replace current screen with main screen
-                  if (widget.subjectFilter != null || widget.showImportant) {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (context) => const HomeworkListScreen(),
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    DrawerHeader(
+                      decoration: const BoxDecoration(color: Colors.blue),
+                      child: Text(
+                        AppLocalizations.of(context)!.subjects,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                        ),
                       ),
-                      (route) => route.isFirst,
-                    );
-                  }
-                },
-              ),
-              // NEW: Important filter entry
-              ListTile(
-                leading: const Icon(Icons.priority_high, color: Colors.red),
-                title: const Text('Important'),
-                onTap: () async {
-                  Navigator.pop(context); // close drawer
-                  // open Important filtered screen and await return
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const HomeworkListScreen(showImportant: true),
                     ),
-                  );
-                  // Refresh when returning
-                  if (mounted) {
-                    setState(() {
-                      _homeworkFuture = _loadHomework();
-                      _loadSubjects();
-                    });
-                  }
-                },
+                    ListTile(
+                      leading: const Icon(Icons.list),
+                      title: Text(AppLocalizations.of(context)!.allAssignments),
+                      onTap: () {
+                        Navigator.pop(context); // Close drawer
+                        if (widget.subjectFilter != null ||
+                            widget.showImportant) {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (context) => const HomeworkListScreen(),
+                            ),
+                            (route) => route.isFirst,
+                          );
+                        }
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(
+                        Icons.priority_high,
+                        color: Colors.red,
+                      ),
+                      title: Text(AppLocalizations.of(context)!.important),
+                      onTap: () async {
+                        Navigator.pop(context); // close drawer
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const HomeworkListScreen(showImportant: true),
+                          ),
+                        );
+                        if (mounted) {
+                          setState(() {
+                            _homeworkFuture = _loadHomework();
+                            _loadSubjects();
+                          });
+                        }
+                      },
+                    ),
+                    const Divider(),
+                    if (_subjects.isEmpty)
+                      ListTile(
+                        title: Text(
+                          AppLocalizations.of(context)!.noSavedSubjects,
+                        ),
+                      )
+                    else
+                      ..._subjects.map(
+                        (subject) => ListTile(
+                          leading: Icon(
+                            _subjectIcons.containsKey(subject)
+                                ? getIconFromCodePoint(_subjectIcons[subject]!)
+                                : Icons.book,
+                          ),
+                          title: Text(subject),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _deleteSubject(subject),
+                          ),
+                          onTap: () async {
+                            Navigator.pop(context);
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    HomeworkListScreen(subjectFilter: subject),
+                              ),
+                            );
+                            if (mounted) {
+                              setState(() {
+                                _homeworkFuture = _loadHomework();
+                                _loadSubjects();
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                  ],
+                ),
               ),
               const Divider(),
-              if (_subjects.isEmpty)
-                const ListTile(title: Text('No saved subjects'))
-              else
-                ..._subjects.map(
-                  (subject) => ListTile(
-                    leading: Icon(
-                      _subjectIcons.containsKey(subject)
-                          ? getIconFromCodePoint(_subjectIcons[subject]!)
-                          : Icons.book,
-                    ),
-                    title: Text(subject),
-                    // NEW: delete button per subject
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deleteSubject(subject),
-                    ),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      // Await the pushed filtered screen so we can refresh when it returns.
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              HomeworkListScreen(subjectFilter: subject),
-                        ),
-                      );
-                      // When returning from the filtered screen, reload homework and subjects
-                      // so the main "All tasks" list reflects any additions/changes made there.
-                      if (mounted) {
-                        setState(() {
-                          _homeworkFuture = _loadHomework();
-                          _loadSubjects();
-                        });
-                      }
-                    },
-                  ),
+              // Language Toggle moved to bottom
+              ListTile(
+                leading: const Icon(Icons.language, color: Colors.blue),
+                title: Text(AppLocalizations.of(context)!.language),
+                subtitle: Text(
+                  Localizations.localeOf(context).languageCode == 'en'
+                      ? 'English'
+                      : 'Español',
                 ),
+                onTap: () {
+                  Navigator.pop(context);
+                  final current = Localizations.localeOf(context);
+                  final newLocale = current.languageCode == 'en'
+                      ? const Locale('es')
+                      : const Locale('en');
+                  MyApp.setLocale(context, newLocale);
+                },
+              ),
+              const SizedBox(height: 16), // Bottom padding
             ],
           ),
         ),
@@ -586,9 +666,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             }
           },
           icon: const Icon(Icons.add),
-          label: const Text(
-            'New',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          label: Text(
+            AppLocalizations.of(context)!.newButton,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
         body: FutureBuilder<List<Homework>>(
@@ -654,7 +734,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     if (filteredList.isEmpty) {
       return Center(
         child: Text(
-          isPendingTab ? 'No pending assignments' : 'No completed assignments',
+          isPendingTab
+              ? AppLocalizations.of(context)!.noPendingAssignments
+              : AppLocalizations.of(context)!.noCompletedAssignments,
         ),
       );
     }
@@ -671,33 +753,41 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
           IconData icon;
           double fontSize;
 
+          String displayTitle;
+
           switch (sectionTitle) {
-            case 'Overdue Assignments':
+            case 'overdue':
+              displayTitle = AppLocalizations.of(context)!.sectionOverdue;
               textColor = Colors.red[800]!;
               icon = Icons.hourglass_empty;
               fontSize = 23;
               break;
-            case 'Today':
+            case 'today':
+              displayTitle = AppLocalizations.of(context)!.sectionToday;
               textColor = Colors.red;
               icon = Icons.warning;
               fontSize = 23;
               break;
-            case 'Tomorrow':
+            case 'tomorrow':
+              displayTitle = AppLocalizations.of(context)!.sectionTomorrow;
               textColor = Colors.orange;
               icon = Icons.calendar_today;
               fontSize = 23;
               break;
-            case 'This Week':
+            case 'week':
+              displayTitle = AppLocalizations.of(context)!.sectionThisWeek;
               textColor = const Color.fromARGB(250, 245, 225, 10);
               icon = Icons.calendar_view_week;
               fontSize = 23;
               break;
-            case 'Upcoming':
+            case 'upcoming':
+              displayTitle = AppLocalizations.of(context)!.sectionUpcoming;
               textColor = const Color(0xFF00bb2d);
               icon = Icons.date_range;
               fontSize = 23;
               break;
             default:
+              displayTitle = sectionTitle;
               textColor = Colors.blueGrey;
               icon = Icons.label;
               fontSize = 16;
@@ -716,7 +806,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                     Icon(icon, size: 20, color: textColor),
                     const SizedBox(width: 8),
                     Text(
-                      sectionTitle,
+                      displayTitle,
                       style: TextStyle(
                         fontSize: fontSize,
                         fontWeight: FontWeight.bold,
@@ -835,9 +925,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               child: ElevatedButton.icon(
                 onPressed: () => _confirmClearCompleted(context),
                 icon: const Icon(Icons.delete_forever, color: Colors.white),
-                label: const Text(
-                  'Clear completed assignments',
-                  style: TextStyle(
+                label: Text(
+                  AppLocalizations.of(context)!.clearCompletedButton,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1018,7 +1108,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('New Subject'),
+              title: Text(AppLocalizations.of(context)!.createNewSubject),
               content: SizedBox(
                 width: double.maxFinite,
                 child: SingleChildScrollView(
@@ -1027,17 +1117,17 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                     children: [
                       TextField(
                         autofocus: true,
-                        decoration: const InputDecoration(
-                          hintText: 'Subject Name',
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context)!.subjectName,
                         ),
                         onChanged: (text) {
                           value = text;
                         },
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Select Icon:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      Text(
+                        AppLocalizations.of(context)!.selectIcon,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       GridView.builder(
@@ -1082,14 +1172,14 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
+                  child: Text(AppLocalizations.of(context)!.cancel),
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context, {
                     'name': value,
                     'icon': selectedIcon.codePoint,
                   }),
-                  child: const Text('Save'),
+                  child: Text(AppLocalizations.of(context)!.save),
                 ),
               ],
             );
@@ -1157,7 +1247,11 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.homework != null ? 'Edit Homework' : 'Add Homework'),
+        title: Text(
+          widget.homework != null
+              ? AppLocalizations.of(context)!.update
+              : AppLocalizations.of(context)!.newButton,
+        ), // Simplified: leveraging Update/New strings, or could add dedicated Edit/Add Homework strings
       ),
       body: SafeArea(
         child: Padding(
@@ -1169,16 +1263,21 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                 children: [
                   TextFormField(
                     controller: _titleController,
-                    decoration: const InputDecoration(labelText: 'Title'),
-                    validator: (value) =>
-                        value?.isEmpty == true ? 'Enter a title' : null,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.title,
+                    ),
+                    validator: (value) => value?.isEmpty == true
+                        ? AppLocalizations.of(context)!.enterTitleValidator
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: _subjects.contains(_selectedSubject)
                         ? _selectedSubject
                         : null,
-                    decoration: const InputDecoration(labelText: 'Subject'),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.subject,
+                    ),
                     items: [
                       ..._subjects.map(
                         (s) => DropdownMenuItem(value: s, child: Text(s)),
@@ -1186,10 +1285,12 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                       DropdownMenuItem(
                         value: _createNewSubjectLabel,
                         child: Row(
-                          children: const [
+                          children: [
                             Icon(Icons.add, size: 20),
                             SizedBox(width: 8),
-                            Text('Create new subject...'),
+                            Text(
+                              AppLocalizations.of(context)!.createNewSubject,
+                            ),
                           ],
                         ),
                       ),
@@ -1206,14 +1307,16 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                     },
                     validator: (value) =>
                         (value == null && _subjectController.text.isEmpty)
-                        ? 'Select or create a subject'
+                        ? AppLocalizations.of(context)!.selectSubjectValidator
                         : null,
                   ),
                   const SizedBox(height: 16),
                   // MOVED: single-line description field (same style as title)
                   TextFormField(
                     controller: _descriptionController,
-                    decoration: const InputDecoration(labelText: 'Description'),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.description,
+                    ),
                     // optional: no validator so it's not required
                   ),
                   const SizedBox(height: 20),
@@ -1221,7 +1324,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                     children: [
                       Expanded(
                         child: ListTile(
-                          title: const Text('Due Date'),
+                          title: Text(AppLocalizations.of(context)!.dueDate),
                           subtitle: Text(
                             DateFormat('MMM dd, yyyy').format(_selectedDate),
                           ),
@@ -1230,7 +1333,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                       ),
                       Expanded(
                         child: ListTile(
-                          title: const Text('Due Time'),
+                          title: Text(AppLocalizations.of(context)!.dueTime),
                           subtitle: Text(_selectedTime.format(context)),
                           onTap: () => _selectTime(context),
                         ),
@@ -1239,7 +1342,9 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                   ),
                   const SizedBox(height: 20),
                   SwitchListTile(
-                    title: const Text('Receive notification'),
+                    title: Text(
+                      AppLocalizations.of(context)!.receiveNotification,
+                    ),
                     value: _enableNotification,
                     onChanged: (value) {
                       setState(() {
@@ -1250,34 +1355,45 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                   if (_enableNotification)
                     DropdownButtonFormField<int>(
                       value: _notificationOffset,
-                      decoration: const InputDecoration(
-                        labelText: 'Notification Offset',
-                        contentPadding: EdgeInsets.symmetric(
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(
+                          context,
+                        )!.notificationOffset,
+                        contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 8,
                         ),
                       ),
-                      items: const [
-                        DropdownMenuItem(value: 0, child: Text('At due time')),
+                      items: [
+                        DropdownMenuItem(
+                          value: 0,
+                          child: Text(AppLocalizations.of(context)!.atDueTime),
+                        ),
                         DropdownMenuItem(
                           value: 10,
-                          child: Text('10 minutes before'),
+                          child: Text(
+                            AppLocalizations.of(context)!.minutesBefore(10),
+                          ),
                         ),
                         DropdownMenuItem(
                           value: 30,
-                          child: Text('30 minutes before'),
+                          child: Text(
+                            AppLocalizations.of(context)!.minutesBefore(30),
+                          ),
                         ),
                         DropdownMenuItem(
                           value: 60,
-                          child: Text('1 hour before'),
+                          child: Text(AppLocalizations.of(context)!.hourBefore),
                         ),
                         DropdownMenuItem(
                           value: 120,
-                          child: Text('2 hours before'),
+                          child: Text(
+                            AppLocalizations.of(context)!.hoursBefore(2),
+                          ),
                         ),
                         DropdownMenuItem(
                           value: 1440,
-                          child: Text('1 day before'),
+                          child: Text(AppLocalizations.of(context)!.dayBefore),
                         ),
                       ],
                       onChanged: (value) {
@@ -1291,7 +1407,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                   const SizedBox(height: 20),
                   // NEW: important toggle
                   SwitchListTile(
-                    title: const Text('Mark as important'),
+                    title: Text(AppLocalizations.of(context)!.markAsImportant),
                     value: _isImportant,
                     onChanged: (value) {
                       setState(() {
@@ -1331,7 +1447,11 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                         );
                       }
                     },
-                    child: Text(widget.homework != null ? 'Update' : 'Save'),
+                    child: Text(
+                      widget.homework != null
+                          ? AppLocalizations.of(context)!.update
+                          : AppLocalizations.of(context)!.save,
+                    ),
                   ),
                 ],
               ),
