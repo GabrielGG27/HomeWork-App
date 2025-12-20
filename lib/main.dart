@@ -325,6 +325,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
       if (list[index].isCompleted) {
         final notificationId = homework.id.hashCode & 0x7FFFFFFF;
         await flutterLocalNotificationsPlugin.cancel(notificationId);
+      } else {
+        await _scheduleNotification(list[index]);
       }
       setState(() {
         _homeworkFuture = _loadHomework();
