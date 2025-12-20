@@ -170,7 +170,7 @@ class Homework {
     title: json['title'],
     subject: json['subject'],
     dueDate: DateTime.fromMillisecondsSinceEpoch(json['dueDate']),
-    isCompleted: json['isCompleted'],
+    isCompleted: json['isCompleted'] ?? false,
     enableNotification: json['enableNotification'] ?? true,
     notificationOffset: json['notificationOffset'] ?? 0,
     isImportant: json['isImportant'] ?? false, // read back
@@ -236,7 +236,33 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   Future<List<Homework>> _loadHomework() async {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getStringList('homework') ?? [];
-    return data.map((item) => Homework.fromJson(jsonDecode(item))).toList();
+
+    List<Homework> loaded = [];
+    bool needsSave = false;
+    // Base timestamp to ensure unique IDs for migrated tasks
+    int baseId = DateTime.now().millisecondsSinceEpoch;
+
+    for (int i = 0; i < data.length; i++) {
+      try {
+        Map<String, dynamic> json = jsonDecode(data[i]);
+        // Fix missing ID
+        if (json['id'] == null) {
+          json['id'] = '${baseId + i}';
+          needsSave = true;
+        }
+        loaded.add(Homework.fromJson(json));
+      } catch (e) {
+        // Skip malformed data
+        print('Error loading homework item: $e');
+      }
+    }
+
+    if (needsSave) {
+      final fixedData = loaded.map((h) => jsonEncode(h.toJson())).toList();
+      await prefs.setStringList('homework', fixedData);
+    }
+
+    return loaded;
   }
 
   Future<void> _loadSubjects() async {
