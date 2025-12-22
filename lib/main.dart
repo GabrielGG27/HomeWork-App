@@ -194,7 +194,8 @@ class HomeworkListScreen extends StatefulWidget {
 }
 
 class _HomeworkListScreenState extends State<HomeworkListScreen> {
-  late Future<List<Homework>> _homeworkFuture;
+  List<Homework> _homeworkList = [];
+  bool _isLoading = true;
   Timer? _timer;
   List<String> _subjects = [];
   Map<String, int> _subjectIcons = {};
@@ -202,8 +203,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   @override
   void initState() {
     super.initState();
-    _homeworkFuture = _loadHomework();
-    _loadSubjects();
+    _loadData();
     _requestPermissions(); // NEW: request notification permissions on start
     _schedulePendingNotifications();
 
@@ -214,6 +214,20 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
           // setState triggers rebuild and _groupHomeworkByDate will use current DateTime
         });
       }
+    });
+  }
+
+  Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+    });
+    // Load subjects
+    await _loadSubjects();
+    // Load homework
+    final loaded = await _loadHomework();
+    setState(() {
+      _homeworkList = loaded;
+      _isLoading = false;
     });
   }
 
@@ -283,54 +297,51 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   }
 
   void _addHomework(Homework homework) async {
-    final list = await _loadHomework();
-    list.add(homework);
-    await _saveHomework(list);
-    _scheduleNotification(homework);
     setState(() {
-      _homeworkFuture = _loadHomework();
-      _loadSubjects(); // Reload subjects in case a new one was added
+      _homeworkList.add(homework);
     });
+    await _saveHomework(_homeworkList);
+    _scheduleNotification(homework);
+    // Subjects might have changed if a new one was added in the Add screen?
+    // Usually AddHomeworkScreen doesn't add subjects to prefs directly,
+    // but if we want to be safe we can reload subjects or manage them in memory too.
+    _loadSubjects();
   }
 
   void _updateHomework(int index, Homework updatedHomework) async {
-    final list = await _loadHomework();
-    list[index] = updatedHomework;
-    await _saveHomework(list);
-    _scheduleNotification(updatedHomework); // Re-programar notificación
     setState(() {
-      _homeworkFuture = _loadHomework();
-      _loadSubjects(); // Reload subjects
+      _homeworkList[index] = updatedHomework;
     });
+    await _saveHomework(_homeworkList);
+    _scheduleNotification(updatedHomework); // Re-programar notificación
+    _loadSubjects(); // Reload subjects
   }
 
   void _deleteHomework(int index) async {
-    final list = await _loadHomework();
     // Cancel notification if the task is deleted (optional but recommended)
     // flutterLocalNotificationsPlugin.cancel(list[index].id.hashCode & 0x7FFFFFFF);
-    list.removeAt(index);
-    await _saveHomework(list);
     setState(() {
-      _homeworkFuture = _loadHomework();
+      _homeworkList.removeAt(index);
     });
+    await _saveHomework(_homeworkList);
   }
 
   void _toggleCompleted(Homework homework) async {
-    final list = await _loadHomework();
-    final index = list.indexWhere((h) => h.id == homework.id);
+    final index = _homeworkList.indexWhere((h) => h.id == homework.id);
     if (index != -1) {
-      list[index].isCompleted = !list[index].isCompleted;
-      await _saveHomework(list);
-      // If completed, you may want to cancel the notification:
-      if (list[index].isCompleted) {
+      setState(() {
+        _homeworkList[index].isCompleted = !_homeworkList[index].isCompleted;
+      });
+
+      await _saveHomework(_homeworkList);
+
+      // Toggle notification logic
+      if (_homeworkList[index].isCompleted) {
         final notificationId = homework.id.hashCode & 0x7FFFFFFF;
         await flutterLocalNotificationsPlugin.cancel(notificationId);
       } else {
-        await _scheduleNotification(list[index]);
+        await _scheduleNotification(_homeworkList[index]);
       }
-      setState(() {
-        _homeworkFuture = _loadHomework();
-      });
     }
   }
 
@@ -343,13 +354,19 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     if (updatedHomework != null) {
       final index = fullList.indexWhere((h) => h.id == homework.id);
       if (index != -1) {
-        _updateHomework(index, updatedHomework);
+        // We need the index in the MAIN list (_homeworkList), not the filtered fullList passed here.
+        // Actually fullList IS _homeworkList in the build method, so index is correct relative to _homeworkList structure?
+        // Wait, fullList is passed from build. If we use _homeworkList directly we are safer.
+        final mainIndex = _homeworkList.indexWhere((h) => h.id == homework.id);
+        if (mainIndex != -1) {
+          _updateHomework(mainIndex, updatedHomework);
+        }
       }
     }
   }
 
   void _deleteFromFullList(Homework homework, List<Homework> fullList) {
-    final index = fullList.indexWhere((h) => h.id == homework.id);
+    final index = _homeworkList.indexWhere((h) => h.id == homework.id);
     if (index != -1) {
       _deleteHomework(index);
     }
@@ -422,12 +439,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   }
 
   void _clearCompletedTasks() async {
-    final allTasks = await _loadHomework();
-    final pendingTasks = allTasks.where((task) => !task.isCompleted).toList();
-    await _saveHomework(pendingTasks);
     setState(() {
-      _homeworkFuture = _loadHomework();
+      _homeworkList.removeWhere((task) => task.isCompleted);
     });
+    await _saveHomework(_homeworkList);
   }
 
   Future<void> _schedulePendingNotifications() async {
@@ -527,7 +542,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
       setState(() {
         _subjects = current;
         _subjectIcons.remove(subject);
-        _homeworkFuture = _loadHomework();
+        // _homeworkFuture = _loadHomework(); // No longer needed
+        // If we want to delete tasks associated with this subject, we should do it here?
+        // Original code didn't seem to delete tasks, just the subject from the list.
       });
     }
 
@@ -612,7 +629,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                         );
                         if (mounted) {
                           setState(() {
-                            _homeworkFuture = _loadHomework();
+                            // _homeworkFuture = _loadHomework();
                             _loadSubjects();
                           });
                         }
@@ -649,7 +666,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                             );
                             if (mounted) {
                               setState(() {
-                                _homeworkFuture = _loadHomework();
+                                // _homeworkFuture = _loadHomework();
                                 _loadSubjects();
                               });
                             }
@@ -699,13 +716,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
-        body: FutureBuilder<List<Homework>>(
-          future: _homeworkFuture,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
+        body: Builder(
+          builder: (context) {
+            if (_isLoading) {
               return const Center(child: CircularProgressIndicator());
             }
-            final allHomework = snapshot.data!;
+            final allHomework = _homeworkList;
 
             // Filter according to subjectFilter or important flag
             late final List<Homework> filteredHomework;
