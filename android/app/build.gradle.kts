@@ -53,6 +53,16 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+
+            // Enable code shrinking and resource shrinking for release builds
+            // so that R8 can apply the ProGuard rules in `proguard-rules.pro`.
+            isMinifyEnabled = true
+            isShrinkResources = true
+
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
