@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:open_file/open_file.dart';
 import 'package:homework_app/models/attachment.dart';
 
 class AttachmentPicker extends StatefulWidget {
@@ -156,9 +157,17 @@ class _AttachmentPickerState extends State<AttachmentPicker> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.insert_drive_file, size: 28),
+                  GestureDetector(
+                    onTap: () => OpenFile.open(a.path),
+                    child: const Icon(Icons.insert_drive_file, size: 28),
+                  ),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(a.filename, overflow: TextOverflow.ellipsis)),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => OpenFile.open(a.path),
+                      child: Text(a.filename, overflow: TextOverflow.ellipsis),
+                    ),
+                  ),
                   InkWell(
                     onTap: () => _removeAttachment(a.id),
                     child: const Padding(
