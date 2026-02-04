@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:homework_app/l10n/app_localizations.dart';
 import 'package:homework_app/models/homework.dart';
+import 'package:homework_app/models/attachment.dart';
+import 'package:homework_app/widgets/attachment_picker.dart';
 import 'package:homework_app/icons_helper.dart';
 
 class AddHomeworkScreen extends StatefulWidget {
@@ -25,6 +27,8 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
   bool _enableNotification = true;
   int _notificationOffset = 0;
   bool _isImportant = false;
+
+  List<Attachment> _attachments = [];
 
   List<String> _subjects = [];
   Map<String, int> _subjectIcons = {};
@@ -49,6 +53,8 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       _enableNotification = widget.homework!.enableNotification;
       _notificationOffset = widget.homework!.notificationOffset;
       _isImportant = widget.homework!.isImportant;
+      _attachments = widget.homework!.attachments;
+
     } else {
       _titleController = TextEditingController();
       _subjectController = TextEditingController();
@@ -59,6 +65,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       _enableNotification = true;
       _notificationOffset = 0;
       _isImportant = false;
+      _attachments = []; 
     }
   }
 
@@ -302,6 +309,11 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                       labelText: AppLocalizations.of(context)!.description,
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  AttachmentPicker(
+                    initialAttachments: _attachments,
+                    onChanged: (list) => setState(() => _attachments = list),
+                  ),
                   const SizedBox(height: 20),
                   Row(
                     children: [
@@ -419,6 +431,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                           notificationOffset: _notificationOffset,
                           isImportant: _isImportant,
                           description: _descriptionController.text.trim(),
+                          attachments: _attachments,
                         );
                         Navigator.of(context).pop(homework);
                       } else if (_subjectController.text.isEmpty) {
