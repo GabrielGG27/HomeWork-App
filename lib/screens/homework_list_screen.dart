@@ -6,6 +6,7 @@ import 'package:homework_app/models/homework.dart';
 import 'package:homework_app/services/homework_service.dart';
 import 'package:homework_app/services/notification_service.dart';
 import 'package:homework_app/icons_helper.dart';
+import 'package:homework_app/main.dart';
 import 'add_homework_screen.dart';
 
 class HomeworkListScreen extends StatefulWidget {
@@ -382,8 +383,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                   final newLocale = current.languageCode == 'en'
                       ? const Locale('es')
                       : const Locale('en');
-                  // Import MyApp from main.dart if you need to use setLocale
-                  // For now, we'll handle this in the main app
+                  MyApp.setLocale(context, newLocale);
                 },
               ),
               const SizedBox(height: 16),

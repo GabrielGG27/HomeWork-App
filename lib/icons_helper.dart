@@ -17,6 +17,10 @@ const List<IconData> kAvailableIcons = [
   Icons.work,
   Icons.school,
   Icons.lightbulb,
+  Icons.local_florist,
+  Icons.theater_comedy,
+  Icons.show_chart,
+  Icons.park,
 ];
 
 // Helper to look up icon by code point
