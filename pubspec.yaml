@@ -46,16 +46,18 @@ dependencies:
   file_picker: ^10.3.10
   mime: ^1.0.3
   open_file: ^3.2.1
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.14.4
 
 flutter_launcher_icons:
-  android: "launcher_icon"
+  android: "icon_hw_app"
   ios: true
-  image_path: "assets/icon/icon.png"
+  image_path: "C:/Users/gabot/Documents/Gabriel/CODIGOS/Res hw_app/icons/icon_hw_app.jpg"
+  adaptive_icon_background: "#FFFFFF" 
+  adaptive_icon_foreground: "C:/Users/gabot/Documents/Gabriel/CODIGOS/Res hw_app/icons/background removido pero sin sombrear.png"
 
 
   # The "flutter_lints" package below contains a set of recommended lints to
