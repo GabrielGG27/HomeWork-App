@@ -36,6 +36,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAssignment => 'Delete';
 
   @override
+  String get trash => 'Trash';
+
+  @override
+  String get restore => 'Restore';
+
+  @override
+  String get deleteForever => 'Delete forever';
+
+  @override
+  String get emptyTrash => 'Empty trash';
+
+  @override
+  String get emptyTrashTitle => 'Empty trash?';
+
+  @override
+  String get emptyTrashMessage =>
+      'This will permanently delete all tasks in the trash. This action cannot be undone.';
+
+  @override
   String get cancel => 'Cancel';
 
   @override
@@ -81,7 +100,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearCompletedMessage =>
-      'All assignments marked as completed will be deleted. This action cannot be undone.';
+      'All completed assignments will be moved to the trash. You can restore them from there.';
 
   @override
   String get clearCompletedButton => 'Clear completed assignments';

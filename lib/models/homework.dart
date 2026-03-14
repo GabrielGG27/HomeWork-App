@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:homework_app/models/attachment.dart';
 
 class Homework {
@@ -8,6 +6,7 @@ class Homework {
   String subject;
   DateTime dueDate;
   bool isCompleted;
+  bool isDeleted;
   bool enableNotification;
   int notificationOffset;
   bool isImportant;
@@ -19,6 +18,7 @@ class Homework {
     required this.subject,
     required this.dueDate,
     this.isCompleted = false,
+    this.isDeleted = false,
     this.enableNotification = true,
     this.notificationOffset = 0,
     this.isImportant = false,
@@ -74,6 +74,7 @@ class Homework {
     'subject': subject,
     'dueDate': dueDate.millisecondsSinceEpoch,
     'isCompleted': isCompleted,
+    'isDeleted': isDeleted,
     'enableNotification': enableNotification,
     'notificationOffset': notificationOffset,
     'isImportant': isImportant,
@@ -87,6 +88,7 @@ class Homework {
     subject: json['subject'],
     dueDate: DateTime.fromMillisecondsSinceEpoch(json['dueDate']),
     isCompleted: json['isCompleted'] ?? false,
+    isDeleted: json['isDeleted'] ?? false,
     enableNotification: json['enableNotification'] ?? true,
     notificationOffset: json['notificationOffset'] ?? 0,
     isImportant: json['isImportant'] ?? false,

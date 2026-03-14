@@ -36,6 +36,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String get deleteAssignment => 'Eliminar';
 
   @override
+  String get trash => 'Papelera';
+
+  @override
+  String get restore => 'Restaurar';
+
+  @override
+  String get deleteForever => 'Eliminar permanentemente';
+
+  @override
+  String get emptyTrash => 'Vaciar papelera';
+
+  @override
+  String get emptyTrashTitle => '¿Vaciar la papelera?';
+
+  @override
+  String get emptyTrashMessage =>
+      'Esto eliminará permanentemente todas las tareas en la papelera. Esta acción no se puede deshacer.';
+
+  @override
   String get cancel => 'Cancelar';
 
   @override
@@ -81,7 +100,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get clearCompletedMessage =>
-      'Se eliminarán todas las tareas marcadas como completadas. Esta acción no se puede deshacer.';
+      'Todas las tareas marcadas como completadas se moverán a la papelera. Podrás restaurarlas desde allí.';
 
   @override
   String get clearCompletedButton => 'Borrar tareas completadas';

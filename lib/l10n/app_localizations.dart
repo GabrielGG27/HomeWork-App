@@ -152,6 +152,42 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get deleteAssignment;
 
+  /// No description provided for @trash.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash'**
+  String get trash;
+
+  /// No description provided for @restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restore;
+
+  /// No description provided for @deleteForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete forever'**
+  String get deleteForever;
+
+  /// No description provided for @emptyTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty trash'**
+  String get emptyTrash;
+
+  /// No description provided for @emptyTrashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty trash?'**
+  String get emptyTrashTitle;
+
+  /// No description provided for @emptyTrashMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete all tasks in the trash. This action cannot be undone.'**
+  String get emptyTrashMessage;
+
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
@@ -239,7 +275,7 @@ abstract class AppLocalizations {
   /// No description provided for @clearCompletedMessage.
   ///
   /// In en, this message translates to:
-  /// **'All assignments marked as completed will be deleted. This action cannot be undone.'**
+  /// **'All completed assignments will be moved to the trash. You can restore them from there.'**
   String get clearCompletedMessage;
 
   /// No description provided for @clearCompletedButton.

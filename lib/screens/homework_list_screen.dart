@@ -7,6 +7,7 @@ import 'package:homework_app/services/homework_service.dart';
 import 'package:homework_app/services/notification_service.dart';
 import 'package:homework_app/icons_helper.dart';
 import 'package:homework_app/main.dart';
+import 'package:homework_app/screens/trash_screen.dart';
 import 'add_homework_screen.dart';
 
 class HomeworkListScreen extends StatefulWidget {
@@ -91,9 +92,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
 
   void _deleteHomework(int index) async {
     setState(() {
-      _homeworkList.removeAt(index);
+      _homeworkList[index].isDeleted = true;
     });
     await HomeworkService.saveHomework(_homeworkList);
+    await NotificationService.cancelNotification(_homeworkList[index].id);
   }
 
   void _toggleCompleted(Homework homework) async {
@@ -201,14 +203,19 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
 
   void _clearCompletedTasks() async {
     setState(() {
-      _homeworkList.removeWhere((task) => task.isCompleted);
+      for (final task in _homeworkList) {
+        if (task.isCompleted) {
+          task.isDeleted = true;
+        }
+      }
     });
     await HomeworkService.saveHomework(_homeworkList);
   }
 
   Future<void> _schedulePendingNotifications() async {
     final allTasks = await HomeworkService.loadHomework();
-    await NotificationService.schedulePendingNotifications(allTasks);
+    final pendingTasks = allTasks.where((t) => !t.isDeleted).toList();
+    await NotificationService.schedulePendingNotifications(pendingTasks);
   }
 
   Future<void> _deleteSubject(String subject) async {
@@ -303,6 +310,21 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                             ),
                             (route) => route.isFirst,
                           );
+                        }
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.delete, color: Colors.grey),
+                      title: Text(AppLocalizations.of(context)!.trash),
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const TrashScreen(),
+                          ),
+                        );
+                        if (mounted) {
+                          _loadData();
                         }
                       },
                     ),
@@ -412,7 +434,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             if (_isLoading) {
               return const Center(child: CircularProgressIndicator());
             }
-            final allHomework = _homeworkList;
+            final allHomework = _homeworkList.where((h) => !h.isDeleted).toList();
 
             late final List<Homework> filteredHomework;
             if (widget.showImportant) {
