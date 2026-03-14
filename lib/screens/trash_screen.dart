@@ -131,6 +131,35 @@ class _TrashScreenState extends State<TrashScreen> {
     }
   }
 
+  Future<void> _confirmDeleteForever(Homework task) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.confirmDeleteForeverTitle),
+        content: Text(AppLocalizations.of(context)!
+            .confirmDeleteForeverMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              AppLocalizations.of(context)!.deleteForever,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    await _deleteForever(task);
+  }
+
   Future<void> _deleteForever(Homework task) async {
     final all = await HomeworkService.loadHomework();
     all.removeWhere((t) => t.id == task.id);
@@ -218,13 +247,6 @@ class _TrashScreenState extends State<TrashScreen> {
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.delete, color: Colors.grey),
-                    title: Text(AppLocalizations.of(context)!.trash),
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  ListTile(
                     leading: const Icon(
                       Icons.priority_high,
                       color: Colors.red,
@@ -242,6 +264,13 @@ class _TrashScreenState extends State<TrashScreen> {
                       if (mounted) {
                         _loadSubjects();
                       }
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.delete, color: Colors.grey),
+                    title: Text(AppLocalizations.of(context)!.trash),
+                    onTap: () {
+                      Navigator.pop(context);
                     },
                   ),
                   const Divider(),
@@ -472,7 +501,7 @@ class _TrashScreenState extends State<TrashScreen> {
                               icon: const Icon(Icons.delete_forever,
                                   color: Colors.red),
                               tooltip: AppLocalizations.of(context)!.deleteForever,
-                              onPressed: () => _deleteForever(hw),
+                              onPressed: () => _confirmDeleteForever(hw),
                             ),
                           ],
                         ),

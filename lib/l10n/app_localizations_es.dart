@@ -45,6 +45,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get deleteForever => 'Eliminar permanentemente';
 
   @override
+  String get confirmDeleteForeverTitle => '¿Eliminar permanentemente?';
+
+  @override
+  String get confirmDeleteForeverMessage =>
+      'Esto eliminará permanentemente esta tarea. Esta acción no se puede deshacer.';
+
+  @override
   String get emptyTrash => 'Vaciar papelera';
 
   @override

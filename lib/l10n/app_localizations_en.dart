@@ -45,6 +45,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteForever => 'Delete forever';
 
   @override
+  String get confirmDeleteForeverTitle => 'Delete permanently?';
+
+  @override
+  String get confirmDeleteForeverMessage =>
+      'This will permanently delete this task. This action cannot be undone.';
+
+  @override
   String get emptyTrash => 'Empty trash';
 
   @override

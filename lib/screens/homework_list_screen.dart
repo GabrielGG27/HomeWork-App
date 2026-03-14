@@ -314,21 +314,6 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                       },
                     ),
                     ListTile(
-                      leading: const Icon(Icons.delete, color: Colors.grey),
-                      title: Text(AppLocalizations.of(context)!.trash),
-                      onTap: () async {
-                        Navigator.pop(context);
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const TrashScreen(),
-                          ),
-                        );
-                        if (mounted) {
-                          _loadData();
-                        }
-                      },
-                    ),
-                    ListTile(
                       leading: const Icon(
                         Icons.priority_high,
                         color: Colors.red,
@@ -347,6 +332,21 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                           setState(() {
                             _loadSubjects();
                           });
+                        }
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.delete, color: Colors.grey),
+                      title: Text(AppLocalizations.of(context)!.trash),
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const TrashScreen(),
+                          ),
+                        );
+                        if (mounted) {
+                          _loadData();
                         }
                       },
                     ),

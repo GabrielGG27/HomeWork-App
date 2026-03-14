@@ -170,6 +170,18 @@ abstract class AppLocalizations {
   /// **'Delete forever'**
   String get deleteForever;
 
+  /// No description provided for @confirmDeleteForeverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete permanently?'**
+  String get confirmDeleteForeverTitle;
+
+  /// No description provided for @confirmDeleteForeverMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete this task. This action cannot be undone.'**
+  String get confirmDeleteForeverMessage;
+
   /// No description provided for @emptyTrash.
   ///
   /// In en, this message translates to:

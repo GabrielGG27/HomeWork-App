@@ -11,6 +11,8 @@
   "trash": "Trash",
   "restore": "Restore",
   "deleteForever": "Delete forever",
+  "confirmDeleteForeverTitle": "Delete permanently?",
+  "confirmDeleteForeverMessage": "This will permanently delete this task. This action cannot be undone.",
   "emptyTrash": "Empty trash",
   "emptyTrashTitle": "Empty trash?",
   "emptyTrashMessage": "This will permanently delete all tasks in the trash. This action cannot be undone.",
