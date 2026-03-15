@@ -16,6 +16,7 @@
   "emptyTrash": "Vaciar papelera",
   "emptyTrashTitle": "¿Vaciar la papelera?",
   "emptyTrashMessage": "Esto eliminará permanentemente todas las tareas en la papelera. Esta acción no se puede deshacer.",
+  "autoDeleteMessage": "Las tareas en la papelera se eliminarán permanentemente después de 30 días.",
   "cancel": "Cancelar",
   "save": "Guardar",
   "update": "Actualizar",

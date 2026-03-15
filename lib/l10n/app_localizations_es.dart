@@ -62,6 +62,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esto eliminará permanentemente todas las tareas en la papelera. Esta acción no se puede deshacer.';
 
   @override
+  String get autoDeleteMessage =>
+      'Las tareas en la papelera se eliminarán permanentemente después de 30 días.';
+
+  @override
   String get cancel => 'Cancelar';
 
   @override

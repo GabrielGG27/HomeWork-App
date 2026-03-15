@@ -7,6 +7,7 @@ class Homework {
   DateTime dueDate;
   bool isCompleted;
   bool isDeleted;
+  DateTime? deletedAt;
   bool enableNotification;
   int notificationOffset;
   bool isImportant;
@@ -19,6 +20,7 @@ class Homework {
     required this.dueDate,
     this.isCompleted = false,
     this.isDeleted = false,
+    this.deletedAt,
     this.enableNotification = true,
     this.notificationOffset = 0,
     this.isImportant = false,
@@ -75,6 +77,7 @@ class Homework {
     'dueDate': dueDate.millisecondsSinceEpoch,
     'isCompleted': isCompleted,
     'isDeleted': isDeleted,
+    'deletedAt': deletedAt?.millisecondsSinceEpoch,
     'enableNotification': enableNotification,
     'notificationOffset': notificationOffset,
     'isImportant': isImportant,
@@ -89,6 +92,9 @@ class Homework {
     dueDate: DateTime.fromMillisecondsSinceEpoch(json['dueDate']),
     isCompleted: json['isCompleted'] ?? false,
     isDeleted: json['isDeleted'] ?? false,
+    deletedAt: json['deletedAt'] != null
+        ? DateTime.fromMillisecondsSinceEpoch(json['deletedAt'])
+        : null,
     enableNotification: json['enableNotification'] ?? true,
     notificationOffset: json['notificationOffset'] ?? 0,
     isImportant: json['isImportant'] ?? false,

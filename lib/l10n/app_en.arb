@@ -16,6 +16,7 @@
   "emptyTrash": "Empty trash",
   "emptyTrashTitle": "Empty trash?",
   "emptyTrashMessage": "This will permanently delete all tasks in the trash. This action cannot be undone.",
+  "autoDeleteMessage": "Tasks in trash will be permanently deleted after 30 days.",
   "cancel": "Cancel",
   "save": "Save",
   "update": "Update",

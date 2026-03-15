@@ -62,6 +62,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'This will permanently delete all tasks in the trash. This action cannot be undone.';
 
   @override
+  String get autoDeleteMessage =>
+      'Tasks in trash will be permanently deleted after 30 days.';
+
+  @override
   String get cancel => 'Cancel';
 
   @override

@@ -29,6 +29,16 @@ class HomeworkService {
       await prefs.setStringList('homework', fixedData);
     }
 
+    // Auto-delete expired deleted tasks (older than 30 days)
+    final now = DateTime.now();
+    final thirtyDaysAgo = now.subtract(const Duration(days: 30));
+    final expiredTasks = loaded.where((h) => h.isDeleted && h.deletedAt != null && h.deletedAt!.isBefore(thirtyDaysAgo)).toList();
+    if (expiredTasks.isNotEmpty) {
+      loaded.removeWhere((h) => expiredTasks.contains(h));
+      final updatedData = loaded.map((h) => jsonEncode(h.toJson())).toList();
+      await prefs.setStringList('homework', updatedData);
+    }
+
     return loaded;
   }
 

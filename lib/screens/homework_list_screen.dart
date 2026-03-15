@@ -93,6 +93,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   void _deleteHomework(int index) async {
     setState(() {
       _homeworkList[index].isDeleted = true;
+      _homeworkList[index].deletedAt = DateTime.now();
     });
     await HomeworkService.saveHomework(_homeworkList);
     await NotificationService.cancelNotification(_homeworkList[index].id);
@@ -202,10 +203,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   }
 
   void _clearCompletedTasks() async {
+    final now = DateTime.now();
     setState(() {
       for (final task in _homeworkList) {
         if (task.isCompleted) {
           task.isDeleted = true;
+          task.deletedAt = now;
         }
       }
     });

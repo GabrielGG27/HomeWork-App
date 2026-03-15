@@ -346,171 +346,189 @@ class _TrashScreenState extends State<TrashScreen> {
           }
 
           final grouped = _groupHomeworkByDate(_deletedTasks);
-          return ListView.builder(
-            itemCount: grouped.keys.length,
-            itemBuilder: (context, sectionIndex) {
-              final sectionTitle = grouped.keys.elementAt(sectionIndex);
-              final sectionTasks = grouped.values.elementAt(sectionIndex);
+          return Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  itemCount: grouped.keys.length,
+                  itemBuilder: (context, sectionIndex) {
+                    final sectionTitle = grouped.keys.elementAt(sectionIndex);
+                    final sectionTasks = grouped.values.elementAt(sectionIndex);
 
-              Color textColor;
-              IconData icon;
-              double fontSize;
-              String displayTitle;
+                    Color textColor;
+                    IconData icon;
+                    double fontSize;
+                    String displayTitle;
 
-              switch (sectionTitle) {
-                case 'overdue':
-                  displayTitle = AppLocalizations.of(context)!.sectionOverdue;
-                  textColor = Colors.red[800]!;
-                  icon = Icons.hourglass_empty;
-                  fontSize = 23;
-                  break;
-                case 'today':
-                  displayTitle = AppLocalizations.of(context)!.sectionToday;
-                  textColor = Colors.red;
-                  icon = Icons.warning;
-                  fontSize = 23;
-                  break;
-                case 'tomorrow':
-                  displayTitle = AppLocalizations.of(context)!.sectionTomorrow;
-                  textColor = Colors.orange;
-                  icon = Icons.calendar_today;
-                  fontSize = 23;
-                  break;
-                case 'week':
-                  displayTitle = AppLocalizations.of(context)!.sectionThisWeek;
-                  textColor = const Color.fromARGB(250, 245, 225, 10);
-                  icon = Icons.calendar_view_week;
-                  fontSize = 23;
-                  break;
-                case 'upcoming':
-                  displayTitle = AppLocalizations.of(context)!.sectionUpcoming;
-                  textColor = const Color(0xFF00bb2d);
-                  icon = Icons.date_range;
-                  fontSize = 23;
-                  break;
-                default:
-                  displayTitle = sectionTitle;
-                  textColor = Colors.blueGrey;
-                  icon = Icons.label;
-                  fontSize = 16;
-              }
+                    switch (sectionTitle) {
+                      case 'overdue':
+                        displayTitle = AppLocalizations.of(context)!.sectionOverdue;
+                        textColor = Colors.red[800]!;
+                        icon = Icons.hourglass_empty;
+                        fontSize = 23;
+                        break;
+                      case 'today':
+                        displayTitle = AppLocalizations.of(context)!.sectionToday;
+                        textColor = Colors.red;
+                        icon = Icons.warning;
+                        fontSize = 23;
+                        break;
+                      case 'tomorrow':
+                        displayTitle = AppLocalizations.of(context)!.sectionTomorrow;
+                        textColor = Colors.orange;
+                        icon = Icons.calendar_today;
+                        fontSize = 23;
+                        break;
+                      case 'week':
+                        displayTitle = AppLocalizations.of(context)!.sectionThisWeek;
+                        textColor = const Color.fromARGB(250, 245, 225, 10);
+                        icon = Icons.calendar_view_week;
+                        fontSize = 23;
+                        break;
+                      case 'upcoming':
+                        displayTitle = AppLocalizations.of(context)!.sectionUpcoming;
+                        textColor = const Color(0xFF00bb2d);
+                        icon = Icons.date_range;
+                        fontSize = 23;
+                        break;
+                      default:
+                        displayTitle = sectionTitle;
+                        textColor = Colors.blueGrey;
+                        icon = Icons.label;
+                        fontSize = 16;
+                    }
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    child: Row(
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(icon, size: 20, color: textColor),
-                        const SizedBox(width: 8),
-                        Text(
-                          displayTitle,
-                          style: TextStyle(
-                            fontSize: fontSize,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ...sectionTasks.map((hw) {
-                    final formattedDate = DateFormat(
-                      'MMM dd, yyyy - hh:mm a',
-                    ).format(hw.dueDate);
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 4,
-                      ),
-                      child: ListTile(
-                        title: Row(
-                          children: [
-                            if (hw.isImportant)
-                              const Padding(
-                                padding: EdgeInsets.only(right: 8.0),
-                                child: Text(
-                                  '!!!',
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
+                          child: Row(
+                            children: [
+                              Icon(icon, size: 20, color: textColor),
+                              const SizedBox(width: 8),
+                              Text(
+                                displayTitle,
+                                style: TextStyle(
+                                  fontSize: fontSize,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
                                 ),
                               ),
-                            Expanded(
-                              child: Text(hw.title),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text.rich(
-                              TextSpan(
+                        ...sectionTasks.map((hw) {
+                          final formattedDate = DateFormat(
+                            'MMM dd, yyyy - hh:mm a',
+                          ).format(hw.dueDate);
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
+                            child: ListTile(
+                              title: Row(
                                 children: [
-                                  TextSpan(
-                                    text: '${hw.subject} ',
-                                    style: const TextStyle(color: Colors.black54),
+                                  if (hw.isImportant)
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 8.0),
+                                      child: Text(
+                                        '!!!',
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  Expanded(
+                                    child: Text(hw.title),
                                   ),
-                                  WidgetSpan(
-                                    alignment: PlaceholderAlignment.middle,
-                                    child: Icon(
-                                      _subjectIcons.containsKey(hw.subject)
-                                          ? getIconFromCodePoint(
-                                              _subjectIcons[hw.subject]!,
-                                            )
-                                          : Icons.book,
-                                      size: 16,
-                                      color: Colors.grey,
+                                ],
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: '${hw.subject} ',
+                                          style: const TextStyle(color: Colors.black54),
+                                        ),
+                                        WidgetSpan(
+                                          alignment: PlaceholderAlignment.middle,
+                                          child: Icon(
+                                            _subjectIcons.containsKey(hw.subject)
+                                                ? getIconFromCodePoint(
+                                                    _subjectIcons[hw.subject]!,
+                                                  )
+                                                : Icons.book,
+                                            size: 16,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: ' • $formattedDate',
+                                          style: const TextStyle(color: Colors.black54),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  TextSpan(
-                                    text: ' • $formattedDate',
-                                    style: const TextStyle(color: Colors.black54),
+                                  if (hw.description.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4.0),
+                                      child: Text(
+                                        hw.description,
+                                        style: const TextStyle(
+                                          color: Colors.black54,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.restore, color: Colors.green),
+                                    tooltip: AppLocalizations.of(context)!.restore,
+                                    onPressed: () => _restoreTask(hw),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_forever,
+                                        color: Colors.red),
+                                    tooltip: AppLocalizations.of(context)!.deleteForever,
+                                    onPressed: () => _confirmDeleteForever(hw),
                                   ),
                                 ],
                               ),
                             ),
-                            if (hw.description.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4.0),
-                                child: Text(
-                                  hw.description,
-                                  style: const TextStyle(
-                                    color: Colors.black54,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.restore, color: Colors.green),
-                              tooltip: AppLocalizations.of(context)!.restore,
-                              onPressed: () => _restoreTask(hw),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_forever,
-                                  color: Colors.red),
-                              tooltip: AppLocalizations.of(context)!.deleteForever,
-                              onPressed: () => _confirmDeleteForever(hw),
-                            ),
-                          ],
-                        ),
-                      ),
+                          );
+                        }).toList(),
+                      ],
                     );
-                  }).toList(),
-                ],
-              );
-            },
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(18.0),
+                child: Text(
+                  AppLocalizations.of(context)!.autoDeleteMessage,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color.fromARGB(255, 112, 112, 112),
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
           );
         },
       ),

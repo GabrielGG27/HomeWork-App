@@ -200,6 +200,12 @@ abstract class AppLocalizations {
   /// **'This will permanently delete all tasks in the trash. This action cannot be undone.'**
   String get emptyTrashMessage;
 
+  /// No description provided for @autoDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks in trash will be permanently deleted after 30 days.'**
+  String get autoDeleteMessage;
+
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
