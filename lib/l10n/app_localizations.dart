@@ -409,6 +409,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'1 day before'**
   String get dayBefore;
+
+  /// No description provided for @darkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Mode'**
+  String get darkMode;
 }
 
 class _AppLocalizationsDelegate

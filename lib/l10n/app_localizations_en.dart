@@ -173,4 +173,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dayBefore => '1 day before';
+
+  @override
+  String get darkMode => 'Dark Mode';
 }

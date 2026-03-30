@@ -37,15 +37,22 @@ class MyApp extends StatefulWidget {
     _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
     state?.setLocale(newLocale);
   }
+
+  static void setThemeMode(BuildContext context, ThemeMode newThemeMode) {
+    _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
+    state?.setThemeMode(newThemeMode);
+  }
 }
 
 class _MyAppState extends State<MyApp> {
   Locale? _locale;
+  ThemeMode _themeMode = ThemeMode.system;
 
   @override
   void initState() {
     super.initState();
     _loadLocale();
+    _loadThemeMode();
   }
 
   Future<void> _loadLocale() async {
@@ -66,6 +73,33 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  Future<void> _loadThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final themeString = prefs.getString('themeMode');
+    if (themeString != null) {
+      setState(() {
+        if (themeString == 'dark') {
+          _themeMode = ThemeMode.dark;
+        } else if (themeString == 'light') {
+          _themeMode = ThemeMode.light;
+        } else {
+          _themeMode = ThemeMode.system;
+        }
+      });
+    }
+  }
+
+  void setThemeMode(ThemeMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    String themeString = 'system';
+    if (mode == ThemeMode.dark) themeString = 'dark';
+    if (mode == ThemeMode.light) themeString = 'light';
+    await prefs.setString('themeMode', themeString);
+    setState(() {
+      _themeMode = mode;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -74,6 +108,14 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.dark,
+        ),
+      ),
+      themeMode: _themeMode,
       locale: _locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,

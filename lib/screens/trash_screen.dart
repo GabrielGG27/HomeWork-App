@@ -458,7 +458,7 @@ class _TrashScreenState extends State<TrashScreen> {
                                       children: [
                                         TextSpan(
                                           text: '${hw.subject} ',
-                                          style: const TextStyle(color: Colors.black54),
+                                          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                                         ),
                                         WidgetSpan(
                                           alignment: PlaceholderAlignment.middle,
@@ -469,12 +469,12 @@ class _TrashScreenState extends State<TrashScreen> {
                                                   )
                                                 : Icons.book,
                                             size: 16,
-                                            color: Colors.grey,
+                                            color: Theme.of(context).colorScheme.outline,
                                           ),
                                         ),
                                         TextSpan(
                                           text: ' • $formattedDate',
-                                          style: const TextStyle(color: Colors.black54),
+                                          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                                         ),
                                       ],
                                     ),
@@ -484,8 +484,8 @@ class _TrashScreenState extends State<TrashScreen> {
                                       padding: const EdgeInsets.only(top: 4.0),
                                       child: Text(
                                         hw.description,
-                                        style: const TextStyle(
-                                          color: Colors.black54,
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                                           fontSize: 13,
                                         ),
                                       ),
@@ -520,9 +520,9 @@ class _TrashScreenState extends State<TrashScreen> {
                 padding: const EdgeInsets.all(18.0),
                 child: Text(
                   AppLocalizations.of(context)!.autoDeleteMessage,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
-                    color: Color.fromARGB(255, 112, 112, 112),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontStyle: FontStyle.italic,
                   ),
                   textAlign: TextAlign.center,

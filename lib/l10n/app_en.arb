@@ -1,4 +1,5 @@
 {
+  "@@locale": "en",
   "appTitle": "HomeWork App",
   "pending": "Pending",
   "completed": "Completed",
@@ -71,5 +72,6 @@
       }
     }
   },
-  "dayBefore": "1 day before"
+  "dayBefore": "1 day before",
+  "darkMode": "Dark Mode"
 }

@@ -411,6 +411,17 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                   MyApp.setLocale(context, newLocale);
                 },
               ),
+              SwitchListTile(
+                secondary: const Icon(Icons.dark_mode, color: Colors.blue),
+                title: Text(AppLocalizations.of(context)!.darkMode),
+                value: Theme.of(context).brightness == Brightness.dark,
+                onChanged: (bool value) {
+                  MyApp.setThemeMode(
+                    context,
+                    value ? ThemeMode.dark : ThemeMode.light,
+                  );
+                },
+              ),
               const SizedBox(height: 16),
             ],
           ),
@@ -616,7 +627,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                             children: [
                               TextSpan(
                                 text: '${hw.subject} ',
-                                style: const TextStyle(color: Colors.black54),
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                               ),
                               WidgetSpan(
                                 alignment: PlaceholderAlignment.middle,
@@ -627,12 +638,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                                         )
                                       : Icons.book,
                                   size: 16,
-                                  color: Colors.grey,
+                                  color: Theme.of(context).colorScheme.outline,
                                 ),
                               ),
                               TextSpan(
                                 text: ' • $formattedDate',
-                                style: const TextStyle(color: Colors.black54),
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                               ),
                             ],
                           ),
@@ -642,8 +653,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                             padding: const EdgeInsets.only(top: 4.0),
                             child: Text(
                               hw.description,
-                              style: const TextStyle(
-                                color: Colors.black54,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 fontSize: 13,
                               ),
                             ),
@@ -733,7 +744,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                   children: [
                     TextSpan(
                       text: '${hw.subject} ',
-                      style: const TextStyle(color: Colors.black54),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                     WidgetSpan(
                       alignment: PlaceholderAlignment.middle,
@@ -742,12 +753,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                             ? getIconFromCodePoint(_subjectIcons[hw.subject]!)
                             : Icons.book,
                         size: 16,
-                        color: Colors.grey,
+                        color: Theme.of(context).colorScheme.outline,
                       ),
                     ),
                     TextSpan(
                       text: ' • $formattedDate',
-                      style: const TextStyle(color: Colors.black54),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
