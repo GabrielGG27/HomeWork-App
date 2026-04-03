@@ -47,6 +47,7 @@ dependencies:
   mime: ^1.0.3
   open_file: ^3.2.1
   flutter_launcher_icons: ^0.14.4
+  in_app_review: ^2.0.11
 
 dev_dependencies:
   flutter_test:

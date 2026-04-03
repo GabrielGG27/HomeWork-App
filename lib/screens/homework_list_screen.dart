@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:homework_app/l10n/app_localizations.dart';
@@ -8,6 +9,7 @@ import 'package:homework_app/services/notification_service.dart';
 import 'package:homework_app/icons_helper.dart';
 import 'package:homework_app/main.dart';
 import 'package:homework_app/screens/trash_screen.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'add_homework_screen.dart';
 
 class HomeworkListScreen extends StatefulWidget {
@@ -79,6 +81,22 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     await HomeworkService.saveHomework(_homeworkList);
     await NotificationService.scheduleNotification(homework);
     _loadSubjects();
+    _checkAndRequestReview();
+  }
+
+  Future<void> _checkAndRequestReview() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Increment the number of times a homework has been added.
+    int homeworkAddedCount = (prefs.getInt('homeworkAddedCount') ?? 0) + 1;
+    await prefs.setInt('homeworkAddedCount', homeworkAddedCount);
+
+    // If exactly 5 tasks have been added, trigger the review prompt.
+    if (homeworkAddedCount == 5) {
+      final InAppReview inAppReview = InAppReview.instance;
+      if (await inAppReview.isAvailable()) {
+        inAppReview.requestReview();
+      }
+    }
   }
 
   void _updateHomework(int index, Homework updatedHomework) async {
@@ -420,6 +438,17 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                     context,
                     value ? ThemeMode.dark : ThemeMode.light,
                   );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.star, color: Colors.amber),
+                title: Text(AppLocalizations.of(context)!.rateApp),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final InAppReview inAppReview = InAppReview.instance;
+                  if (await inAppReview.isAvailable()) {
+                    inAppReview.requestReview();
+                  }
                 },
               ),
               const SizedBox(height: 16),

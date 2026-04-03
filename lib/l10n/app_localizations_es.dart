@@ -176,4 +176,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get darkMode => 'Modo oscuro';
+
+  @override
+  String get rateApp => 'Calificar aplicación';
 }

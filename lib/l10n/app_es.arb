@@ -52,5 +52,6 @@
   "hourBefore": "1 hora antes",
   "hoursBefore": "{hours} horas antes",
   "dayBefore": "1 día antes",
-  "darkMode": "Modo oscuro"
+  "darkMode": "Modo oscuro",
+  "rateApp": "Calificar aplicación"
 }

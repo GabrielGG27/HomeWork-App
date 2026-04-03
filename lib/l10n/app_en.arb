@@ -73,5 +73,6 @@
     }
   },
   "dayBefore": "1 day before",
-  "darkMode": "Dark Mode"
+  "darkMode": "Dark Mode",
+  "rateApp": "Rate App"
 }
