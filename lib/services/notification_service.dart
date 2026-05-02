@@ -73,6 +73,7 @@ class NotificationService {
             priority: Priority.max,
             playSound: true,
             color: Colors.blue,
+            largeIcon: DrawableResourceAndroidBitmap('large_icon'),
           ),
         ),
         androidAllowWhileIdle: true,
