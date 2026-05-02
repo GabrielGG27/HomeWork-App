@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/material.dart';
 import 'package:homework_app/models/homework.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 
 const String notificationChannelId = 'homework_channel_id_max_priority';
 late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
@@ -58,11 +60,18 @@ class NotificationService {
 
     final notificationId = homework.id.hashCode & 0x7FFFFFFF;
 
+    final prefs = await SharedPreferences.getInstance();
+    final langCode = prefs.getString('languageCode') ?? Platform.localeName.split('_')[0];
+    final isEs = langCode == 'es';
+
+    final upcomingStr = isEs ? 'Próxima tarea: ${homework.title}' : 'Upcoming assignment: ${homework.title}';
+    final dueStr = isEs ? 'Entrega ${DateFormat('MMM dd, hh:mm a').format(homework.dueDate)}' : 'Due ${DateFormat('MMM dd, hh:mm a').format(homework.dueDate)}';
+
     try {
       await flutterLocalNotificationsPlugin.zonedSchedule(
         notificationId,
-        'Upcoming assignment: ${homework.title}',
-        'Due ${DateFormat('MMM dd, hh:mm a').format(homework.dueDate)}',
+        upcomingStr,
+        dueStr,
         tz.TZDateTime.from(scheduledDate, tz.local),
         NotificationDetails(
           android: AndroidNotificationDetails(
@@ -77,8 +86,8 @@ class NotificationService {
             styleInformation: BigTextStyleInformation(
               homework.description.isNotEmpty
                   ? homework.description
-                  : 'Due ${DateFormat('MMM dd, hh:mm a').format(homework.dueDate)}',
-              contentTitle: 'Upcoming assignment: ${homework.title}',
+                  : dueStr,
+              contentTitle: upcomingStr,
             ),
           ),
         ),
