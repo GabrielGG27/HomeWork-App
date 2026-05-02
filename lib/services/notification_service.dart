@@ -4,7 +4,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/material.dart';
 import 'package:homework_app/models/homework.dart';
 
-const String notificationChannelId = 'homework_channel_id';
+const String notificationChannelId = 'homework_channel_id_max_priority';
 late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
 class NotificationService {
@@ -14,9 +14,8 @@ class NotificationService {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('icon_app');
 
-    final InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
+    final InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
 
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
@@ -24,7 +23,7 @@ class NotificationService {
       notificationChannelId,
       'Homework Notifications',
       description: 'Notifications for upcoming homework assignments',
-      importance: Importance.high,
+      importance: Importance.max,
       playSound: true,
     );
 
@@ -71,7 +70,7 @@ class NotificationService {
             'Homework Notifications',
             channelDescription: 'Notifications for upcoming homework tasks',
             importance: Importance.max,
-            priority: Priority.high,
+            priority: Priority.max,
             playSound: true,
             color: Colors.blue,
           ),
@@ -88,7 +87,9 @@ class NotificationService {
     }
   }
 
-  static Future<void> schedulePendingNotifications(List<Homework> allTasks) async {
+  static Future<void> schedulePendingNotifications(
+    List<Homework> allTasks,
+  ) async {
     final pendingTasks = allTasks.where((task) => !task.isCompleted).toList();
     for (final task in pendingTasks) {
       await scheduleNotification(task);
