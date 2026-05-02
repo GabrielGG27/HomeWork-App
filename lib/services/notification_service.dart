@@ -64,7 +64,7 @@ class NotificationService {
         'Upcoming assignment: ${homework.title}',
         'Due ${DateFormat('MMM dd, hh:mm a').format(homework.dueDate)}',
         tz.TZDateTime.from(scheduledDate, tz.local),
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             notificationChannelId,
             'Homework Notifications',
@@ -73,7 +73,13 @@ class NotificationService {
             priority: Priority.max,
             playSound: true,
             color: Colors.blue,
-            largeIcon: DrawableResourceAndroidBitmap('large_icon'),
+            largeIcon: const DrawableResourceAndroidBitmap('large_icon'),
+            styleInformation: BigTextStyleInformation(
+              homework.description.isNotEmpty
+                  ? homework.description
+                  : 'Due ${DateFormat('MMM dd, hh:mm a').format(homework.dueDate)}',
+              contentTitle: 'Upcoming assignment: ${homework.title}',
+            ),
           ),
         ),
         androidAllowWhileIdle: true,
