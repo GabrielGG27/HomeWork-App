@@ -1,6 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter/material.dart';
 import 'package:homework_app/models/homework.dart';
 
 const String notificationChannelId = 'homework_channel_id';
@@ -72,6 +73,7 @@ class NotificationService {
             importance: Importance.max,
             priority: Priority.high,
             playSound: true,
+            color: Colors.blue,
           ),
         ),
         androidAllowWhileIdle: true,
