@@ -82,7 +82,6 @@ class NotificationService {
             priority: Priority.max,
             playSound: true,
             color: Colors.blue,
-            largeIcon: const DrawableResourceAndroidBitmap('large_icon'),
             styleInformation: BigTextStyleInformation(
               homework.description.isNotEmpty
                   ? homework.description
