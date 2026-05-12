@@ -72,7 +72,14 @@ class NotificationService {
         notificationId,
         upcomingStr,
         dueStr,
-        tz.TZDateTime.from(scheduledDate, tz.local),
+        tz.TZDateTime.local(
+          scheduledDate.year,
+          scheduledDate.month,
+          scheduledDate.day,
+          scheduledDate.hour,
+          scheduledDate.minute,
+          scheduledDate.second,
+        ),
         NotificationDetails(
           android: AndroidNotificationDetails(
             notificationChannelId,
