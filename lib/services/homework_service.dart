@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:homework_app/models/homework.dart';
 
@@ -20,7 +21,7 @@ class HomeworkService {
         }
         loaded.add(Homework.fromJson(json));
       } catch (e) {
-        print('Error loading homework item: $e');
+        debugPrint('Error loading homework item: $e');
       }
     }
 

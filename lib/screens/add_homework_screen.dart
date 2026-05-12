@@ -143,7 +143,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                             child: Container(
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? Colors.blue.withOpacity(0.2)
+                                    ? Colors.blue.withValues(alpha: 0.2)
                                     : null,
                                 shape: BoxShape.circle,
                                 border: isSelected
@@ -264,7 +264,8 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: _subjects.contains(_selectedSubject)
+                    key: ValueKey(_selectedSubject),
+                    initialValue: _subjects.contains(_selectedSubject)
                         ? _selectedSubject
                         : null,
                     decoration: InputDecoration(
@@ -349,7 +350,8 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                   ),
                   if (_enableNotification)
                     DropdownButtonFormField<int>(
-                      value: _notificationOffset,
+                      key: ValueKey(_notificationOffset),
+                      initialValue: _notificationOffset,
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(
                           context,

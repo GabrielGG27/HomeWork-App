@@ -90,15 +90,15 @@ class NotificationService {
             ),
           ),
         ),
-        androidAllowWhileIdle: true,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
       );
-      print(
+      debugPrint(
         "Notification scheduled for: $scheduledDate (Due: ${homework.dueDate})",
       );
     } catch (e) {
-      print("Error scheduling notification: $e");
+      debugPrint("Error scheduling notification: $e");
     }
   }
 

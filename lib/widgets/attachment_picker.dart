@@ -11,10 +11,10 @@ class AttachmentPicker extends StatefulWidget {
   final ValueChanged<List<Attachment>> onChanged;
 
   const AttachmentPicker({
-    Key? key,
+    super.key,
     this.initialAttachments = const [],
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<AttachmentPicker> createState() => _AttachmentPickerState();

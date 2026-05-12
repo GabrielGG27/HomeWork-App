@@ -270,15 +270,14 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
         _subjects.remove(subject);
         _subjectIcons.remove(subject);
       });
-    }
+      Navigator.pop(context);
 
-    Navigator.pop(context);
-
-    if (widget.subjectFilter == subject) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (ctx) => const HomeworkListScreen()),
-        (route) => route.isFirst,
-      );
+      if (widget.subjectFilter == subject) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (ctx) => const HomeworkListScreen()),
+          (route) => route.isFirst,
+        );
+      }
     }
   }
 
@@ -696,7 +695,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                     ),
                   ),
                 );
-              }).toList(),
+              }),
             ],
           );
         },
