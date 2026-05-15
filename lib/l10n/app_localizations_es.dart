@@ -132,10 +132,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sectionTomorrow => 'Mañana';
 
   @override
-  String get sectionThisWeek => 'Esta Semana';
+  String get sectionNext7Days => 'Próximos 7 días';
 
   @override
-  String get sectionUpcoming => 'Próximas';
+  String get sectionLater => 'Más adelante';
 
   @override
   String get createNewSubject => 'Crear nueva materia...';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:homework_app/utils/date_formatter.dart';
 import 'package:homework_app/l10n/app_localizations.dart';
 import 'package:homework_app/models/homework.dart';
 import 'package:homework_app/services/homework_service.dart';
@@ -136,8 +136,9 @@ class _TrashScreenState extends State<TrashScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.confirmDeleteForeverTitle),
-        content: Text(AppLocalizations.of(context)!
-            .confirmDeleteForeverMessage),
+        content: Text(
+          AppLocalizations.of(context)!.confirmDeleteForeverMessage,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -227,10 +228,7 @@ class _TrashScreenState extends State<TrashScreen> {
                     decoration: const BoxDecoration(color: Colors.blue),
                     child: Text(
                       AppLocalizations.of(context)!.subjects,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 24),
                     ),
                   ),
                   ListTile(
@@ -247,10 +245,7 @@ class _TrashScreenState extends State<TrashScreen> {
                     },
                   ),
                   ListTile(
-                    leading: const Icon(
-                      Icons.priority_high,
-                      color: Colors.red,
-                    ),
+                    leading: const Icon(Icons.priority_high, color: Colors.red),
                     title: Text(AppLocalizations.of(context)!.important),
                     onTap: () async {
                       Navigator.pop(context);
@@ -362,31 +357,41 @@ class _TrashScreenState extends State<TrashScreen> {
 
                     switch (sectionTitle) {
                       case 'overdue':
-                        displayTitle = AppLocalizations.of(context)!.sectionOverdue;
+                        displayTitle = AppLocalizations.of(
+                          context,
+                        )!.sectionOverdue;
                         textColor = Colors.red[800]!;
                         icon = Icons.hourglass_empty;
                         fontSize = 23;
                         break;
                       case 'today':
-                        displayTitle = AppLocalizations.of(context)!.sectionToday;
+                        displayTitle = AppLocalizations.of(
+                          context,
+                        )!.sectionToday;
                         textColor = Colors.red;
                         icon = Icons.warning;
                         fontSize = 23;
                         break;
                       case 'tomorrow':
-                        displayTitle = AppLocalizations.of(context)!.sectionTomorrow;
+                        displayTitle = AppLocalizations.of(
+                          context,
+                        )!.sectionTomorrow;
                         textColor = Colors.orange;
                         icon = Icons.calendar_today;
                         fontSize = 23;
                         break;
                       case 'week':
-                        displayTitle = AppLocalizations.of(context)!.sectionThisWeek;
+                        displayTitle = AppLocalizations.of(
+                          context,
+                        )!.sectionNext7Days;
                         textColor = const Color.fromARGB(250, 245, 225, 10);
                         icon = Icons.calendar_view_week;
                         fontSize = 23;
                         break;
                       case 'upcoming':
-                        displayTitle = AppLocalizations.of(context)!.sectionUpcoming;
+                        displayTitle = AppLocalizations.of(
+                          context,
+                        )!.sectionLater;
                         textColor = const Color(0xFF00bb2d);
                         icon = Icons.date_range;
                         fontSize = 23;
@@ -422,9 +427,11 @@ class _TrashScreenState extends State<TrashScreen> {
                           ),
                         ),
                         ...sectionTasks.map((hw) {
-                          final formattedDate = DateFormat(
-                            'MMM dd, yyyy - hh:mm a',
-                          ).format(hw.dueDate);
+                          final formattedDate =
+                              SmartDateFormatter.formatForCard(
+                                hw.dueDate,
+                                sectionTitle,
+                              );
                           return Card(
                             margin: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -445,9 +452,7 @@ class _TrashScreenState extends State<TrashScreen> {
                                         ),
                                       ),
                                     ),
-                                  Expanded(
-                                    child: Text(hw.title),
-                                  ),
+                                  Expanded(child: Text(hw.title)),
                                 ],
                               ),
                               subtitle: Column(
@@ -458,23 +463,36 @@ class _TrashScreenState extends State<TrashScreen> {
                                       children: [
                                         TextSpan(
                                           text: '${hw.subject} ',
-                                          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                          style: TextStyle(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
+                                          ),
                                         ),
                                         WidgetSpan(
-                                          alignment: PlaceholderAlignment.middle,
+                                          alignment:
+                                              PlaceholderAlignment.middle,
                                           child: Icon(
-                                            _subjectIcons.containsKey(hw.subject)
+                                            _subjectIcons.containsKey(
+                                                  hw.subject,
+                                                )
                                                 ? getIconFromCodePoint(
                                                     _subjectIcons[hw.subject]!,
                                                   )
                                                 : Icons.book,
                                             size: 16,
-                                            color: Theme.of(context).colorScheme.outline,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.outline,
                                           ),
                                         ),
                                         TextSpan(
                                           text: ' • $formattedDate',
-                                          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                          style: TextStyle(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -485,7 +503,9 @@ class _TrashScreenState extends State<TrashScreen> {
                                       child: Text(
                                         hw.description,
                                         style: TextStyle(
-                                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
                                           fontSize: 13,
                                         ),
                                       ),
@@ -496,14 +516,23 @@ class _TrashScreenState extends State<TrashScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.restore, color: Colors.green),
-                                    tooltip: AppLocalizations.of(context)!.restore,
+                                    icon: const Icon(
+                                      Icons.restore,
+                                      color: Colors.green,
+                                    ),
+                                    tooltip: AppLocalizations.of(
+                                      context,
+                                    )!.restore,
                                     onPressed: () => _restoreTask(hw),
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.delete_forever,
-                                        color: Colors.red),
-                                    tooltip: AppLocalizations.of(context)!.deleteForever,
+                                    icon: const Icon(
+                                      Icons.delete_forever,
+                                      color: Colors.red,
+                                    ),
+                                    tooltip: AppLocalizations.of(
+                                      context,
+                                    )!.deleteForever,
                                     onPressed: () => _confirmDeleteForever(hw),
                                   ),
                                 ],
@@ -521,7 +550,7 @@ class _TrashScreenState extends State<TrashScreen> {
                 child: Text(
                   AppLocalizations.of(context)!.autoDeleteMessage,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 13,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontStyle: FontStyle.italic,
                   ),

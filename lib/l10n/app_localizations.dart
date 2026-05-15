@@ -317,7 +317,7 @@ abstract class AppLocalizations {
   /// No description provided for @sectionOverdue.
   ///
   /// In en, this message translates to:
-  /// **'Overdue Assignments'**
+  /// **'Overdue'**
   String get sectionOverdue;
 
   /// No description provided for @sectionToday.
@@ -332,17 +332,17 @@ abstract class AppLocalizations {
   /// **'Tomorrow'**
   String get sectionTomorrow;
 
-  /// No description provided for @sectionThisWeek.
+  /// No description provided for @sectionNext7Days.
   ///
   /// In en, this message translates to:
-  /// **'This Week'**
-  String get sectionThisWeek;
+  /// **'Next 7 Days'**
+  String get sectionNext7Days;
 
-  /// No description provided for @sectionUpcoming.
+  /// No description provided for @sectionLater.
   ///
   /// In en, this message translates to:
-  /// **'Upcoming'**
-  String get sectionUpcoming;
+  /// **'Later'**
+  String get sectionLater;
 
   /// No description provided for @createNewSubject.
   ///

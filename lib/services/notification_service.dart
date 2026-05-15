@@ -1,5 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:intl/intl.dart';
+import 'package:homework_app/utils/date_formatter.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/material.dart';
 import 'package:homework_app/models/homework.dart';
@@ -65,7 +65,8 @@ class NotificationService {
     final isEs = langCode == 'es';
 
     final upcomingStr = isEs ? 'Próxima tarea: ${homework.title}' : 'Upcoming assignment: ${homework.title}';
-    final dueStr = isEs ? 'Entrega ${DateFormat('MMM dd, hh:mm a').format(homework.dueDate)}' : 'Due ${DateFormat('MMM dd, hh:mm a').format(homework.dueDate)}';
+    final smartDate = SmartDateFormatter.formatForNotification(homework.dueDate, isSpanish: isEs);
+    final dueStr = isEs ? 'Entrega $smartDate' : 'Due $smartDate';
 
     try {
       await flutterLocalNotificationsPlugin.zonedSchedule(

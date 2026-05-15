@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:homework_app/utils/date_formatter.dart';
 import 'package:homework_app/l10n/app_localizations.dart';
 import 'package:homework_app/models/homework.dart';
 import 'package:homework_app/services/homework_service.dart';
@@ -565,13 +565,13 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               fontSize = 23;
               break;
             case 'week':
-              displayTitle = AppLocalizations.of(context)!.sectionThisWeek;
+              displayTitle = AppLocalizations.of(context)!.sectionNext7Days;
               textColor = const Color.fromARGB(250, 245, 225, 10);
               icon = Icons.calendar_view_week;
               fontSize = 23;
               break;
             case 'upcoming':
-              displayTitle = AppLocalizations.of(context)!.sectionUpcoming;
+              displayTitle = AppLocalizations.of(context)!.sectionLater;
               textColor = const Color(0xFF00bb2d);
               icon = Icons.date_range;
               fontSize = 23;
@@ -607,9 +607,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                 ),
               ),
               ...sectionTasks.map((hw) {
-                final formattedDate = DateFormat(
-                  'MMM dd, yyyy - hh:mm a',
-                ).format(hw.dueDate);
+                final formattedDate = SmartDateFormatter.formatForCard(hw.dueDate, sectionTitle);
                 return Card(
                   margin: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -732,9 +730,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
           }
 
           final hw = filteredList[index];
-          final formattedDate = DateFormat(
-            'MMM dd, yyyy – hh:mm a',
-          ).format(hw.dueDate);
+          final formattedDate = SmartDateFormatter.formatForCompletedCard(hw.dueDate);
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: ListTile(

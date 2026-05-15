@@ -123,7 +123,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noCompletedAssignments => 'No completed assignments';
 
   @override
-  String get sectionOverdue => 'Overdue Assignments';
+  String get sectionOverdue => 'Overdue';
 
   @override
   String get sectionToday => 'Today';
@@ -132,10 +132,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionTomorrow => 'Tomorrow';
 
   @override
-  String get sectionThisWeek => 'This Week';
+  String get sectionNext7Days => 'Next 7 Days';
 
   @override
-  String get sectionUpcoming => 'Upcoming';
+  String get sectionLater => 'Later';
 
   @override
   String get createNewSubject => 'Create new subject...';
