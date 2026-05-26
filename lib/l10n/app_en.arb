@@ -74,5 +74,7 @@
   },
   "dayBefore": "1 day before",
   "darkMode": "Dark Mode",
-  "rateApp": "Rate App"
+  "rateApp": "Rate App",
+  "hasDueDate": "Due Date",
+  "sectionNoDate": "No Date"
 }

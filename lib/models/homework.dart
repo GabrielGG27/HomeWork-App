@@ -5,6 +5,7 @@ class Homework {
   String title;
   String subject;
   DateTime dueDate;
+  bool hasDueDate;
   bool isCompleted;
   bool isDeleted;
   DateTime? deletedAt;
@@ -18,6 +19,7 @@ class Homework {
     required this.title,
     required this.subject,
     required this.dueDate,
+    this.hasDueDate = true,
     this.isCompleted = false,
     this.isDeleted = false,
     this.deletedAt,
@@ -75,6 +77,7 @@ class Homework {
     'title': title,
     'subject': subject,
     'dueDate': dueDate.millisecondsSinceEpoch,
+    'hasDueDate': hasDueDate,
     'isCompleted': isCompleted,
     'isDeleted': isDeleted,
     'deletedAt': deletedAt?.millisecondsSinceEpoch,
@@ -90,6 +93,7 @@ class Homework {
     title: json['title'],
     subject: json['subject'],
     dueDate: DateTime.fromMillisecondsSinceEpoch(json['dueDate']),
+    hasDueDate: json['hasDueDate'] ?? true,
     isCompleted: json['isCompleted'] ?? false,
     isDeleted: json['isDeleted'] ?? false,
     deletedAt: json['deletedAt'] != null

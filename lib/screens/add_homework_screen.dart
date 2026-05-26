@@ -27,6 +27,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
   bool _enableNotification = true;
   int _notificationOffset = 0;
   bool _isImportant = false;
+  bool _hasDueDate = true;
 
   List<Attachment> _attachments = [];
 
@@ -53,6 +54,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       _enableNotification = widget.homework!.enableNotification;
       _notificationOffset = widget.homework!.notificationOffset;
       _isImportant = widget.homework!.isImportant;
+      _hasDueDate = widget.homework!.hasDueDate;
       _attachments = widget.homework!.attachments;
 
     } else {
@@ -65,6 +67,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       _enableNotification = true;
       _notificationOffset = 0;
       _isImportant = false;
+      _hasDueDate = true;
       _attachments = []; 
     }
   }
@@ -316,92 +319,103 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                     onChanged: (list) => setState(() => _attachments = list),
                   ),
                   const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ListTile(
-                          title: Text(AppLocalizations.of(context)!.dueDate),
-                          subtitle: Text(
-                            DateFormat('MMM dd, yyyy').format(_selectedDate),
-                          ),
-                          onTap: () => _selectDate(context),
-                        ),
-                      ),
-                      Expanded(
-                        child: ListTile(
-                          title: Text(AppLocalizations.of(context)!.dueTime),
-                          subtitle: Text(_selectedTime.format(context)),
-                          onTap: () => _selectTime(context),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
                   SwitchListTile(
-                    title: Text(
-                      AppLocalizations.of(context)!.receiveNotification,
-                    ),
-                    value: _enableNotification,
+                    title: Text(AppLocalizations.of(context)!.hasDueDate),
+                    value: _hasDueDate,
                     onChanged: (value) {
                       setState(() {
-                        _enableNotification = value;
+                        _hasDueDate = value;
                       });
                     },
                   ),
-                  if (_enableNotification)
-                    DropdownButtonFormField<int>(
-                      key: ValueKey(_notificationOffset),
-                      initialValue: _notificationOffset,
-                      decoration: InputDecoration(
-                        labelText: AppLocalizations.of(
-                          context,
-                        )!.notificationOffset,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                      ),
-                      items: [
-                        DropdownMenuItem(
-                          value: 0,
-                          child: Text(AppLocalizations.of(context)!.atDueTime),
-                        ),
-                        DropdownMenuItem(
-                          value: 10,
-                          child: Text(
-                            AppLocalizations.of(context)!.minutesBefore(10),
+                  if (_hasDueDate) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ListTile(
+                            title: Text(AppLocalizations.of(context)!.dueDate),
+                            subtitle: Text(
+                              DateFormat('MMM dd, yyyy').format(_selectedDate),
+                            ),
+                            onTap: () => _selectDate(context),
                           ),
                         ),
-                        DropdownMenuItem(
-                          value: 30,
-                          child: Text(
-                            AppLocalizations.of(context)!.minutesBefore(30),
+                        Expanded(
+                          child: ListTile(
+                            title: Text(AppLocalizations.of(context)!.dueTime),
+                            subtitle: Text(_selectedTime.format(context)),
+                            onTap: () => _selectTime(context),
                           ),
-                        ),
-                        DropdownMenuItem(
-                          value: 60,
-                          child: Text(AppLocalizations.of(context)!.hourBefore),
-                        ),
-                        DropdownMenuItem(
-                          value: 120,
-                          child: Text(
-                            AppLocalizations.of(context)!.hoursBefore(2),
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: 1440,
-                          child: Text(AppLocalizations.of(context)!.dayBefore),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 20),
+                    SwitchListTile(
+                      title: Text(
+                        AppLocalizations.of(context)!.receiveNotification,
+                      ),
+                      value: _enableNotification,
                       onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _notificationOffset = value;
-                          });
-                        }
+                        setState(() {
+                          _enableNotification = value;
+                        });
                       },
                     ),
-                  const SizedBox(height: 20),
+                    if (_enableNotification)
+                      DropdownButtonFormField<int>(
+                        key: ValueKey(_notificationOffset),
+                        initialValue: _notificationOffset,
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(
+                            context,
+                          )!.notificationOffset,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: 0,
+                            child: Text(AppLocalizations.of(context)!.atDueTime),
+                          ),
+                          DropdownMenuItem(
+                            value: 10,
+                            child: Text(
+                              AppLocalizations.of(context)!.minutesBefore(10),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 30,
+                            child: Text(
+                              AppLocalizations.of(context)!.minutesBefore(30),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 60,
+                            child: Text(AppLocalizations.of(context)!.hourBefore),
+                          ),
+                          DropdownMenuItem(
+                            value: 120,
+                            child: Text(
+                              AppLocalizations.of(context)!.hoursBefore(2),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 1440,
+                            child: Text(AppLocalizations.of(context)!.dayBefore),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _notificationOffset = value;
+                            });
+                          }
+                        },
+                      ),
+                    const SizedBox(height: 20),
+                  ],
                   SwitchListTile(
                     title: Text(AppLocalizations.of(context)!.markAsImportant),
                     value: _isImportant,
@@ -428,8 +442,9 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                           title: _titleController.text,
                           subject: _subjectController.text,
                           dueDate: due,
+                          hasDueDate: _hasDueDate,
                           isCompleted: widget.homework?.isCompleted ?? false,
-                          enableNotification: _enableNotification,
+                          enableNotification: _hasDueDate ? _enableNotification : false,
                           notificationOffset: _notificationOffset,
                           isImportant: _isImportant,
                           description: _descriptionController.text.trim(),

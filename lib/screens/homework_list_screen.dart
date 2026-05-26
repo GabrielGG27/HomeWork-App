@@ -171,10 +171,13 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
       'tomorrow': [],
       'week': [],
       'upcoming': [],
+      'no_date': [],
     };
 
     for (final hw in homeworkList) {
-      if (hw.dueDate.isBefore(now)) {
+      if (!hw.hasDueDate) {
+        groups['no_date']!.add(hw);
+      } else if (hw.dueDate.isBefore(now)) {
         groups['overdue']!.add(hw);
       } else if (hw.dueDate.isAfter(now) && hw.dueDate.isBefore(todayEnd)) {
         groups['today']!.add(hw);
@@ -495,6 +498,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             int importanceCompare(Homework a, Homework b) {
               if (a.isImportant && !b.isImportant) return -1;
               if (!a.isImportant && b.isImportant) return 1;
+              if (a.hasDueDate && !b.hasDueDate) return -1;
+              if (!a.hasDueDate && b.hasDueDate) return 1;
               return a.dueDate.compareTo(b.dueDate);
             }
 
@@ -574,6 +579,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               displayTitle = AppLocalizations.of(context)!.sectionLater;
               textColor = const Color(0xFF00bb2d);
               icon = Icons.date_range;
+              fontSize = 23;
+              break;
+            case 'no_date':
+              displayTitle = AppLocalizations.of(context)!.sectionNoDate;
+              textColor = Colors.grey;
+              icon = Icons.event_busy;
               fontSize = 23;
               break;
             default:
@@ -667,10 +678,11 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
                               ),
-                              TextSpan(
-                                text: ' • $formattedDate',
-                                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                              ),
+                              if (hw.hasDueDate)
+                                TextSpan(
+                                  text: ' • $formattedDate',
+                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                ),
                             ],
                           ),
                         ),
@@ -780,10 +792,11 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                         color: Theme.of(context).colorScheme.outline,
                       ),
                     ),
-                    TextSpan(
-                      text: ' • $formattedDate',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                    ),
+                    if (hw.hasDueDate)
+                      TextSpan(
+                        text: ' • $formattedDate',
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
                   ],
                 ),
               ),

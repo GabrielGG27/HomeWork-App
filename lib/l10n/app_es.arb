@@ -53,5 +53,7 @@
   "hoursBefore": "{hours} horas antes",
   "dayBefore": "1 día antes",
   "darkMode": "Modo oscuro",
-  "rateApp": "Calificar aplicación"
+  "rateApp": "Calificar aplicación",
+  "hasDueDate": "Fecha de Entrega",
+  "sectionNoDate": "Sin Fecha"
 }

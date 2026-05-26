@@ -64,10 +64,13 @@ class _TrashScreenState extends State<TrashScreen> {
       'tomorrow': [],
       'week': [],
       'upcoming': [],
+      'no_date': [],
     };
 
     for (final hw in homeworkList) {
-      if (hw.dueDate.isBefore(now)) {
+      if (!hw.hasDueDate) {
+        groups['no_date']!.add(hw);
+      } else if (hw.dueDate.isBefore(now)) {
         groups['overdue']!.add(hw);
       } else if (hw.dueDate.isAfter(now) && hw.dueDate.isBefore(todayEnd)) {
         groups['today']!.add(hw);
@@ -396,6 +399,12 @@ class _TrashScreenState extends State<TrashScreen> {
                         icon = Icons.date_range;
                         fontSize = 23;
                         break;
+                      case 'no_date':
+                        displayTitle = AppLocalizations.of(context)!.sectionNoDate;
+                        textColor = Colors.grey;
+                        icon = Icons.event_busy;
+                        fontSize = 23;
+                        break;
                       default:
                         displayTitle = sectionTitle;
                         textColor = Colors.blueGrey;
@@ -486,14 +495,15 @@ class _TrashScreenState extends State<TrashScreen> {
                                             ).colorScheme.outline,
                                           ),
                                         ),
-                                        TextSpan(
-                                          text: ' • $formattedDate',
-                                          style: TextStyle(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.onSurfaceVariant,
+                                        if (hw.hasDueDate)
+                                          TextSpan(
+                                            text: ' • $formattedDate',
+                                            style: TextStyle(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                            ),
                                           ),
-                                        ),
                                       ],
                                     ),
                                   ),

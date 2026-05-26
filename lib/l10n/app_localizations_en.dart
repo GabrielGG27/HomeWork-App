@@ -179,4 +179,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rateApp => 'Rate App';
+
+  @override
+  String get hasDueDate => 'Due Date';
+
+  @override
+  String get sectionNoDate => 'No Date';
 }

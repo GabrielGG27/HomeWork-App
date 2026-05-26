@@ -421,6 +421,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rate App'**
   String get rateApp;
+
+  /// No description provided for @hasDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Due Date'**
+  String get hasDueDate;
+
+  /// No description provided for @sectionNoDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No Date'**
+  String get sectionNoDate;
 }
 
 class _AppLocalizationsDelegate
