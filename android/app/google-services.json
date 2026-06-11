@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1033635029840",
+    "project_id": "homework-app-9421c",
+    "storage_bucket": "homework-app-9421c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1033635029840:android:9f7a8287aa1a3a50ca8255",
+        "android_client_info": {
+          "package_name": "com.gabriel.homework_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCosHoZsD5-84zAvJOgIDi0QFvf25igu1I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
