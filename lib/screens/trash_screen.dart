@@ -221,114 +221,116 @@ class _TrashScreenState extends State<TrashScreen> {
         ],
       ),
       drawer: Drawer(
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  DrawerHeader(
-                    decoration: const BoxDecoration(color: Colors.blue),
-                    child: Text(
-                      AppLocalizations.of(context)!.subjects,
-                      style: const TextStyle(color: Colors.white, fontSize: 24),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    DrawerHeader(
+                      decoration: const BoxDecoration(color: Colors.blue),
+                      child: Text(
+                        AppLocalizations.of(context)!.subjects,
+                        style: const TextStyle(color: Colors.white, fontSize: 24),
+                      ),
                     ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.list),
-                    title: Text(AppLocalizations.of(context)!.allAssignments),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(
-                          builder: (ctx) => const HomeworkListScreen(),
-                        ),
-                        (route) => route.isFirst,
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.priority_high, color: Colors.red),
-                    title: Text(AppLocalizations.of(context)!.important),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const HomeworkListScreen(showImportant: true),
-                        ),
-                      );
-                      if (mounted) {
-                        _loadSubjects();
-                      }
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.delete, color: Colors.grey),
-                    title: Text(AppLocalizations.of(context)!.trash),
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  const Divider(),
-                  if (_subjects.isEmpty)
                     ListTile(
-                      title: Text(
-                        AppLocalizations.of(context)!.noSavedSubjects,
-                      ),
-                    )
-                  else
-                    ..._subjects.map(
-                      (subject) => ListTile(
-                        leading: Icon(
-                          _subjectIcons.containsKey(subject)
-                              ? getIconFromCodePoint(_subjectIcons[subject]!)
-                              : Icons.book,
-                        ),
-                        title: Text(subject),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteSubject(subject),
-                        ),
-                        onTap: () async {
-                          Navigator.pop(context);
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  HomeworkListScreen(subjectFilter: subject),
-                            ),
-                          );
-                          if (mounted) {
-                            _loadSubjects();
-                          }
-                        },
-                      ),
+                      leading: const Icon(Icons.list),
+                      title: Text(AppLocalizations.of(context)!.allAssignments),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (ctx) => const HomeworkListScreen(),
+                          ),
+                          (route) => route.isFirst,
+                        );
+                      },
                     ),
-                ],
+                    ListTile(
+                      leading: const Icon(Icons.priority_high, color: Colors.red),
+                      title: Text(AppLocalizations.of(context)!.important),
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const HomeworkListScreen(showImportant: true),
+                          ),
+                        );
+                        if (mounted) {
+                          _loadSubjects();
+                        }
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.delete, color: Colors.grey),
+                      title: Text(AppLocalizations.of(context)!.trash),
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                    const Divider(),
+                    if (_subjects.isEmpty)
+                      ListTile(
+                        title: Text(
+                          AppLocalizations.of(context)!.noSavedSubjects,
+                        ),
+                      )
+                    else
+                      ..._subjects.map(
+                        (subject) => ListTile(
+                          leading: Icon(
+                            _subjectIcons.containsKey(subject)
+                                ? getIconFromCodePoint(_subjectIcons[subject]!)
+                                : Icons.book,
+                          ),
+                          title: Text(subject),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _deleteSubject(subject),
+                          ),
+                          onTap: () async {
+                            Navigator.pop(context);
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    HomeworkListScreen(subjectFilter: subject),
+                              ),
+                            );
+                            if (mounted) {
+                              _loadSubjects();
+                            }
+                          },
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.language, color: Colors.blue),
-              title: Text(AppLocalizations.of(context)!.language),
-              subtitle: Text(
-                Localizations.localeOf(context).languageCode == 'en'
-                    ? 'English'
-                    : 'Español',
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.language, color: Colors.blue),
+                title: Text(AppLocalizations.of(context)!.language),
+                subtitle: Text(
+                  Localizations.localeOf(context).languageCode == 'en'
+                      ? 'English'
+                      : 'Español',
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  final current = Localizations.localeOf(context);
+                  final newLocale = current.languageCode == 'en'
+                      ? const Locale('es')
+                      : const Locale('en');
+                  MyApp.setLocale(context, newLocale);
+                },
               ),
-              onTap: () {
-                Navigator.pop(context);
-                final current = Localizations.localeOf(context);
-                final newLocale = current.languageCode == 'en'
-                    ? const Locale('es')
-                    : const Locale('en');
-                MyApp.setLocale(context, newLocale);
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
       body: Builder(
