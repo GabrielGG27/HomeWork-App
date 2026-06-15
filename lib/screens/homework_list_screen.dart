@@ -10,6 +10,8 @@ import 'package:homework_app/icons_helper.dart';
 import 'package:homework_app/main.dart';
 import 'package:homework_app/screens/trash_screen.dart';
 import 'package:in_app_review/in_app_review.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'dart:io' show Platform;
 import 'add_homework_screen.dart';
 
 class HomeworkListScreen extends StatefulWidget {
@@ -32,6 +34,11 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   Timer? _timer;
   List<String> _subjects = [];
   Map<String, int> _subjectIcons = {};
+  InterstitialAd? _interstitialAd;
+
+  final String _adUnitId = Platform.isAndroid
+      ? 'ca-app-pub-3940256099942544/1033173712'
+      : 'ca-app-pub-3940256099942544/4411468910';
 
   @override
   void initState() {
@@ -39,6 +46,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     _loadData();
     NotificationService.requestNotificationsPermission();
     _schedulePendingNotifications();
+    _loadInterstitialAd();
 
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       if (mounted) {
@@ -62,7 +70,49 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _interstitialAd?.dispose();
     super.dispose();
+  }
+
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: _adUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          debugPrint('Ad was loaded.');
+          _interstitialAd = ad;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          debugPrint('Ad failed to load with error: $error');
+          _interstitialAd = null;
+        },
+      ),
+    );
+  }
+
+  void _showInterstitialAd() {
+    if (_interstitialAd == null) {
+      debugPrint('Warning: attempt to show interstitial before loaded.');
+      return;
+    }
+    _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdShowedFullScreenContent: (ad) =>
+          debugPrint('Ad showed full screen content.'),
+      onAdDismissedFullScreenContent: (ad) {
+        debugPrint('Ad was dismissed.');
+        ad.dispose();
+        _loadInterstitialAd();
+      },
+      onAdFailedToShowFullScreenContent: (ad, error) {
+        debugPrint('Ad failed to show full screen content with error: $error');
+        ad.dispose();
+        _loadInterstitialAd();
+      },
+    );
+    _interstitialAd!.setImmersiveMode(true);
+    _interstitialAd!.show();
+    _interstitialAd = null;
   }
 
   Future<void> _loadSubjects() async {
@@ -81,22 +131,29 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     await HomeworkService.saveHomework(_homeworkList);
     await NotificationService.scheduleNotification(homework);
     _loadSubjects();
-    _checkAndRequestReview();
+    int count = await _checkAndRequestReview();
+    
+    // Mostrar anuncio cada 7 tareas
+    if (count % 7 == 0) {
+      _showInterstitialAd();
+    }
   }
 
-  Future<void> _checkAndRequestReview() async {
+  Future<int> _checkAndRequestReview() async {
     final prefs = await SharedPreferences.getInstance();
     // Increment the number of times a homework has been added.
     int homeworkAddedCount = (prefs.getInt('homeworkAddedCount') ?? 0) + 1;
     await prefs.setInt('homeworkAddedCount', homeworkAddedCount);
 
-    // If exactly 5 tasks have been added, trigger the review prompt.
-    if (homeworkAddedCount == 5) {
+    // If exactly 10 tasks have been added, trigger the review prompt.
+    if (homeworkAddedCount == 10) {
       final InAppReview inAppReview = InAppReview.instance;
       if (await inAppReview.isAvailable()) {
         inAppReview.requestReview();
       }
     }
+    
+    return homeworkAddedCount;
   }
 
   void _updateHomework(int index, Homework updatedHomework) async {
@@ -294,7 +351,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             widget.showImportant
                 ? AppLocalizations.of(context)!.important
                 : (widget.subjectFilter ??
-                    AppLocalizations.of(context)!.appTitle),
+                      AppLocalizations.of(context)!.appTitle),
           ),
           bottom: TabBar(
             tabs: [
@@ -323,14 +380,17 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                       ),
                       ListTile(
                         leading: const Icon(Icons.list),
-                        title: Text(AppLocalizations.of(context)!.allAssignments),
+                        title: Text(
+                          AppLocalizations.of(context)!.allAssignments,
+                        ),
                         onTap: () {
                           Navigator.pop(context);
                           if (widget.subjectFilter != null ||
                               widget.showImportant) {
                             Navigator.of(context).pushAndRemoveUntil(
                               MaterialPageRoute(
-                                builder: (context) => const HomeworkListScreen(),
+                                builder: (context) =>
+                                    const HomeworkListScreen(),
                               ),
                               (route) => route.isFirst,
                             );
@@ -386,7 +446,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                           (subject) => ListTile(
                             leading: Icon(
                               _subjectIcons.containsKey(subject)
-                                  ? getIconFromCodePoint(_subjectIcons[subject]!)
+                                  ? getIconFromCodePoint(
+                                      _subjectIcons[subject]!,
+                                    )
                                   : Icons.book,
                             ),
                             title: Text(subject),
@@ -399,8 +461,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                               await Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      HomeworkListScreen(subjectFilter: subject),
+                                  builder: (context) => HomeworkListScreen(
+                                    subjectFilter: subject,
+                                  ),
                                 ),
                               );
                               if (mounted) {
@@ -481,11 +544,15 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             if (_isLoading) {
               return const Center(child: CircularProgressIndicator());
             }
-            final allHomework = _homeworkList.where((h) => !h.isDeleted).toList();
+            final allHomework = _homeworkList
+                .where((h) => !h.isDeleted)
+                .toList();
 
             late final List<Homework> filteredHomework;
             if (widget.showImportant) {
-              filteredHomework = allHomework.where((h) => h.isImportant).toList();
+              filteredHomework = allHomework
+                  .where((h) => h.isImportant)
+                  .toList();
             } else if (widget.subjectFilter != null) {
               filteredHomework = allHomework
                   .where((h) => h.subject == widget.subjectFilter)
@@ -494,8 +561,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               filteredHomework = allHomework;
             }
 
-            final pending = filteredHomework.where((h) => !h.isCompleted).toList();
-            final completed = filteredHomework.where((h) => h.isCompleted).toList();
+            final pending = filteredHomework
+                .where((h) => !h.isCompleted)
+                .toList();
+            final completed = filteredHomework
+                .where((h) => h.isCompleted)
+                .toList();
 
             int importanceCompare(Homework a, Homework b) {
               if (a.isImportant && !b.isImportant) return -1;
@@ -620,7 +691,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                 ),
               ),
               ...sectionTasks.map((hw) {
-                final formattedDate = SmartDateFormatter.formatForCard(hw.dueDate, sectionTitle);
+                final formattedDate = SmartDateFormatter.formatForCard(
+                  hw.dueDate,
+                  sectionTitle,
+                );
                 return Card(
                   margin: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -666,7 +740,11 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                             children: [
                               TextSpan(
                                 text: '${hw.subject} ',
-                                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
                               ),
                               WidgetSpan(
                                 alignment: PlaceholderAlignment.middle,
@@ -683,7 +761,11 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                               if (hw.hasDueDate)
                                 TextSpan(
                                   text: ' • $formattedDate',
-                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                             ],
                           ),
@@ -694,7 +776,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                             child: Text(
                               hw.description,
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                                 fontSize: 13,
                               ),
                             ),
@@ -744,7 +828,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
           }
 
           final hw = filteredList[index];
-          final formattedDate = SmartDateFormatter.formatForCompletedCard(hw.dueDate);
+          final formattedDate = SmartDateFormatter.formatForCompletedCard(
+            hw.dueDate,
+          );
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: ListTile(
@@ -782,7 +868,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                   children: [
                     TextSpan(
                       text: '${hw.subject} ',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     WidgetSpan(
                       alignment: PlaceholderAlignment.middle,
@@ -797,7 +885,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                     if (hw.hasDueDate)
                       TextSpan(
                         text: ' • $formattedDate',
-                        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                   ],
                 ),
