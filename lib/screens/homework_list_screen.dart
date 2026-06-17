@@ -35,10 +35,16 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   List<String> _subjects = [];
   Map<String, int> _subjectIcons = {};
   InterstitialAd? _interstitialAd;
+  BannerAd? _bannerAd;
+  bool _isBannerAdLoaded = false;
 
   final String _adUnitId = Platform.isAndroid
       ? 'ca-app-pub-3940256099942544/1033173712'
       : 'ca-app-pub-3940256099942544/4411468910';
+
+  final String _bannerAdUnitId = Platform.isAndroid
+      ? 'ca-app-pub-3940256099942544/6300978111'
+      : 'ca-app-pub-3940256099942544/2934735716';
 
   @override
   void initState() {
@@ -47,6 +53,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     NotificationService.requestNotificationsPermission();
     _schedulePendingNotifications();
     _loadInterstitialAd();
+    _loadBannerAd();
 
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       if (mounted) {
@@ -71,7 +78,29 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   void dispose() {
     _timer?.cancel();
     _interstitialAd?.dispose();
+    _bannerAd?.dispose();
     super.dispose();
+  }
+
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: _bannerAdUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) {
+            setState(() {
+              _isBannerAdLoaded = true;
+            });
+          }
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+          debugPrint('BannerAd failed to load: $error');
+        },
+      ),
+    )..load();
   }
 
   void _loadInterstitialAd() {
@@ -539,6 +568,15 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
+        bottomNavigationBar: _isBannerAdLoaded && _bannerAd != null
+            ? SafeArea(
+                child: SizedBox(
+                  width: _bannerAd!.size.width.toDouble(),
+                  height: _bannerAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _bannerAd!),
+                ),
+              )
+            : null,
         body: Builder(
           builder: (context) {
             if (_isLoading) {
