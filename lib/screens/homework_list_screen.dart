@@ -13,6 +13,7 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:io' show Platform;
 import 'add_homework_screen.dart';
+import 'package:homework_app/widgets/native_ad_card.dart';
 
 class HomeworkListScreen extends StatefulWidget {
   final String? subjectFilter;
@@ -728,7 +729,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                   ],
                 ),
               ),
-              ...sectionTasks.map((hw) {
+              ...List.generate(sectionTasks.length + (sectionTasks.length ~/ 4), (index) {
+                if (index > 0 && (index + 1) % 5 == 0) {
+                  return const NativeAdCard();
+                }
+                final taskIndex = index - (index ~/ 5);
+                final hw = sectionTasks[taskIndex];
                 final formattedDate = SmartDateFormatter.formatForCard(
                   hw.dueDate,
                   sectionTitle,
@@ -839,10 +845,13 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
         return Center(child: Text('No completed assignments'));
       }
 
+      final adsCount = filteredList.length ~/ 4;
+      final totalItems = filteredList.length + adsCount + 1;
+
       return ListView.builder(
-        itemCount: filteredList.length + 1,
+        itemCount: totalItems,
         itemBuilder: (context, index) {
-          if (index == filteredList.length) {
+          if (index == totalItems - 1) {
             return Padding(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton.icon(
@@ -865,7 +874,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             );
           }
 
-          final hw = filteredList[index];
+          if (index > 0 && (index + 1) % 5 == 0) {
+            return const NativeAdCard(marginVertical: 8.0);
+          }
+
+          final taskIndex = index - (index ~/ 5);
+          final hw = filteredList[taskIndex];
           final formattedDate = SmartDateFormatter.formatForCompletedCard(
             hw.dueDate,
           );
