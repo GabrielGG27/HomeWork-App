@@ -14,6 +14,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:io' show Platform;
 import 'add_homework_screen.dart';
 import 'package:homework_app/widgets/native_ad_card.dart';
+import 'package:provider/provider.dart';
+import 'package:homework_app/services/purchases_service.dart';
 
 class HomeworkListScreen extends StatefulWidget {
   final String? subjectFilter;
@@ -155,6 +157,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   }
 
   void _addHomework(Homework homework) async {
+    // Leer el servicio ANTES de cualquier await para evitar usar BuildContext
+    // a través de gaps asíncronos.
+    final purchasesService = Provider.of<PurchasesService>(context, listen: false);
+
     setState(() {
       _homeworkList.add(homework);
     });
@@ -163,8 +169,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     _loadSubjects();
     int count = await _checkAndRequestReview();
     
-    // Mostrar anuncio cada 7 tareas
-    if (count % 7 == 0) {
+    // Mostrar anuncio cada 7 tareas, solo si no es premium
+    if (!purchasesService.isPremium && count % 7 == 0) {
       _showInterstitialAd();
     }
   }
@@ -373,6 +379,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final purchasesService = context.watch<PurchasesService>();
+    final isPremium = purchasesService.isPremium;
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -547,6 +556,50 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                     }
                   },
                 ),
+                const Divider(),
+                if (isPremium)
+                  const ListTile(
+                    leading: Icon(Icons.workspace_premium, color: Colors.amber),
+                    title: Text('Premium Activo ✅'),
+                    subtitle: Text('Anuncios eliminados'),
+                  )
+                else if (purchasesService.isPurchasePending)
+                  const ListTile(
+                    leading: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    title: Text('Procesando compra...'),
+                  )
+                else ...[
+                  ListTile(
+                    leading: const Icon(Icons.block, color: Colors.red),
+                    title: const Text('Quitar Anuncios'),
+                    subtitle: Text(
+                      !purchasesService.isAvailable
+                          ? 'Tienda no disponible'
+                          : purchasesService.products.isEmpty
+                              ? 'Producto no encontrado en la tienda'
+                              : 'Eliminar anuncios permanentemente',
+                    ),
+                    onTap: (purchasesService.isAvailable &&
+                            purchasesService.products.isNotEmpty)
+                        ? () {
+                            Navigator.pop(context);
+                            purchasesService.buyRemoveAds();
+                          }
+                        : null,
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.restore, color: Colors.blue),
+                    title: const Text('Restaurar Compras'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      purchasesService.restorePurchases();
+                    },
+                  ),
+                ],
                 const SizedBox(height: 16),
               ],
             ),
@@ -569,7 +622,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
-        bottomNavigationBar: _isBannerAdLoaded && _bannerAd != null
+        bottomNavigationBar: (!isPremium && _isBannerAdLoaded && _bannerAd != null)
             ? SafeArea(
                 child: SizedBox(
                   width: _bannerAd!.size.width.toDouble(),
@@ -622,8 +675,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               padding: const EdgeInsets.only(bottom: 80.0),
               child: TabBarView(
                 children: [
-                  _buildHomeworkList(context, pending, allHomework, true),
-                  _buildHomeworkList(context, completed, allHomework, false),
+                  _buildHomeworkList(context, pending, allHomework, true, isPremium),
+                  _buildHomeworkList(context, completed, allHomework, false, isPremium),
                 ],
               ),
             );
@@ -638,6 +691,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     List<Homework> filteredList,
     List<Homework> fullList,
     bool isPendingTab,
+    bool isPremium,
   ) {
     if (filteredList.isEmpty) {
       return Center(
@@ -729,11 +783,15 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                   ],
                 ),
               ),
-              ...List.generate(sectionTasks.length + (sectionTasks.length ~/ 4), (index) {
-                if (index > 0 && (index + 1) % 5 == 0) {
+              ...List.generate(
+                isPremium 
+                  ? sectionTasks.length 
+                  : sectionTasks.length + (sectionTasks.length ~/ 4), 
+                (index) {
+                if (!isPremium && index > 0 && (index + 1) % 5 == 0) {
                   return const NativeAdCard();
                 }
-                final taskIndex = index - (index ~/ 5);
+                final taskIndex = isPremium ? index : index - (index ~/ 5);
                 final hw = sectionTasks[taskIndex];
                 final formattedDate = SmartDateFormatter.formatForCard(
                   hw.dueDate,
