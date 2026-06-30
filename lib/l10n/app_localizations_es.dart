@@ -185,4 +185,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sectionNoDate => 'Sin Fecha';
+
+  @override
+  String get settings => 'Configuración';
+
+  @override
+  String get settingsDescription =>
+      'Idioma, tema y preferencias de la aplicación';
+
+  @override
+  String get restorePurchases => 'Restaurar compras';
 }

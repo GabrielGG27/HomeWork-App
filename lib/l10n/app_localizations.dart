@@ -433,6 +433,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No Date'**
   String get sectionNoDate;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @settingsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Language, theme, and application preferences'**
+  String get settingsDescription;
+
+  /// No description provided for @restorePurchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Purchases'**
+  String get restorePurchases;
 }
 
 class _AppLocalizationsDelegate

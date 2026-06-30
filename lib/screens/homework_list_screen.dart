@@ -7,12 +7,12 @@ import 'package:homework_app/models/homework.dart';
 import 'package:homework_app/services/homework_service.dart';
 import 'package:homework_app/services/notification_service.dart';
 import 'package:homework_app/icons_helper.dart';
-import 'package:homework_app/main.dart';
 import 'package:homework_app/screens/trash_screen.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:io' show Platform;
 import 'add_homework_screen.dart';
+import 'settings_screen.dart';
 import 'package:homework_app/widgets/native_ad_card.dart';
 import 'package:provider/provider.dart';
 import 'package:homework_app/services/purchases_service.dart';
@@ -517,89 +517,49 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                   ),
                 ),
                 const Divider(),
+                if (!isPremium) ...[
+                  if (purchasesService.isPurchasePending)
+                    const ListTile(
+                      leading: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      title: Text('Procesando compra...'),
+                    )
+                  else
+                    ListTile(
+                      leading: const Icon(Icons.block, color: Colors.red),
+                      title: const Text('Quitar Anuncios'),
+                      subtitle: Text(
+                        !purchasesService.isAvailable
+                            ? 'Tienda no disponible'
+                            : purchasesService.products.isEmpty
+                                ? 'Producto no encontrado en la tienda'
+                                : 'Eliminar anuncios permanentemente',
+                      ),
+                      onTap: (purchasesService.isAvailable &&
+                              purchasesService.products.isNotEmpty)
+                          ? () {
+                              Navigator.pop(context);
+                              purchasesService.buyRemoveAds();
+                            }
+                          : null,
+                    ),
+                ],
                 ListTile(
-                  leading: const Icon(Icons.language, color: Colors.blue),
-                  title: Text(AppLocalizations.of(context)!.language),
-                  subtitle: Text(
-                    Localizations.localeOf(context).languageCode == 'en'
-                        ? 'English'
-                        : 'Español',
-                  ),
+                  leading: const Icon(Icons.settings, color: Colors.blue),
+                  title: Text(AppLocalizations.of(context)!.settings),
                   onTap: () {
                     Navigator.pop(context);
-                    final current = Localizations.localeOf(context);
-                    final newLocale = current.languageCode == 'en'
-                        ? const Locale('es')
-                        : const Locale('en');
-                    MyApp.setLocale(context, newLocale);
-                  },
-                ),
-                SwitchListTile(
-                  secondary: const Icon(Icons.dark_mode, color: Colors.blue),
-                  title: Text(AppLocalizations.of(context)!.darkMode),
-                  value: Theme.of(context).brightness == Brightness.dark,
-                  onChanged: (bool value) {
-                    MyApp.setThemeMode(
+                    Navigator.push(
                       context,
-                      value ? ThemeMode.dark : ThemeMode.light,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsScreen(),
+                      ),
                     );
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.star, color: Colors.amber),
-                  title: Text(AppLocalizations.of(context)!.rateApp),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    final InAppReview inAppReview = InAppReview.instance;
-                    if (await inAppReview.isAvailable()) {
-                      inAppReview.requestReview();
-                    }
-                  },
-                ),
-                const Divider(),
-                if (isPremium)
-                  const ListTile(
-                    leading: Icon(Icons.workspace_premium, color: Colors.amber),
-                    title: Text('Premium Activo ✅'),
-                    subtitle: Text('Anuncios eliminados'),
-                  )
-                else if (purchasesService.isPurchasePending)
-                  const ListTile(
-                    leading: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    title: Text('Procesando compra...'),
-                  )
-                else ...[
-                  ListTile(
-                    leading: const Icon(Icons.block, color: Colors.red),
-                    title: const Text('Quitar Anuncios'),
-                    subtitle: Text(
-                      !purchasesService.isAvailable
-                          ? 'Tienda no disponible'
-                          : purchasesService.products.isEmpty
-                              ? 'Producto no encontrado en la tienda'
-                              : 'Eliminar anuncios permanentemente',
-                    ),
-                    onTap: (purchasesService.isAvailable &&
-                            purchasesService.products.isNotEmpty)
-                        ? () {
-                            Navigator.pop(context);
-                            purchasesService.buyRemoveAds();
-                          }
-                        : null,
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.restore, color: Colors.blue),
-                    title: const Text('Restaurar Compras'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      purchasesService.restorePurchases();
-                    },
-                  ),
-                ],
                 const SizedBox(height: 16),
               ],
             ),

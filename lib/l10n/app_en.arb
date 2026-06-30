@@ -76,5 +76,8 @@
   "darkMode": "Dark Mode",
   "rateApp": "Rate App",
   "hasDueDate": "Due Date",
-  "sectionNoDate": "No Date"
+  "sectionNoDate": "No Date",
+  "settings": "Settings",
+  "settingsDescription": "Language, theme, and application preferences",
+  "restorePurchases": "Restore Purchases"
 }

@@ -55,5 +55,8 @@
   "darkMode": "Modo oscuro",
   "rateApp": "Calificar aplicación",
   "hasDueDate": "Fecha de Entrega",
-  "sectionNoDate": "Sin Fecha"
+  "sectionNoDate": "Sin Fecha",
+  "settings": "Configuración",
+  "settingsDescription": "Idioma, tema y preferencias de la aplicación",
+  "restorePurchases": "Restaurar compras"
 }

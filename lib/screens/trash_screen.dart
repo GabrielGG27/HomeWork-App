@@ -5,8 +5,8 @@ import 'package:homework_app/models/homework.dart';
 import 'package:homework_app/services/homework_service.dart';
 import 'package:homework_app/services/notification_service.dart';
 import 'package:homework_app/icons_helper.dart';
-import 'package:homework_app/main.dart';
 import 'package:homework_app/screens/homework_list_screen.dart';
+import 'settings_screen.dart';
 
 class TrashScreen extends StatefulWidget {
   const TrashScreen({super.key});
@@ -312,20 +312,16 @@ class _TrashScreenState extends State<TrashScreen> {
               ),
               const Divider(),
               ListTile(
-                leading: const Icon(Icons.language, color: Colors.blue),
-                title: Text(AppLocalizations.of(context)!.language),
-                subtitle: Text(
-                  Localizations.localeOf(context).languageCode == 'en'
-                      ? 'English'
-                      : 'Español',
-                ),
+                leading: const Icon(Icons.settings, color: Colors.blue),
+                title: Text(AppLocalizations.of(context)!.settings),
                 onTap: () {
                   Navigator.pop(context);
-                  final current = Localizations.localeOf(context);
-                  final newLocale = current.languageCode == 'en'
-                      ? const Locale('es')
-                      : const Locale('en');
-                  MyApp.setLocale(context, newLocale);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
+                  );
                 },
               ),
               const SizedBox(height: 16),
