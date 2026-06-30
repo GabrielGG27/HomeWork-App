@@ -2,15 +2,21 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PurchasesService extends ChangeNotifier {
   static const String _premiumPrefKey = 'is_premium';
 
-  // ⚠️ El único ID real que exige la documentación oficial
+  // ID exacto del producto en Play Console.
   static const String removeAdsProductId = 'remove_ads';
 
   final InAppPurchase _inAppPurchase = InAppPurchase.instance;
-  late StreamSubscription<List<PurchaseDetails>> _subscription;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
+  StreamSubscription<DocumentSnapshot>? _userDocSubscription;
 
   bool _isPremium = false;
   bool get isPremium => _isPremium;
@@ -32,20 +38,67 @@ class PurchasesService extends ChangeNotifier {
   }
 
   Future<void> _init() async {
+    // 1. Cargar estado guardado localmente (para evitar parpadeos de anuncios al iniciar)
     final prefs = await SharedPreferences.getInstance();
     _isPremium = prefs.getBool(_premiumPrefKey) ?? false;
     notifyListeners();
 
+    // 2. Iniciar sesión de forma anónima
+    _auth.userChanges().listen((User? user) {
+      if (user == null) {
+        _signInAnonymously();
+      } else {
+        _listenToUserDoc(user.uid);
+      }
+    });
+
+    // 3. Escuchar el stream de compras
     final purchaseUpdated = _inAppPurchase.purchaseStream;
-    _subscription = purchaseUpdated.listen(
+    _purchaseSubscription = purchaseUpdated.listen(
       _listenToPurchaseUpdated,
-      onDone: () => _subscription.cancel(),
+      onDone: () => _purchaseSubscription?.cancel(),
       onError: (error) {
         debugPrint('[IAP] Error en el stream de compras: $error');
       },
     );
 
+    // 4. Verificar disponibilidad de la tienda y cargar productos
     await _loadProducts();
+  }
+
+  Future<void> _signInAnonymously() async {
+    try {
+      debugPrint('[Firebase Auth] Iniciando sesión de forma anónima...');
+      await _auth.signInAnonymously();
+      debugPrint('[Firebase Auth] Sesión iniciada con éxito.');
+    } catch (e) {
+      debugPrint('[Firebase Auth] Error al iniciar sesión anónima: $e');
+    }
+  }
+
+  void _listenToUserDoc(String uid) {
+    _userDocSubscription?.cancel();
+    _userDocSubscription = _firestore
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .listen((snapshot) async {
+      if (snapshot.exists && snapshot.data() != null) {
+        final data = snapshot.data() as Map<String, dynamic>;
+        final firestorePremium = data['isPremium'] == true;
+
+        if (_isPremium != firestorePremium) {
+          _isPremium = firestorePremium;
+          // Sincronizar también con SharedPreferences para caché offline
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool(_premiumPrefKey, firestorePremium);
+          notifyListeners();
+          debugPrint('[Firestore] Estado premium actualizado desde base de datos: $_isPremium');
+        }
+      }
+    }, onError: (e) {
+      debugPrint('[Firestore] Error al escuchar documento de usuario: $e');
+    });
   }
 
   Future<void> _loadProducts() async {
@@ -58,9 +111,8 @@ class PurchasesService extends ChangeNotifier {
       return;
     }
 
-    // Consulta limpia apuntando directo al ID raíz
-    final ProductDetailsResponse response = await _inAppPurchase
-        .queryProductDetails({removeAdsProductId});
+    final ProductDetailsResponse response =
+        await _inAppPurchase.queryProductDetails({removeAdsProductId});
 
     if (response.error != null) {
       debugPrint('[IAP] Error al consultar productos: ${response.error}');
@@ -68,13 +120,8 @@ class PurchasesService extends ChangeNotifier {
 
     if (response.notFoundIDs.isNotEmpty) {
       debugPrint(
-        '[IAP] ⚠️ ID NO encontrado en la tienda: ${response.notFoundIDs}',
-      );
-    }
-
-    if (response.productDetails.isNotEmpty) {
-      debugPrint(
-        '[IAP] ✅ Producto válido listo: ${response.productDetails.map((p) => p.id).toList()}',
+        '[IAP] ⚠️ Productos NO encontrados: ${response.notFoundIDs}. '
+        'Verifica que el ID "$removeAdsProductId" exista en Google Play Console y esté ACTIVO.',
       );
     }
 
@@ -82,30 +129,20 @@ class PurchasesService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Inicia la compra del producto "quitar anuncios".
   bool buyRemoveAds() {
     if (!_isAvailable) {
       debugPrint('[IAP] No se puede comprar: tienda no disponible.');
       return false;
     }
-
     if (_products.isEmpty) {
-      debugPrint(
-        '[IAP] No se puede comprar: la lista de productos está vacía.',
-      );
+      debugPrint('[IAP] No se puede comprar: ningún producto cargado.');
       return false;
     }
 
-    // Buscamos el producto exacto de forma segura
-    ProductDetails? product;
-    for (var p in _products) {
-      if (p.id == removeAdsProductId) {
-        product = p;
-        break;
-      }
-    }
-
-    product ??= _products.first;
+    final product = _products.firstWhere(
+      (p) => p.id == removeAdsProductId,
+      orElse: () => _products.first,
+    );
 
     debugPrint('[IAP] Iniciando compra de: ${product.id} (${product.price})');
     final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
@@ -120,9 +157,7 @@ class PurchasesService extends ChangeNotifier {
 
   void _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) {
     for (var purchaseDetails in purchaseDetailsList) {
-      debugPrint(
-        '[IAP] Estado de compra: ${purchaseDetails.status} para ${purchaseDetails.productID}',
-      );
+      debugPrint('[IAP] Estado de compra: ${purchaseDetails.status} para ${purchaseDetails.productID}');
 
       if (purchaseDetails.status == PurchaseStatus.pending) {
         _isPurchasePending = true;
@@ -131,16 +166,13 @@ class PurchasesService extends ChangeNotifier {
         _isPurchasePending = false;
 
         if (purchaseDetails.status == PurchaseStatus.error) {
-          _purchaseError =
-              purchaseDetails.error?.message ?? 'Error desconocido';
+          _purchaseError = purchaseDetails.error?.message ?? 'Error desconocido';
           debugPrint('[IAP] Error en la compra: $_purchaseError');
           notifyListeners();
         } else if (purchaseDetails.status == PurchaseStatus.purchased ||
-            purchaseDetails.status == PurchaseStatus.restored) {
+                   purchaseDetails.status == PurchaseStatus.restored) {
           if (purchaseDetails.productID == removeAdsProductId) {
-            debugPrint(
-              '[IAP] ✅ Compra válida para: ${purchaseDetails.productID}',
-            );
+            debugPrint('[IAP] ✅ Compra válida para: ${purchaseDetails.productID}');
             _deliverProduct();
           }
         }
@@ -155,15 +187,33 @@ class PurchasesService extends ChangeNotifier {
   Future<void> _deliverProduct() async {
     _isPremium = true;
     _purchaseError = null;
+    notifyListeners();
+
+    // 1. Guardar en caché local
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_premiumPrefKey, true);
-    debugPrint('[IAP] 🎉 Usuario ahora es Premium. Anuncios eliminados.');
-    notifyListeners();
+
+    // 2. Guardar de forma segura en Firebase Firestore
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        await _firestore.collection('users').doc(user.uid).set({
+          'isPremium': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+        debugPrint('[Firestore] ✅ Estado Premium guardado en la base de datos para el usuario ${user.uid}.');
+      } else {
+        debugPrint('[Firestore] ⚠️ No se pudo guardar el estado premium porque no hay usuario activo en Auth.');
+      }
+    } catch (e) {
+      debugPrint('[Firestore] Error al escribir en base de datos: $e');
+    }
   }
 
   @override
   void dispose() {
-    _subscription.cancel();
+    _purchaseSubscription?.cancel();
+    _userDocSubscription?.cancel();
     super.dispose();
   }
 }
