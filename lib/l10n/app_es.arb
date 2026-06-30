@@ -58,5 +58,14 @@
   "sectionNoDate": "Sin Fecha",
   "settings": "Configuración",
   "settingsDescription": "Idioma, tema y preferencias de la aplicación",
-  "restorePurchases": "Restaurar compras"
+  "restorePurchases": "Restaurar compras",
+  "removeAds": "Quitar Anuncios",
+  "removeAdsPermanently": "Eliminar anuncios permanentemente",
+  "storeNotAvailable": "Tienda no disponible",
+  "productNotFound": "Producto no encontrado en la tienda",
+  "supportAndMore": "Soporte y Más",
+  "premiumActive": "Premium Activo ✅",
+  "adsRemoved": "Anuncios eliminados",
+  "processingPurchase": "Procesando compra...",
+  "restoringPurchases": "Restaurando compras..."
 }

@@ -42,12 +42,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   bool _isBannerAdLoaded = false;
 
   final String _adUnitId = Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/1033173712'
-      : 'ca-app-pub-3940256099942544/4411468910';
+      ? 'ca-app-pub-7427500220267639/4890805530' // Interstitial
+      : 'ca-app-pub-7427500220267639/4890805530'; // Interstitial
 
   final String _bannerAdUnitId = Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/6300978111'
-      : 'ca-app-pub-3940256099942544/2934735716';
+      ? 'ca-app-pub-7427500220267639/5542410791' // Banner
+      : 'ca-app-pub-7427500220267639/5542410791'; // Banner
 
   @override
   void initState() {
@@ -519,24 +519,24 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                 const Divider(),
                 if (!isPremium) ...[
                   if (purchasesService.isPurchasePending)
-                    const ListTile(
-                      leading: SizedBox(
+                    ListTile(
+                      leading: const SizedBox(
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-                      title: Text('Procesando compra...'),
+                      title: Text(AppLocalizations.of(context)!.processingPurchase),
                     )
                   else
                     ListTile(
                       leading: const Icon(Icons.block, color: Colors.red),
-                      title: const Text('Quitar Anuncios'),
+                      title: Text(AppLocalizations.of(context)!.removeAds),
                       subtitle: Text(
                         !purchasesService.isAvailable
-                            ? 'Tienda no disponible'
+                            ? AppLocalizations.of(context)!.storeNotAvailable
                             : purchasesService.products.isEmpty
-                                ? 'Producto no encontrado en la tienda'
-                                : 'Eliminar anuncios permanentemente',
+                                ? AppLocalizations.of(context)!.productNotFound
+                                : AppLocalizations.of(context)!.removeAdsPermanently,
                       ),
                       onTap: (purchasesService.isAvailable &&
                               purchasesService.products.isNotEmpty)

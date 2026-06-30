@@ -79,5 +79,14 @@
   "sectionNoDate": "No Date",
   "settings": "Settings",
   "settingsDescription": "Language, theme, and application preferences",
-  "restorePurchases": "Restore Purchases"
+  "restorePurchases": "Restore Purchases",
+  "removeAds": "Remove Ads",
+  "removeAdsPermanently": "Permanently remove ads",
+  "storeNotAvailable": "Store not available",
+  "productNotFound": "Product not found in the store",
+  "supportAndMore": "Support & More",
+  "premiumActive": "Premium Active ✅",
+  "adsRemoved": "Ads removed",
+  "processingPurchase": "Processing purchase...",
+  "restoringPurchases": "Restoring purchases..."
 }

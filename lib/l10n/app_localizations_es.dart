@@ -195,4 +195,31 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get restorePurchases => 'Restaurar compras';
+
+  @override
+  String get removeAds => 'Quitar Anuncios';
+
+  @override
+  String get removeAdsPermanently => 'Eliminar anuncios permanentemente';
+
+  @override
+  String get storeNotAvailable => 'Tienda no disponible';
+
+  @override
+  String get productNotFound => 'Producto no encontrado en la tienda';
+
+  @override
+  String get supportAndMore => 'Soporte y Más';
+
+  @override
+  String get premiumActive => 'Premium Activo ✅';
+
+  @override
+  String get adsRemoved => 'Anuncios eliminados';
+
+  @override
+  String get processingPurchase => 'Procesando compra...';
+
+  @override
+  String get restoringPurchases => 'Restaurando compras...';
 }

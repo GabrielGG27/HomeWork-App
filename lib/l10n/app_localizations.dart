@@ -451,6 +451,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore Purchases'**
   String get restorePurchases;
+
+  /// No description provided for @removeAds.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Ads'**
+  String get removeAds;
+
+  /// No description provided for @removeAdsPermanently.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently remove ads'**
+  String get removeAdsPermanently;
+
+  /// No description provided for @storeNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Store not available'**
+  String get storeNotAvailable;
+
+  /// No description provided for @productNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Product not found in the store'**
+  String get productNotFound;
+
+  /// No description provided for @supportAndMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Support & More'**
+  String get supportAndMore;
+
+  /// No description provided for @premiumActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Active ✅'**
+  String get premiumActive;
+
+  /// No description provided for @adsRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Ads removed'**
+  String get adsRemoved;
+
+  /// No description provided for @processingPurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing purchase...'**
+  String get processingPurchase;
+
+  /// No description provided for @restoringPurchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring purchases...'**
+  String get restoringPurchases;
 }
 
 class _AppLocalizationsDelegate

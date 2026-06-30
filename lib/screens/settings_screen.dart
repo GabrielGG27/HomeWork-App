@@ -46,7 +46,7 @@ class SettingsScreen extends StatelessWidget {
             },
           ),
           const Divider(),
-          _buildSectionHeader(context, 'Soporte y Más'),
+          _buildSectionHeader(context, AppLocalizations.of(context)!.supportAndMore),
           ListTile(
             leading: const Icon(Icons.star, color: Colors.amber),
             title: Text(AppLocalizations.of(context)!.rateApp),
@@ -58,19 +58,19 @@ class SettingsScreen extends StatelessWidget {
             },
           ),
           if (isPremium)
-            const ListTile(
-              leading: Icon(Icons.workspace_premium, color: Colors.amber),
-              title: Text('Premium Activo ✅'),
-              subtitle: Text('Anuncios eliminados'),
+            ListTile(
+              leading: const Icon(Icons.workspace_premium, color: Colors.amber),
+              title: Text(AppLocalizations.of(context)!.premiumActive),
+              subtitle: Text(AppLocalizations.of(context)!.adsRemoved),
             )
           else if (purchasesService.isPurchasePending)
-            const ListTile(
-              leading: SizedBox(
+            ListTile(
+              leading: const SizedBox(
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
-              title: Text('Procesando compra...'),
+              title: Text(AppLocalizations.of(context)!.processingPurchase),
             )
           else
             ListTile(
@@ -79,9 +79,9 @@ class SettingsScreen extends StatelessWidget {
               onTap: () {
                 purchasesService.restorePurchases();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Restaurando compras...'),
-                    duration: Duration(seconds: 2),
+                  SnackBar(
+                    content: Text(AppLocalizations.of(context)!.restoringPurchases),
+                    duration: const Duration(seconds: 2),
                   ),
                 );
               },
