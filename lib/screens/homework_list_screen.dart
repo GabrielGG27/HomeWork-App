@@ -159,7 +159,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   void _addHomework(Homework homework) async {
     // Leer el servicio ANTES de cualquier await para evitar usar BuildContext
     // a través de gaps asíncronos.
-    final purchasesService = Provider.of<PurchasesService>(context, listen: false);
+    final purchasesService = Provider.of<PurchasesService>(
+      context,
+      listen: false,
+    );
 
     setState(() {
       _homeworkList.add(homework);
@@ -168,7 +171,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     await NotificationService.scheduleNotification(homework);
     _loadSubjects();
     int count = await _checkAndRequestReview();
-    
+
     // Mostrar anuncio cada 7 tareas, solo si no es premium
     if (!purchasesService.isPremium && count % 7 == 0) {
       _showInterstitialAd();
@@ -188,7 +191,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
         inAppReview.requestReview();
       }
     }
-    
+
     return homeworkAddedCount;
   }
 
@@ -525,7 +528,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                         height: 24,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-                      title: Text(AppLocalizations.of(context)!.processingPurchase),
+                      title: Text(
+                        AppLocalizations.of(context)!.processingPurchase,
+                      ),
                     )
                   else
                     ListTile(
@@ -535,10 +540,13 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                         !purchasesService.isAvailable
                             ? AppLocalizations.of(context)!.storeNotAvailable
                             : purchasesService.products.isEmpty
-                                ? AppLocalizations.of(context)!.productNotFound
-                                : AppLocalizations.of(context)!.removeAdsPermanently,
+                            ? AppLocalizations.of(context)!.productNotFound
+                            : AppLocalizations.of(
+                                context,
+                              )!.removeAdsPermanently,
                       ),
-                      onTap: (purchasesService.isAvailable &&
+                      onTap:
+                          (purchasesService.isAvailable &&
                               purchasesService.products.isNotEmpty)
                           ? () {
                               Navigator.pop(context);
@@ -582,7 +590,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
-        bottomNavigationBar: (!isPremium && _isBannerAdLoaded && _bannerAd != null)
+        bottomNavigationBar:
+            (!isPremium && _isBannerAdLoaded && _bannerAd != null)
             ? SafeArea(
                 child: SizedBox(
                   width: _bannerAd!.size.width.toDouble(),
@@ -635,8 +644,20 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               padding: const EdgeInsets.only(bottom: 80.0),
               child: TabBarView(
                 children: [
-                  _buildHomeworkList(context, pending, allHomework, true, isPremium),
-                  _buildHomeworkList(context, completed, allHomework, false, isPremium),
+                  _buildHomeworkList(
+                    context,
+                    pending,
+                    allHomework,
+                    true,
+                    isPremium,
+                  ),
+                  _buildHomeworkList(
+                    context,
+                    completed,
+                    allHomework,
+                    false,
+                    isPremium,
+                  ),
                 ],
               ),
             );
@@ -744,116 +765,119 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                 ),
               ),
               ...List.generate(
-                isPremium 
-                  ? sectionTasks.length 
-                  : sectionTasks.length + (sectionTasks.length ~/ 4), 
+                isPremium
+                    ? sectionTasks.length
+                    : sectionTasks.length + (sectionTasks.length ~/ 4),
                 (index) {
-                if (!isPremium && index > 0 && (index + 1) % 5 == 0) {
-                  return const NativeAdCard();
-                }
-                final taskIndex = isPremium ? index : index - (index ~/ 5);
-                final hw = sectionTasks[taskIndex];
-                final formattedDate = SmartDateFormatter.formatForCard(
-                  hw.dueDate,
-                  sectionTitle,
-                );
-                return Card(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 4,
-                  ),
-                  child: ListTile(
-                    onTap: () => _editHomework(hw, fullList),
-                    leading: Checkbox(
-                      value: hw.isCompleted,
-                      onChanged: (value) => _toggleCompleted(hw),
+                  if (!isPremium && index > 0 && (index + 1) % 5 == 0) {
+                    return const NativeAdCard();
+                  }
+                  final taskIndex = isPremium ? index : index - (index ~/ 5);
+                  final hw = sectionTasks[taskIndex];
+                  final formattedDate = SmartDateFormatter.formatForCard(
+                    hw.dueDate,
+                    sectionTitle,
+                  );
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
                     ),
-                    title: Row(
-                      children: [
-                        if (hw.isImportant)
-                          const Padding(
-                            padding: EdgeInsets.only(right: 8.0),
-                            child: Text(
-                              '!!!',
-                              style: TextStyle(
-                                color: Colors.red,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        Expanded(
-                          child: Text(
-                            hw.title,
-                            style: TextStyle(
-                              decoration: hw.isCompleted
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: '${hw.subject} ',
+                    child: ListTile(
+                      onTap: () => _editHomework(hw, fullList),
+                      leading: Checkbox(
+                        value: hw.isCompleted,
+                        onChanged: (value) => _toggleCompleted(hw),
+                      ),
+                      title: Row(
+                        children: [
+                          if (hw.isImportant)
+                            const Padding(
+                              padding: EdgeInsets.only(right: 8.0),
+                              child: Text(
+                                '!!!',
                                 style: TextStyle(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
                                 ),
                               ),
-                              WidgetSpan(
-                                alignment: PlaceholderAlignment.middle,
-                                child: Icon(
-                                  _subjectIcons.containsKey(hw.subject)
-                                      ? getIconFromCodePoint(
-                                          _subjectIcons[hw.subject]!,
-                                        )
-                                      : Icons.book,
-                                  size: 16,
-                                  color: Theme.of(context).colorScheme.outline,
-                                ),
+                            ),
+                          Expanded(
+                            child: Text(
+                              hw.title,
+                              style: TextStyle(
+                                decoration: hw.isCompleted
+                                    ? TextDecoration.lineThrough
+                                    : null,
                               ),
-                              if (hw.hasDueDate)
+                            ),
+                          ),
+                        ],
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text.rich(
+                            TextSpan(
+                              children: [
                                 TextSpan(
-                                  text: ' • $formattedDate',
+                                  text: '${hw.subject} ',
                                   style: TextStyle(
                                     color: Theme.of(
                                       context,
                                     ).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
-                            ],
-                          ),
-                        ),
-                        if (hw.description.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4.0),
-                            child: Text(
-                              hw.description,
-                              style: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                                fontSize: 13,
-                              ),
+                                WidgetSpan(
+                                  alignment: PlaceholderAlignment.middle,
+                                  child: Icon(
+                                    _subjectIcons.containsKey(hw.subject)
+                                        ? getIconFromCodePoint(
+                                            _subjectIcons[hw.subject]!,
+                                          )
+                                        : Icons.book,
+                                    size: 16,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.outline,
+                                  ),
+                                ),
+                                if (hw.hasDueDate)
+                                  TextSpan(
+                                    text: ' • $formattedDate',
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-                      ],
+                          if (hw.description.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: Text(
+                                hw.description,
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _deleteFromFullList(hw, fullList),
+                      ),
                     ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deleteFromFullList(hw, fullList),
-                    ),
-                  ),
-                );
-              }),
+                  );
+                },
+              ),
             ],
           );
         },

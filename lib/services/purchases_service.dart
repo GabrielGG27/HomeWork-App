@@ -82,23 +82,30 @@ class PurchasesService extends ChangeNotifier {
         .collection('users')
         .doc(uid)
         .snapshots()
-        .listen((snapshot) async {
-      if (snapshot.exists && snapshot.data() != null) {
-        final data = snapshot.data() as Map<String, dynamic>;
-        final firestorePremium = data['isPremium'] == true;
+        .listen(
+          (snapshot) async {
+            if (snapshot.exists && snapshot.data() != null) {
+              final data = snapshot.data() as Map<String, dynamic>;
+              final firestorePremium = data['isPremium'] == true;
 
-        if (_isPremium != firestorePremium) {
-          _isPremium = firestorePremium;
-          // Sincronizar también con SharedPreferences para caché offline
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setBool(_premiumPrefKey, firestorePremium);
-          notifyListeners();
-          debugPrint('[Firestore] Estado premium actualizado desde base de datos: $_isPremium');
-        }
-      }
-    }, onError: (e) {
-      debugPrint('[Firestore] Error al escuchar documento de usuario: $e');
-    });
+              if (_isPremium != firestorePremium) {
+                _isPremium = firestorePremium;
+                // Sincronizar también con SharedPreferences para caché offline
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool(_premiumPrefKey, firestorePremium);
+                notifyListeners();
+                debugPrint(
+                  '[Firestore] Estado premium actualizado desde base de datos: $_isPremium',
+                );
+              }
+            }
+          },
+          onError: (e) {
+            debugPrint(
+              '[Firestore] Error al escuchar documento de usuario: $e',
+            );
+          },
+        );
   }
 
   Future<void> _loadProducts() async {
@@ -111,8 +118,8 @@ class PurchasesService extends ChangeNotifier {
       return;
     }
 
-    final ProductDetailsResponse response =
-        await _inAppPurchase.queryProductDetails({removeAdsProductId});
+    final ProductDetailsResponse response = await _inAppPurchase
+        .queryProductDetails({removeAdsProductId});
 
     if (response.error != null) {
       debugPrint('[IAP] Error al consultar productos: ${response.error}');
@@ -129,7 +136,7 @@ class PurchasesService extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool buyRemoveAds() {
+  Future<bool> buyRemoveAds() async {
     if (!_isAvailable) {
       debugPrint('[IAP] No se puede comprar: tienda no disponible.');
       return false;
@@ -139,40 +146,77 @@ class PurchasesService extends ChangeNotifier {
       return false;
     }
 
-    final product = _products.firstWhere(
-      (p) => p.id == removeAdsProductId,
-      orElse: () => _products.first,
-    );
+    // 🟢 Control Seguro: Recuperamos tu bucle manual para evitar el crash de tipos
+    ProductDetails? product;
+    for (var p in _products) {
+      if (p.id == removeAdsProductId) {
+        product = p;
+        break;
+      }
+    }
+    product ??= _products.first;
 
-    debugPrint('[IAP] Iniciando compra de: ${product.id} (${product.price})');
-    final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
-    _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
-    return true;
+    try {
+      // ⚡ Activamos el spinner en el UI de inmediato antes de llamar a Google Play
+      _isPurchasePending = true;
+      _purchaseError = null;
+      notifyListeners();
+
+      debugPrint('[IAP] Iniciando compra de: ${product.id} (${product.price})');
+      final PurchaseParam purchaseParam = PurchaseParam(
+        productDetails: product,
+      );
+
+      // Lanzamos de forma asíncrona la hoja de pago de Google Play
+      await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
+      return true;
+    } catch (e) {
+      // Si el sistema falla al abrir la tienda, apagamos el spinner para no bloquear la pantalla
+      _isPurchasePending = false;
+      _purchaseError = e.toString();
+      notifyListeners();
+      debugPrint('[IAP] Error inmediato al lanzar la compra: $e');
+      return false;
+    }
   }
 
   Future<void> restorePurchases() async {
     debugPrint('[IAP] Restaurando compras...');
-    await _inAppPurchase.restorePurchases();
+    try {
+      _isPurchasePending = true;
+      notifyListeners();
+      await _inAppPurchase.restorePurchases();
+    } catch (e) {
+      _isPurchasePending = false;
+      notifyListeners();
+      debugPrint('[IAP] Error al restaurar compras: $e');
+    }
   }
 
   void _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) {
     for (var purchaseDetails in purchaseDetailsList) {
-      debugPrint('[IAP] Estado de compra: ${purchaseDetails.status} para ${purchaseDetails.productID}');
+      debugPrint(
+        '[IAP] Estado de compra: ${purchaseDetails.status} para ${purchaseDetails.productID}',
+      );
 
       if (purchaseDetails.status == PurchaseStatus.pending) {
         _isPurchasePending = true;
         notifyListeners();
       } else {
+        // En cualquier otro estado final (éxito, error o cancelación), liberamos el indicador de carga
         _isPurchasePending = false;
 
         if (purchaseDetails.status == PurchaseStatus.error) {
-          _purchaseError = purchaseDetails.error?.message ?? 'Error desconocido';
+          _purchaseError =
+              purchaseDetails.error?.message ?? 'Error desconocido';
           debugPrint('[IAP] Error en la compra: $_purchaseError');
           notifyListeners();
         } else if (purchaseDetails.status == PurchaseStatus.purchased ||
-                   purchaseDetails.status == PurchaseStatus.restored) {
+            purchaseDetails.status == PurchaseStatus.restored) {
           if (purchaseDetails.productID == removeAdsProductId) {
-            debugPrint('[IAP] ✅ Compra válida para: ${purchaseDetails.productID}');
+            debugPrint(
+              '[IAP] ✅ Compra válida detectada para: ${purchaseDetails.productID}',
+            );
             _deliverProduct();
           }
         }
@@ -189,11 +233,11 @@ class PurchasesService extends ChangeNotifier {
     _purchaseError = null;
     notifyListeners();
 
-    // 1. Guardar en caché local
+    // 1. Guardar en caché local para arranque instantáneo sin internet
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_premiumPrefKey, true);
 
-    // 2. Guardar de forma segura en Firebase Firestore
+    // 2. Sincronizar de forma segura en la nube con Firebase Firestore
     try {
       final user = _auth.currentUser;
       if (user != null) {
@@ -201,12 +245,16 @@ class PurchasesService extends ChangeNotifier {
           'isPremium': true,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
-        debugPrint('[Firestore] ✅ Estado Premium guardado en la base de datos para el usuario ${user.uid}.');
+        debugPrint(
+          '[Firestore] ✅ Estado Premium respaldado en la base de datos para el usuario ${user.uid}.',
+        );
       } else {
-        debugPrint('[Firestore] ⚠️ No se pudo guardar el estado premium porque no hay usuario activo en Auth.');
+        debugPrint(
+          '[Firestore] ⚠️ No se respaldó en la nube porque no hay sesión Auth activa.',
+        );
       }
     } catch (e) {
-      debugPrint('[Firestore] Error al escribir en base de datos: $e');
+      debugPrint('[Firestore] Error al escribir en la base de datos: $e');
     }
   }
 

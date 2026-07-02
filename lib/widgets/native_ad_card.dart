@@ -122,7 +122,9 @@ class _NativeAdCardState extends State<NativeAdCard> {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -135,13 +137,19 @@ class _NativeAdCardState extends State<NativeAdCard> {
                     Container(
                       width: double.infinity,
                       height: 14,
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.5),
                     ),
                     const SizedBox(height: 8),
                     Container(
                       width: 150,
                       height: 10,
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.5),
                     ),
                   ],
                 ),
@@ -159,10 +167,7 @@ class _NativeAdCardState extends State<NativeAdCard> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          height: 90,
-          child: AdWidget(ad: _nativeAd!),
-        ),
+        child: SizedBox(height: 90, child: AdWidget(ad: _nativeAd!)),
       ),
     );
   }
