@@ -55,8 +55,16 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     _loadData();
     NotificationService.requestNotificationsPermission();
     _schedulePendingNotifications();
-    _loadInterstitialAd();
-    _loadBannerAd();
+
+    // Defer ad loading to the post-frame callback to avoid blocking the
+    // Android main thread Looper during initState, which was causing ANRs
+    // (nativePollOnce, binder transaction, J.N.JJ).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadInterstitialAd();
+        _loadBannerAd();
+      }
+    });
 
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       if (mounted) {
@@ -170,10 +178,15 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     await HomeworkService.saveHomework(_homeworkList);
     await NotificationService.scheduleNotification(homework);
     _loadSubjects();
+
+    // Guard against widget being unmounted during async gap (e.g. app going
+    // to background), which previously caused a fatal 'Reply already
+    // submitted' crash in BasicMessageChannel via in_app_review.
+    if (!mounted) return;
     int count = await _checkAndRequestReview();
 
     // Mostrar anuncio cada 7 tareas, solo si no es premium
-    if (!purchasesService.isPremium && count % 7 == 0) {
+    if (mounted && !purchasesService.isPremium && count % 7 == 0) {
       _showInterstitialAd();
     }
   }
@@ -186,9 +199,19 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
 
     // If exactly 10 tasks have been added, trigger the review prompt.
     if (homeworkAddedCount == 10) {
-      final InAppReview inAppReview = InAppReview.instance;
-      if (await inAppReview.isAvailable()) {
-        inAppReview.requestReview();
+      // Guard: widget may have been unmounted during the awaits above
+      // (e.g. user minimised the app). Calling requestReview() on a
+      // destroyed BasicMessageChannel causes a fatal 'Reply already
+      // submitted' IllegalStateException crash.
+      if (!mounted) return homeworkAddedCount;
+      try {
+        final InAppReview inAppReview = InAppReview.instance;
+        if (await inAppReview.isAvailable()) {
+          if (!mounted) return homeworkAddedCount;
+          await inAppReview.requestReview();
+        }
+      } catch (e) {
+        debugPrint('[InAppReview] Error al solicitar review: $e');
       }
     }
 

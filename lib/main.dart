@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -20,7 +21,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();
-  await MobileAds.instance.initialize();
+
+  // Initialize Mobile Ads SDK without blocking the main thread.
+  // Awaiting this before runApp was causing ANRs (nativePollOnce, binder
+  // transaction, FlutterJNI.nativeSurfaceCreated) by blocking the Android
+  // Looper before the first frame could be rendered.
+  unawaited(MobileAds.instance.initialize());
 
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
   PlatformDispatcher.instance.onError = (error, stack) {
