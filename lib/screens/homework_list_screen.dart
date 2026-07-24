@@ -16,6 +16,8 @@ import 'settings_screen.dart';
 import 'package:homework_app/widgets/native_ad_card.dart';
 import 'package:provider/provider.dart';
 import 'package:homework_app/services/purchases_service.dart';
+import 'package:homework_app/services/ads_service.dart';
+import 'package:homework_app/services/attachment_storage_service.dart';
 
 class HomeworkListScreen extends StatefulWidget {
   final String? subjectFilter;
@@ -93,7 +95,14 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     super.dispose();
   }
 
-  void _loadBannerAd() {
+  Future<void> _loadBannerAd() async {
+    try {
+      await AdsService.ready;
+    } catch (error) {
+      debugPrint('Mobile Ads initialization failed: $error');
+      return;
+    }
+    if (!mounted) return;
     _bannerAd = BannerAd(
       adUnitId: _bannerAdUnitId,
       size: AdSize.banner,
@@ -114,7 +123,14 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     )..load();
   }
 
-  void _loadInterstitialAd() {
+  Future<void> _loadInterstitialAd() async {
+    try {
+      await AdsService.ready;
+    } catch (error) {
+      debugPrint('Mobile Ads initialization failed: $error');
+      return;
+    }
+    if (!mounted) return;
     InterstitialAd.load(
       adUnitId: _adUnitId,
       request: const AdRequest(),
@@ -219,10 +235,15 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   }
 
   void _updateHomework(int index, Homework updatedHomework) async {
+    final retainedIds = updatedHomework.attachments.map((a) => a.id).toSet();
+    final removedAttachments = _homeworkList[index].attachments.where(
+      (attachment) => !retainedIds.contains(attachment.id),
+    );
     setState(() {
       _homeworkList[index] = updatedHomework;
     });
     await HomeworkService.saveHomework(_homeworkList);
+    await AttachmentStorageService.deleteManagedFiles(removedAttachments);
     await NotificationService.scheduleNotification(updatedHomework);
     _loadSubjects();
   }

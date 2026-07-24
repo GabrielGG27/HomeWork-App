@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:homework_app/services/ads_service.dart';
 
 class NativeAdCard extends StatefulWidget {
   final String? adUnitId;
@@ -22,17 +23,30 @@ class _NativeAdCardState extends State<NativeAdCard> {
   NativeAd? _nativeAd;
   bool _isAdLoaded = false;
   bool _adFailed = false;
+  bool _isLoading = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Only load the ad once
-    if (_nativeAd == null && !_adFailed) {
+    if (_nativeAd == null && !_adFailed && !_isLoading) {
       _loadAd();
     }
   }
 
-  void _loadAd() {
+  Future<void> _loadAd() async {
+    _isLoading = true;
+    try {
+      await AdsService.ready;
+    } catch (error) {
+      debugPrint('Mobile Ads initialization failed: $error');
+      if (mounted) setState(() => _adFailed = true);
+      return;
+    } finally {
+      _isLoading = false;
+    }
+    if (!mounted) return;
+
     final defaultAdUnitId = Platform.isAndroid
         ? 'ca-app-pub-7427500220267639/1697764045' // Native
         : 'ca-app-pub-7427500220267639/1697764045'; // Native

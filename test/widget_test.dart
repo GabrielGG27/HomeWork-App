@@ -1,30 +1,79 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:homework_app/main.dart';
+import 'package:homework_app/l10n/app_localizations.dart';
+import 'package:homework_app/models/attachment.dart';
+import 'package:homework_app/models/homework.dart';
+import 'package:homework_app/screens/add_homework_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('homework survives a JSON round trip with its attachments', () {
+    final dueDate = DateTime(2026, 8, 15, 9, 30);
+    final homework = Homework(
+      id: 'homework-1',
+      title: 'Study algebra',
+      subject: 'Mathematics',
+      dueDate: dueDate,
+      description: 'Exercises 1–10',
+      isImportant: true,
+      notificationOffset: 30,
+      attachments: [
+        Attachment(
+          id: 'attachment-1',
+          type: 'file',
+          path: '/app/attachments/exercises.pdf',
+          filename: 'exercises.pdf',
+          mimeType: 'pdf',
+          size: 2048,
+          createdAtMs: 1234,
+        ),
+      ],
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    final restored = Homework.fromJson(homework.toJson());
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    expect(restored.id, homework.id);
+    expect(restored.title, homework.title);
+    expect(restored.subject, homework.subject);
+    expect(restored.dueDate, dueDate);
+    expect(restored.description, homework.description);
+    expect(restored.isImportant, isTrue);
+    expect(restored.notificationOffset, 30);
+    expect(restored.attachments, hasLength(1));
+    expect(restored.attachments.single.filename, 'exercises.pdf');
+    expect(restored.attachments.single.size, 2048);
+  });
+
+  testWidgets('new homework form displays and validates required fields', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        locale: Locale('en'),
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: [Locale('en'), Locale('es')],
+        home: AddHomeworkScreen(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.text('New'), findsOneWidget);
+    expect(find.text('Title'), findsOneWidget);
+    expect(find.text('Subject'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Enter a title'), findsOneWidget);
+    expect(find.text('Select or create a subject'), findsOneWidget);
   });
 }

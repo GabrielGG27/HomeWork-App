@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:homework_app/models/homework.dart';
+import 'package:homework_app/services/attachment_storage_service.dart';
 
 class HomeworkService {
   static Future<List<Homework>> loadHomework() async {
@@ -38,6 +39,9 @@ class HomeworkService {
       loaded.removeWhere((h) => expiredTasks.contains(h));
       final updatedData = loaded.map((h) => jsonEncode(h.toJson())).toList();
       await prefs.setStringList('homework', updatedData);
+      await AttachmentStorageService.deleteManagedFiles(
+        expiredTasks.expand((task) => task.attachments),
+      );
     }
 
     return loaded;

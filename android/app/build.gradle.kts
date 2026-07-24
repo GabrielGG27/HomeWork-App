@@ -21,6 +21,15 @@ android {
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
+    packaging {
+        jniLibs {
+            // Extract native libraries on install. This avoids startup failures
+            // on devices where Flutter's bundled libflutter.so is not mapped
+            // correctly from a split APK.
+            useLegacyPackaging = true
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11

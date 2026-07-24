@@ -4,6 +4,7 @@ import 'package:homework_app/l10n/app_localizations.dart';
 import 'package:homework_app/models/homework.dart';
 import 'package:homework_app/services/homework_service.dart';
 import 'package:homework_app/services/notification_service.dart';
+import 'package:homework_app/services/attachment_storage_service.dart';
 import 'package:homework_app/icons_helper.dart';
 import 'package:homework_app/screens/homework_list_screen.dart';
 import 'settings_screen.dart';
@@ -168,6 +169,7 @@ class _TrashScreenState extends State<TrashScreen> {
     final all = await HomeworkService.loadHomework();
     all.removeWhere((t) => t.id == task.id);
     await HomeworkService.saveHomework(all);
+    await AttachmentStorageService.deleteManagedFiles(task.attachments);
     await NotificationService.cancelNotification(task.id);
     await _loadDeletedTasks();
   }
@@ -198,8 +200,13 @@ class _TrashScreenState extends State<TrashScreen> {
     if (confirmed != true) return;
 
     final all = await HomeworkService.loadHomework();
+    final deletedAttachments = all
+        .where((task) => task.isDeleted)
+        .expand((task) => task.attachments)
+        .toList();
     all.removeWhere((t) => t.isDeleted);
     await HomeworkService.saveHomework(all);
+    await AttachmentStorageService.deleteManagedFiles(deletedAttachments);
     for (final task in _deletedTasks) {
       await NotificationService.cancelNotification(task.id);
     }

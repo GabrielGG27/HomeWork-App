@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_file/open_file.dart';
 import 'package:homework_app/models/attachment.dart';
+import 'package:homework_app/services/attachment_storage_service.dart';
 
 class AttachmentPicker extends StatefulWidget {
   final List<Attachment> initialAttachments;
@@ -22,61 +24,92 @@ class AttachmentPicker extends StatefulWidget {
 
 class _AttachmentPickerState extends State<AttachmentPicker> {
   late List<Attachment> _attachments;
+  late final Set<String> _initialAttachmentIds;
 
   @override
   void initState() {
     super.initState();
     _attachments = List.from(widget.initialAttachments);
+    _initialAttachmentIds = widget.initialAttachments.map((a) => a.id).toSet();
   }
 
   Future<void> _pickImage(ImageSource source) async {
     try {
       final picked = await ImagePicker().pickImage(source: source, imageQuality: 80);
       if (picked != null) {
+        final storedFile = await AttachmentStorageService.persistFile(
+          sourcePath: picked.path,
+          originalFilename: picked.name,
+        );
         final att = Attachment(
-          id: '${DateTime.now().millisecondsSinceEpoch}-${picked.path.hashCode}',
+          id: '${DateTime.now().millisecondsSinceEpoch}-${storedFile.path.hashCode}',
           type: 'photo',
-          path: picked.path,
+          path: storedFile.path,
           filename: picked.name,
         );
+        if (!mounted) {
+          await AttachmentStorageService.deleteManagedFiles([att]);
+          return;
+        }
         setState(() => _attachments.add(att));
-        widget.onChanged(_attachments);
+        widget.onChanged(List.unmodifiable(_attachments));
       }
-    } catch (e) {
-      // ignore errors for now
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save image: $error')),
+      );
     }
   }
 
   Future<void> _pickFiles() async {
+    final copiedAttachments = <Attachment>[];
     try {
       final result = await FilePicker.platform.pickFiles(allowMultiple: true);
       if (result != null && result.files.isNotEmpty) {
         for (final f in result.files) {
           final path = f.path;
           if (path == null) continue;
+          final storedFile = await AttachmentStorageService.persistFile(
+            sourcePath: path,
+            originalFilename: f.name,
+          );
           final att = Attachment(
-            id: '${DateTime.now().millisecondsSinceEpoch}-${path.hashCode}',
+            id: '${DateTime.now().millisecondsSinceEpoch}-${storedFile.path.hashCode}',
             type: 'file',
-            path: path,
+            path: storedFile.path,
             filename: f.name,
             mimeType: f.extension,
             size: f.size,
           );
-          _attachments.add(att);
+          copiedAttachments.add(att);
         }
-        setState(() {});
-        widget.onChanged(_attachments);
+        if (!mounted) {
+          await AttachmentStorageService.deleteManagedFiles(copiedAttachments);
+          return;
+        }
+        setState(() => _attachments.addAll(copiedAttachments));
+        widget.onChanged(List.unmodifiable(_attachments));
       }
-    } catch (e) {
-      // ignore
+    } catch (error) {
+      await AttachmentStorageService.deleteManagedFiles(copiedAttachments);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save file: $error')),
+      );
     }
   }
 
   void _removeAttachment(String id) {
+    final removed = _attachments.where((a) => a.id == id).toList();
     setState(() {
       _attachments = _attachments.where((a) => a.id != id).toList();
     });
-    widget.onChanged(_attachments);
+    widget.onChanged(List.unmodifiable(_attachments));
+
+    if (!_initialAttachmentIds.contains(id)) {
+      unawaited(AttachmentStorageService.deleteManagedFiles(removed));
+    }
   }
 
   @override
@@ -114,12 +147,21 @@ class _AttachmentPickerState extends State<AttachmentPicker> {
                   GestureDetector(
                     onTap: () {
                       if (a.path.isNotEmpty) {
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => Scaffold(
-                            appBar: AppBar(),
-                            body: Center(child: Image.file(File(a.path))),
-                          ),
-                        ));
+                        final image = File(a.path);
+                        if (image.existsSync()) {
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => Scaffold(
+                              appBar: AppBar(),
+                              body: Center(
+                                child: Image.file(
+                                  image,
+                                  errorBuilder: (_, _, _) =>
+                                      const Icon(Icons.broken_image, size: 64),
+                                ),
+                              ),
+                            ),
+                          ));
+                        }
                       }
                     },
                     child: Image.file(
@@ -127,6 +169,11 @@ class _AttachmentPickerState extends State<AttachmentPicker> {
                       width: 96,
                       height: 96,
                       fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const SizedBox(
+                        width: 96,
+                        height: 96,
+                        child: Icon(Icons.broken_image),
+                      ),
                     ),
                   ),
                   Positioned(

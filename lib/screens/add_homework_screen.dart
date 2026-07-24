@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -6,6 +7,7 @@ import 'package:homework_app/l10n/app_localizations.dart';
 import 'package:homework_app/models/homework.dart';
 import 'package:homework_app/models/attachment.dart';
 import 'package:homework_app/widgets/attachment_picker.dart';
+import 'package:homework_app/services/attachment_storage_service.dart';
 import 'package:homework_app/icons_helper.dart';
 
 class AddHomeworkScreen extends StatefulWidget {
@@ -30,6 +32,8 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
   bool _hasDueDate = true;
 
   List<Attachment> _attachments = [];
+  late final Set<String> _initialAttachmentIds;
+  bool _didSubmit = false;
 
   List<String> _subjects = [];
   Map<String, int> _subjectIcons = {};
@@ -70,10 +74,12 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       _hasDueDate = true;
       _attachments = []; 
     }
+    _initialAttachmentIds = _attachments.map((a) => a.id).toSet();
   }
 
   Future<void> _loadSubjects() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       _subjects = prefs.getStringList('subjects') ?? [];
       final iconsJson = prefs.getString('subject_icons');
@@ -184,6 +190,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       },
     );
 
+    if (!mounted) return;
     if (result != null &&
         result['name'] != null &&
         result['name'].toString().trim().isNotEmpty) {
@@ -210,6 +217,14 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
 
   @override
   void dispose() {
+    if (!_didSubmit) {
+      final stagedAttachments = _attachments.where(
+        (attachment) => !_initialAttachmentIds.contains(attachment.id),
+      );
+      unawaited(
+        AttachmentStorageService.deleteManagedFiles(stagedAttachments),
+      );
+    }
     _titleController.dispose();
     _subjectController.dispose();
     _descriptionController.dispose();
@@ -223,6 +238,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
     );
+    if (!mounted) return;
     if (picked != null) {
       setState(() => _selectedDate = picked);
     }
@@ -233,6 +249,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       context: context,
       initialTime: _selectedTime,
     );
+    if (!mounted) return;
     if (picked != null) {
       setState(() => _selectedTime = picked);
     }
@@ -450,6 +467,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                           description: _descriptionController.text.trim(),
                           attachments: _attachments,
                         );
+                        _didSubmit = true;
                         Navigator.of(context).pop(homework);
                       } else if (_subjectController.text.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(

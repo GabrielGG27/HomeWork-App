@@ -10,23 +10,17 @@ import 'l10n/app_localizations.dart';
 import 'services/notification_service.dart';
 import 'screens/homework_list_screen.dart';
 import 'services/purchases_service.dart';
+import 'services/ads_service.dart';
 
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();
-
-  // Initialize Mobile Ads SDK without blocking the main thread.
-  // Awaiting this before runApp was causing ANRs (nativePollOnce, binder
-  // transaction, FlutterJNI.nativeSurfaceCreated) by blocking the Android
-  // Looper before the first frame could be rendered.
-  unawaited(MobileAds.instance.initialize());
 
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
   PlatformDispatcher.instance.onError = (error, stack) {
@@ -46,6 +40,7 @@ void main() async {
   await NotificationService.initializeNotifications();
 
   runApp(const MyApp());
+  unawaited(AdsService.initialize());
 }
 
 class MyApp extends StatefulWidget {
@@ -78,6 +73,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _loadLocale() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     final languageCode = prefs.getString('languageCode');
     if (languageCode != null) {
       setState(() {
@@ -89,6 +85,7 @@ class _MyAppState extends State<MyApp> {
   void setLocale(Locale value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('languageCode', value.languageCode);
+    if (!mounted) return;
     setState(() {
       _locale = value;
     });
@@ -96,6 +93,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _loadThemeMode() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     final themeString = prefs.getString('themeMode');
     if (themeString != null) {
       setState(() {
@@ -116,6 +114,7 @@ class _MyAppState extends State<MyApp> {
     if (mode == ThemeMode.dark) themeString = 'dark';
     if (mode == ThemeMode.light) themeString = 'light';
     await prefs.setString('themeMode', themeString);
+    if (!mounted) return;
     setState(() {
       _themeMode = mode;
     });
