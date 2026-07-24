@@ -18,6 +18,7 @@ import 'package:provider/provider.dart';
 import 'package:homework_app/services/purchases_service.dart';
 import 'package:homework_app/services/ads_service.dart';
 import 'package:homework_app/services/attachment_storage_service.dart';
+import 'package:homework_app/services/analytics_service.dart';
 
 class HomeworkListScreen extends StatefulWidget {
   final String? subjectFilter;
@@ -192,6 +193,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
       _homeworkList.add(homework);
     });
     await HomeworkService.saveHomework(_homeworkList);
+    unawaited(AnalyticsService.logTaskCreated(homework));
     await NotificationService.scheduleNotification(homework);
     _loadSubjects();
 
@@ -735,6 +737,19 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
         itemBuilder: (context, sectionIndex) {
           final sectionTitle = grouped.keys.elementAt(sectionIndex);
           final sectionTasks = grouped.values.elementAt(sectionIndex);
+          final tasksBeforeSection = grouped.values
+              .take(sectionIndex)
+              .fold<int>(0, (total, tasks) => total + tasks.length);
+          final sectionItems = <Homework?>[];
+
+          for (var taskIndex = 0; taskIndex < sectionTasks.length; taskIndex++) {
+            sectionItems.add(sectionTasks[taskIndex]);
+
+            final globalTaskPosition = tasksBeforeSection + taskIndex + 1;
+            if (!isPremium && globalTaskPosition % 4 == 0) {
+              sectionItems.add(null);
+            }
+          }
 
           Color textColor;
           IconData icon;
@@ -809,15 +824,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                 ),
               ),
               ...List.generate(
-                isPremium
-                    ? sectionTasks.length
-                    : sectionTasks.length + (sectionTasks.length ~/ 4),
+                sectionItems.length,
                 (index) {
-                  if (!isPremium && index > 0 && (index + 1) % 5 == 0) {
+                  final hw = sectionItems[index];
+                  if (hw == null) {
                     return const NativeAdCard();
                   }
-                  final taskIndex = isPremium ? index : index - (index ~/ 5);
-                  final hw = sectionTasks[taskIndex];
                   final formattedDate = SmartDateFormatter.formatForCard(
                     hw.dueDate,
                     sectionTitle,
