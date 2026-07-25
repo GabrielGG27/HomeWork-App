@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -38,74 +39,84 @@ class _NativeAdCardState extends State<NativeAdCard> {
     _isLoading = true;
     try {
       await AdsService.ready;
+      await AdsService.enqueueAdLoad(() async {
+        if (!mounted) return;
+
+        final completion = Completer<void>();
+        final defaultAdUnitId = Platform.isAndroid
+            ? 'ca-app-pub-7427500220267639/1697764045'
+            : 'ca-app-pub-7427500220267639/1697764045';
+
+        final colorScheme = Theme.of(context).colorScheme;
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final cardBgColor = isDark
+            ? colorScheme.surfaceContainer
+            : colorScheme.surface;
+
+        _nativeAd = NativeAd(
+          adUnitId: widget.adUnitId ?? defaultAdUnitId,
+          listener: NativeAdListener(
+            onAdLoaded: (ad) {
+              if (!identical(_nativeAd, ad)) {
+                ad.dispose();
+                if (!completion.isCompleted) completion.complete();
+                return;
+              }
+              if (mounted) {
+                setState(() => _isAdLoaded = true);
+              }
+              if (!completion.isCompleted) completion.complete();
+            },
+            onAdFailedToLoad: (ad, error) {
+              debugPrint('NativeAd failed to load: $error');
+              ad.dispose();
+              if (mounted && identical(_nativeAd, ad)) {
+                setState(() {
+                  _adFailed = true;
+                  _nativeAd = null;
+                });
+              }
+              if (!completion.isCompleted) completion.complete();
+            },
+          ),
+          request: const AdRequest(),
+          nativeTemplateStyle: NativeTemplateStyle(
+            templateType: TemplateType.small,
+            mainBackgroundColor: cardBgColor,
+            cornerRadius: 12.0,
+            primaryTextStyle: NativeTemplateTextStyle(
+              textColor: colorScheme.onSurface,
+              size: 15.0,
+            ),
+            secondaryTextStyle: NativeTemplateTextStyle(
+              textColor: colorScheme.onSurfaceVariant,
+              size: 13.0,
+            ),
+            tertiaryTextStyle: NativeTemplateTextStyle(
+              textColor: colorScheme.onSurfaceVariant,
+              size: 12.0,
+            ),
+            callToActionTextStyle: NativeTemplateTextStyle(
+              textColor: colorScheme.onPrimary,
+              backgroundColor: colorScheme.primary,
+              size: 14.0,
+            ),
+          ),
+        );
+
+        _nativeAd!.load();
+        await completion.future;
+      });
     } catch (error) {
-      debugPrint('Mobile Ads initialization failed: $error');
-      if (mounted) setState(() => _adFailed = true);
-      return;
+      debugPrint('NativeAd initialization or load failed: $error');
+      _nativeAd?.dispose();
+      _nativeAd = null;
+      if (mounted) {
+        setState(() => _adFailed = true);
+      }
     } finally {
       _isLoading = false;
     }
-    if (!mounted) return;
-
-    final defaultAdUnitId = Platform.isAndroid
-        ? 'ca-app-pub-7427500220267639/1697764045' // Native
-        : 'ca-app-pub-7427500220267639/1697764045'; // Native
-
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Use surface container or surface depending on light/dark mode
-    final cardBgColor = isDark
-        ? colorScheme.surfaceContainer
-        : colorScheme.surface;
-
-    _nativeAd = NativeAd(
-      adUnitId: widget.adUnitId ?? defaultAdUnitId,
-      listener: NativeAdListener(
-        onAdLoaded: (ad) {
-          if (mounted) {
-            setState(() {
-              _isAdLoaded = true;
-            });
-          }
-        },
-        onAdFailedToLoad: (ad, error) {
-          debugPrint('NativeAd failed to load: $error');
-          ad.dispose();
-          if (mounted) {
-            setState(() {
-              _adFailed = true;
-              _nativeAd = null;
-            });
-          }
-        },
-      ),
-      request: const AdRequest(),
-      nativeTemplateStyle: NativeTemplateStyle(
-        templateType: TemplateType.small,
-        mainBackgroundColor: cardBgColor,
-        cornerRadius: 12.0,
-        primaryTextStyle: NativeTemplateTextStyle(
-          textColor: colorScheme.onSurface,
-          size: 15.0,
-        ),
-        secondaryTextStyle: NativeTemplateTextStyle(
-          textColor: colorScheme.onSurfaceVariant,
-          size: 13.0,
-        ),
-        tertiaryTextStyle: NativeTemplateTextStyle(
-          textColor: colorScheme.onSurfaceVariant,
-          size: 12.0,
-        ),
-        callToActionTextStyle: NativeTemplateTextStyle(
-          textColor: colorScheme.onPrimary,
-          backgroundColor: colorScheme.primary,
-          size: 14.0,
-        ),
-      ),
-    );
-
-    _nativeAd!.load();
   }
 
   @override

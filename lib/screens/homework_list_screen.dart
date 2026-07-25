@@ -64,7 +64,6 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     // (nativePollOnce, binder transaction, J.N.JJ).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _loadInterstitialAd();
         _loadBannerAd();
       }
     });
@@ -99,58 +98,83 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   Future<void> _loadBannerAd() async {
     try {
       await AdsService.ready;
+      await AdsService.enqueueAdLoad(() async {
+        if (!mounted) return;
+        final completion = Completer<void>();
+
+        _bannerAd = BannerAd(
+          adUnitId: _bannerAdUnitId,
+          size: AdSize.banner,
+          request: const AdRequest(),
+          listener: BannerAdListener(
+            onAdLoaded: (ad) {
+              if (!identical(_bannerAd, ad)) {
+                ad.dispose();
+                if (!completion.isCompleted) completion.complete();
+                return;
+              }
+              if (mounted) {
+                setState(() => _isBannerAdLoaded = true);
+              }
+              if (!completion.isCompleted) completion.complete();
+            },
+            onAdFailedToLoad: (ad, error) {
+              ad.dispose();
+              if (identical(_bannerAd, ad)) {
+                _bannerAd = null;
+              }
+              debugPrint('BannerAd failed to load: $error');
+              if (!completion.isCompleted) completion.complete();
+            },
+          ),
+        )..load();
+
+        await completion.future;
+      });
     } catch (error) {
-      debugPrint('Mobile Ads initialization failed: $error');
-      return;
+      debugPrint('BannerAd initialization or load failed: $error');
+      _bannerAd?.dispose();
+      _bannerAd = null;
     }
-    if (!mounted) return;
-    _bannerAd = BannerAd(
-      adUnitId: _bannerAdUnitId,
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          if (mounted) {
-            setState(() {
-              _isBannerAdLoaded = true;
-            });
-          }
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-          debugPrint('BannerAd failed to load: $error');
-        },
-      ),
-    )..load();
   }
 
   Future<void> _loadInterstitialAd() async {
     try {
       await AdsService.ready;
+      await AdsService.enqueueAdLoad(() async {
+        if (!mounted) return;
+        final completion = Completer<void>();
+
+        InterstitialAd.load(
+          adUnitId: _adUnitId,
+          request: const AdRequest(),
+          adLoadCallback: InterstitialAdLoadCallback(
+            onAdLoaded: (InterstitialAd ad) {
+              debugPrint('Ad was loaded.');
+              _interstitialAd = ad;
+              if (!completion.isCompleted) completion.complete();
+            },
+            onAdFailedToLoad: (LoadAdError error) {
+              debugPrint('Ad failed to load with error: $error');
+              _interstitialAd = null;
+              if (!completion.isCompleted) completion.complete();
+            },
+          ),
+        );
+
+        await completion.future;
+      });
     } catch (error) {
-      debugPrint('Mobile Ads initialization failed: $error');
-      return;
+      debugPrint('InterstitialAd initialization or load failed: $error');
+      _interstitialAd?.dispose();
+      _interstitialAd = null;
     }
-    if (!mounted) return;
-    InterstitialAd.load(
-      adUnitId: _adUnitId,
-      request: const AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (InterstitialAd ad) {
-          debugPrint('Ad was loaded.');
-          _interstitialAd = ad;
-        },
-        onAdFailedToLoad: (LoadAdError error) {
-          debugPrint('Ad failed to load with error: $error');
-          _interstitialAd = null;
-        },
-      ),
-    );
   }
 
   void _showInterstitialAd() {
     if (_interstitialAd == null) {
       debugPrint('Warning: attempt to show interstitial before loaded.');
+      _loadInterstitialAd();
       return;
     }
     _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
@@ -206,6 +230,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     // Mostrar anuncio cada 7 tareas, solo si no es premium
     if (mounted && !purchasesService.isPremium && count % 7 == 0) {
       _showInterstitialAd();
+    } else if (mounted &&
+        !purchasesService.isPremium &&
+        _interstitialAd == null) {
+      _loadInterstitialAd();
     }
   }
 

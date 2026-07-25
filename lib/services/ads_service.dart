@@ -8,6 +8,7 @@ class AdsService {
 
   static final Completer<void> _ready = Completer<void>();
   static bool _initializationStarted = false;
+  static Future<void> _loadQueue = Future<void>.value();
 
   static Future<void> get ready => _ready.future;
 
@@ -23,5 +24,24 @@ class AdsService {
     } catch (error, stackTrace) {
       _ready.completeError(error, stackTrace);
     }
+  }
+
+  static Future<void> enqueueAdLoad(
+    Future<void> Function() load,
+  ) {
+    final previousLoad = _loadQueue;
+    final currentLoad = () async {
+      try {
+        await previousLoad;
+      } catch (_) {
+        // A failed request must not prevent later ads from loading.
+      }
+
+      await Future<void>.delayed(const Duration(milliseconds: 750));
+      await load().timeout(const Duration(seconds: 30));
+    }();
+
+    _loadQueue = currentLoad.catchError((_) {});
+    return currentLoad;
   }
 }
