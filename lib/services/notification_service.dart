@@ -1,10 +1,13 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:homework_app/services/analytics_service.dart';
 import 'package:homework_app/utils/date_formatter.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/material.dart';
 import 'package:homework_app/models/homework.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io';
 
 const String notificationChannelId = 'homework_channel_id_max_priority';
 late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
@@ -19,7 +22,18 @@ class NotificationService {
     final InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
 
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    await flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (_) {
+        unawaited(AnalyticsService.logNotificationOpened());
+      },
+    );
+
+    final launchDetails = await flutterLocalNotificationsPlugin
+        .getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp ?? false) {
+      unawaited(AnalyticsService.logNotificationOpened());
+    }
 
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
       notificationChannelId,
@@ -102,6 +116,7 @@ class NotificationService {
             ),
           ),
         ),
+        payload: homework.id,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,

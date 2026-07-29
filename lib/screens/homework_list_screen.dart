@@ -52,12 +52,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   bool _isBannerAdLoaded = false;
 
   final String _adUnitId = Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/1033173712' // Interstitial
-      : 'ca-app-pub-3940256099942544/1033173712'; // Interstitial
+      ? 'ca-app-pub-7427500220267639/4890805530' // Interstitial
+      : 'ca-app-pub-7427500220267639/4890805530'; // Interstitial
 
   final String _bannerAdUnitId = Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/9214589741' // Banner
-      : 'ca-app-pub-3940256099942544/9214589741'; // Banner
+      ? 'ca-app-pub-7427500220267639/5542410791' // Banner
+      : 'ca-app-pub-7427500220267639/5542410791'; // Banner
 
   @override
   void initState() {
@@ -298,11 +298,16 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
       listen: false,
     );
 
+    final prefs = await SharedPreferences.getInstance();
+    final isFirstTask =
+        _homeworkList.isEmpty && (prefs.getInt('homeworkAddedCount') ?? 0) == 0;
     setState(() {
       _homeworkList.add(homework);
     });
     await HomeworkService.saveHomework(_homeworkList);
-    unawaited(AnalyticsService.logTaskCreated(homework));
+    unawaited(
+      AnalyticsService.logTaskCreated(homework, isFirstTask: isFirstTask),
+    );
     await NotificationService.scheduleNotification(homework);
     _loadSubjects();
 
@@ -375,11 +380,23 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   void _toggleCompleted(Homework homework) async {
     final index = _homeworkList.indexWhere((h) => h.id == homework.id);
     if (index != -1) {
+      final isBeingCompleted = !_homeworkList[index].isCompleted;
+      final hasPreviousCompletedTasks = _homeworkList.any(
+        (task) => task.id != homework.id && task.isCompleted,
+      );
       setState(() {
         _homeworkList[index].isCompleted = !_homeworkList[index].isCompleted;
       });
 
       await HomeworkService.saveHomework(_homeworkList);
+      if (isBeingCompleted) {
+        unawaited(
+          AnalyticsService.logTaskCompleted(
+            _homeworkList[index],
+            hasPreviousCompletedTasks: hasPreviousCompletedTasks,
+          ),
+        );
+      }
 
       if (_homeworkList[index].isCompleted) {
         await NotificationService.cancelNotification(homework.id);

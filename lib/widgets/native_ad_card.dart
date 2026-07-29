@@ -44,8 +44,8 @@ class _NativeAdCardState extends State<NativeAdCard> {
 
         final completion = Completer<void>();
         final defaultAdUnitId = Platform.isAndroid
-            ? 'ca-app-pub-3940256099942544/2247696110'
-            : 'ca-app-pub-3940256099942544/2247696110';
+            ? 'ca-app-pub-7427500220267639/1697764045'
+            : 'ca-app-pub-7427500220267639/1697764045';
 
         final colorScheme = Theme.of(context).colorScheme;
         final isDark = Theme.of(context).brightness == Brightness.dark;

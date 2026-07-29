@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:homework_app/l10n/app_localizations.dart';
 import 'package:homework_app/screens/homework_list_screen.dart';
+import 'package:homework_app/services/analytics_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const String onboardingCompletedKey = 'onboardingCompleted';
@@ -19,12 +22,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _page = 0;
 
   @override
+  void initState() {
+    super.initState();
+    unawaited(AnalyticsService.logOnboardingStarted(isReplay: widget.isReplay));
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
   Future<void> _finish({required bool startWalkthrough}) async {
+    if (startWalkthrough) {
+      await AnalyticsService.logOnboardingCompleted(isReplay: widget.isReplay);
+    } else {
+      await AnalyticsService.logOnboardingSkipped(isReplay: widget.isReplay);
+    }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(onboardingCompletedKey, true);
     if (!mounted) return;
