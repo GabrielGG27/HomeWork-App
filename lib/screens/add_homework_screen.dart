@@ -10,11 +10,17 @@ import 'package:homework_app/widgets/attachment_picker.dart';
 import 'package:homework_app/services/attachment_storage_service.dart';
 import 'package:homework_app/icons_helper.dart';
 import 'package:homework_app/services/notification_service.dart';
+import 'package:homework_app/widgets/walkthrough_overlay.dart';
 
 class AddHomeworkScreen extends StatefulWidget {
   final Homework? homework;
+  final bool startWalkthrough;
 
-  const AddHomeworkScreen({super.key, this.homework});
+  const AddHomeworkScreen({
+    super.key,
+    this.homework,
+    this.startWalkthrough = false,
+  });
 
   @override
   State<AddHomeworkScreen> createState() => _AddHomeworkScreenState();
@@ -22,6 +28,11 @@ class AddHomeworkScreen extends StatefulWidget {
 
 class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
   final _formKey = GlobalKey<FormState>();
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _titleTutorialKey = GlobalKey();
+  final GlobalKey _subjectTutorialKey = GlobalKey();
+  final GlobalKey _scheduleTutorialKey = GlobalKey();
+  final GlobalKey _saveTutorialKey = GlobalKey();
   late TextEditingController _titleController;
   late TextEditingController _subjectController;
   late TextEditingController _descriptionController;
@@ -75,6 +86,82 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       _attachments = [];
     }
     _initialAttachmentIds = _attachments.map((a) => a.id).toSet();
+    if (widget.startWalkthrough && widget.homework == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _runWalkthrough());
+    }
+  }
+
+  Future<bool> _showTutorialTarget({
+    required GlobalKey key,
+    required String title,
+    required String description,
+  }) async {
+    final targetContext = key.currentContext;
+    if (targetContext != null) {
+      await Scrollable.ensureVisible(
+        targetContext,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        alignment: 0.25,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+    if (!mounted) return false;
+    final l10n = AppLocalizations.of(context)!;
+    final action = await showWalkthroughStep(
+      context: context,
+      targetKey: key,
+      title: title,
+      description: description,
+      nextLabel: l10n.next,
+      skipLabel: l10n.skipWalkthrough,
+      semanticsLabel: l10n.walkthroughDialogLabel,
+    );
+    return action != WalkthroughAction.skip;
+  }
+
+  Future<void> _runWalkthrough() async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    final steps = [
+      (
+        key: _titleTutorialKey,
+        title: l10n.walkthroughTaskTitleTitle,
+        description: l10n.walkthroughTaskTitleDescription,
+      ),
+      (
+        key: _subjectTutorialKey,
+        title: l10n.walkthroughTaskSubjectTitle,
+        description: l10n.walkthroughTaskSubjectDescription,
+      ),
+      (
+        key: _scheduleTutorialKey,
+        title: l10n.walkthroughTaskScheduleTitle,
+        description: l10n.walkthroughTaskScheduleDescription,
+      ),
+      (
+        key: _saveTutorialKey,
+        title: l10n.walkthroughTaskSaveTitle,
+        description: l10n.walkthroughTaskSaveDescription,
+      ),
+    ];
+
+    for (final step in steps) {
+      if (!mounted ||
+          !await _showTutorialTarget(
+            key: step.key,
+            title: step.title,
+            description: step.description,
+          )) {
+        return;
+      }
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.walkthroughCreateTaskPrompt)));
   }
 
   Future<void> _loadSubjects() async {
@@ -217,6 +304,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     if (!_didSubmit) {
       final stagedAttachments = _attachments.where(
         (attachment) => !_initialAttachmentIds.contains(attachment.id),
@@ -269,57 +357,64 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
           child: Form(
             key: _formKey,
             child: SingleChildScrollView(
+              controller: _scrollController,
               child: Column(
                 children: [
-                  TextFormField(
-                    controller: _titleController,
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.title,
+                  KeyedSubtree(
+                    key: _titleTutorialKey,
+                    child: TextFormField(
+                      controller: _titleController,
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.title,
+                      ),
+                      validator: (value) => value?.isEmpty == true
+                          ? AppLocalizations.of(context)!.enterTitleValidator
+                          : null,
                     ),
-                    validator: (value) => value?.isEmpty == true
-                        ? AppLocalizations.of(context)!.enterTitleValidator
-                        : null,
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    key: ValueKey(_selectedSubject),
-                    initialValue: _subjects.contains(_selectedSubject)
-                        ? _selectedSubject
-                        : null,
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.subject,
-                    ),
-                    items: [
-                      ..._subjects.map(
-                        (s) => DropdownMenuItem(value: s, child: Text(s)),
+                  KeyedSubtree(
+                    key: _subjectTutorialKey,
+                    child: DropdownButtonFormField<String>(
+                      key: ValueKey(_selectedSubject),
+                      initialValue: _subjects.contains(_selectedSubject)
+                          ? _selectedSubject
+                          : null,
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.subject,
                       ),
-                      DropdownMenuItem(
-                        value: _createNewSubjectLabel,
-                        child: Row(
-                          children: [
-                            const Icon(Icons.add, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              AppLocalizations.of(context)!.createNewSubject,
-                            ),
-                          ],
+                      items: [
+                        ..._subjects.map(
+                          (s) => DropdownMenuItem(value: s, child: Text(s)),
                         ),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value == _createNewSubjectLabel) {
-                        _addNewSubject();
-                      } else {
-                        setState(() {
-                          _selectedSubject = value;
-                          _subjectController.text = value ?? '';
-                        });
-                      }
-                    },
-                    validator: (value) =>
-                        (value == null && _subjectController.text.isEmpty)
-                        ? AppLocalizations.of(context)!.selectSubjectValidator
-                        : null,
+                        DropdownMenuItem(
+                          value: _createNewSubjectLabel,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.add, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                AppLocalizations.of(context)!.createNewSubject,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value == _createNewSubjectLabel) {
+                          _addNewSubject();
+                        } else {
+                          setState(() {
+                            _selectedSubject = value;
+                            _subjectController.text = value ?? '';
+                          });
+                        }
+                      },
+                      validator: (value) =>
+                          (value == null && _subjectController.text.isEmpty)
+                          ? AppLocalizations.of(context)!.selectSubjectValidator
+                          : null,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -334,14 +429,17 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                     onChanged: (list) => setState(() => _attachments = list),
                   ),
                   const SizedBox(height: 20),
-                  SwitchListTile(
-                    title: Text(AppLocalizations.of(context)!.hasDueDate),
-                    value: _hasDueDate,
-                    onChanged: (value) {
-                      setState(() {
-                        _hasDueDate = value;
-                      });
-                    },
+                  KeyedSubtree(
+                    key: _scheduleTutorialKey,
+                    child: SwitchListTile(
+                      title: Text(AppLocalizations.of(context)!.hasDueDate),
+                      value: _hasDueDate,
+                      onChanged: (value) {
+                        setState(() {
+                          _hasDueDate = value;
+                        });
+                      },
+                    ),
                   ),
                   if (_hasDueDate) ...[
                     Row(
@@ -448,6 +546,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                   ),
                   const SizedBox(height: 30),
                   ElevatedButton(
+                    key: _saveTutorialKey,
                     onPressed: () async {
                       if (_formKey.currentState!.validate() &&
                           _subjectController.text.isNotEmpty) {

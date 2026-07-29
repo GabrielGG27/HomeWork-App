@@ -643,6 +643,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use the menu to filter by subject, find important assignments, open the trash, or change settings.'**
   String get walkthroughMenuDescription;
+
+  /// No description provided for @walkthroughTaskTitleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Give your assignment a title'**
+  String get walkthroughTaskTitleTitle;
+
+  /// No description provided for @walkthroughTaskTitleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a short, clear name so you can recognize it at a glance.'**
+  String get walkthroughTaskTitleDescription;
+
+  /// No description provided for @walkthroughTaskSubjectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose or create a subject'**
+  String get walkthroughTaskSubjectTitle;
+
+  /// No description provided for @walkthroughTaskSubjectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subjects keep related assignments together. You can create your first one here.'**
+  String get walkthroughTaskSubjectDescription;
+
+  /// No description provided for @walkthroughTaskScheduleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan the deadline'**
+  String get walkthroughTaskScheduleTitle;
+
+  /// No description provided for @walkthroughTaskScheduleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a due date and time, then decide whether you want a reminder.'**
+  String get walkthroughTaskScheduleDescription;
+
+  /// No description provided for @walkthroughTaskSaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first assignment'**
+  String get walkthroughTaskSaveTitle;
+
+  /// No description provided for @walkthroughTaskSaveDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the required title and subject, then tap Save. Your walkthrough will finish when the assignment is created.'**
+  String get walkthroughTaskSaveDescription;
+
+  /// No description provided for @walkthroughCreateTaskPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Now complete the form and save your first assignment.'**
+  String get walkthroughCreateTaskPrompt;
+
+  /// No description provided for @walkthroughCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Walkthrough complete!'**
+  String get walkthroughCompleteTitle;
+
+  /// No description provided for @walkthroughCompleteDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your first assignment is ready. You now know everything you need to stay organized.'**
+  String get walkthroughCompleteDescription;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
 }
 
 class _AppLocalizationsDelegate

@@ -189,12 +189,38 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     _scaffoldKey.currentState?.openDrawer();
     await Future<void>.delayed(const Duration(milliseconds: 350));
     if (!mounted) return;
-    await _showWalkthroughTarget(
+    final continueToTask = await _showWalkthroughTarget(
       key: _drawerHeaderKey,
       title: l10n.walkthroughMenuTitle,
       description: l10n.walkthroughMenuDescription,
     );
-    if (mounted) Navigator.of(context).maybePop();
+    if (!mounted) return;
+    await Navigator.of(context).maybePop();
+    if (!continueToTask || !mounted) return;
+
+    final homework = await Navigator.of(context).push<Homework>(
+      MaterialPageRoute(
+        builder: (_) => const AddHomeworkScreen(startWalkthrough: true),
+      ),
+    );
+    if (!mounted || homework == null) return;
+
+    await _addHomework(homework);
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.celebration_rounded),
+        title: Text(l10n.walkthroughCompleteTitle),
+        content: Text(l10n.walkthroughCompleteDescription),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(l10n.done),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _loadInterstitialAd() async {
@@ -264,7 +290,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     });
   }
 
-  void _addHomework(Homework homework) async {
+  Future<void> _addHomework(Homework homework) async {
     // Leer el servicio ANTES de cualquier await para evitar usar BuildContext
     // a través de gaps asíncronos.
     final purchasesService = Provider.of<PurchasesService>(
@@ -721,7 +747,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               ),
             );
             if (homework != null) {
-              _addHomework(homework);
+              await _addHomework(homework);
             }
           },
           icon: const Icon(Icons.add),

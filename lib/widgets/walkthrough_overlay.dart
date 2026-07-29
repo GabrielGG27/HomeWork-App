@@ -66,6 +66,7 @@ class _WalkthroughOverlay extends StatelessWidget {
     return Semantics(
       scopesRoute: true,
       namesRoute: true,
+      explicitChildNodes: true,
       label: semanticsLabel,
       child: Material(
         color: Colors.transparent,

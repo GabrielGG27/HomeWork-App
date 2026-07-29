@@ -301,4 +301,46 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get walkthroughMenuDescription =>
       'Use the menu to filter by subject, find important assignments, open the trash, or change settings.';
+
+  @override
+  String get walkthroughTaskTitleTitle => 'Give your assignment a title';
+
+  @override
+  String get walkthroughTaskTitleDescription =>
+      'Use a short, clear name so you can recognize it at a glance.';
+
+  @override
+  String get walkthroughTaskSubjectTitle => 'Choose or create a subject';
+
+  @override
+  String get walkthroughTaskSubjectDescription =>
+      'Subjects keep related assignments together. You can create your first one here.';
+
+  @override
+  String get walkthroughTaskScheduleTitle => 'Plan the deadline';
+
+  @override
+  String get walkthroughTaskScheduleDescription =>
+      'Choose a due date and time, then decide whether you want a reminder.';
+
+  @override
+  String get walkthroughTaskSaveTitle => 'Create your first assignment';
+
+  @override
+  String get walkthroughTaskSaveDescription =>
+      'Complete the required title and subject, then tap Save. Your walkthrough will finish when the assignment is created.';
+
+  @override
+  String get walkthroughCreateTaskPrompt =>
+      'Now complete the form and save your first assignment.';
+
+  @override
+  String get walkthroughCompleteTitle => 'Walkthrough complete!';
+
+  @override
+  String get walkthroughCompleteDescription =>
+      'Your first assignment is ready. You now know everything you need to stay organized.';
+
+  @override
+  String get done => 'Done';
 }

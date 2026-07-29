@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:homework_app/l10n/app_localizations.dart';
+import 'package:homework_app/screens/add_homework_screen.dart';
 import 'package:homework_app/screens/onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -72,5 +73,29 @@ void main() {
     await tester.tap(find.text('Back'));
     await tester.pumpAndSettle();
     expect(find.text('Your assignments, under control'), findsOneWidget);
+  });
+
+  testWidgets('first-task walkthrough starts on the title field', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('es')],
+        home: const AddHomeworkScreen(startWalkthrough: true),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Give your assignment a title'), findsOneWidget);
+    expect(find.text('Skip walkthrough'), findsOneWidget);
   });
 }

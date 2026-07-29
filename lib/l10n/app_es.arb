@@ -96,5 +96,17 @@
   "walkthroughNewTaskTitle": "Crea una tarea",
   "walkthroughNewTaskDescription": "Pulsa Nueva para agregar su materia, fecha, recordatorio, importancia y notas.",
   "walkthroughMenuTitle": "Todo está a tu alcance",
-  "walkthroughMenuDescription": "Usa el menú para filtrar por materia, ver tareas importantes, abrir la papelera o cambiar la configuración."
+  "walkthroughMenuDescription": "Usa el menú para filtrar por materia, ver tareas importantes, abrir la papelera o cambiar la configuración.",
+  "walkthroughTaskTitleTitle": "Ponle un título a tu tarea",
+  "walkthroughTaskTitleDescription": "Usa un nombre corto y claro para reconocerla fácilmente.",
+  "walkthroughTaskSubjectTitle": "Elige o crea una materia",
+  "walkthroughTaskSubjectDescription": "Las materias mantienen juntas las tareas relacionadas. Aquí puedes crear la primera.",
+  "walkthroughTaskScheduleTitle": "Planea la entrega",
+  "walkthroughTaskScheduleDescription": "Elige la fecha y hora de entrega, y decide si quieres recibir un recordatorio.",
+  "walkthroughTaskSaveTitle": "Crea tu primera tarea",
+  "walkthroughTaskSaveDescription": "Completa el título y la materia obligatorios, luego pulsa Guardar. El recorrido terminará cuando se cree la tarea.",
+  "walkthroughCreateTaskPrompt": "Ahora completa el formulario y guarda tu primera tarea.",
+  "walkthroughCompleteTitle": "¡Recorrido completado!",
+  "walkthroughCompleteDescription": "Tu primera tarea está lista. Ya conoces todo lo necesario para mantenerte organizado.",
+  "done": "Listo"
 }

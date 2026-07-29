@@ -117,5 +117,17 @@
   "walkthroughNewTaskTitle": "Create an assignment",
   "walkthroughNewTaskDescription": "Tap New to add its subject, due date, reminder, importance, and notes.",
   "walkthroughMenuTitle": "Everything is within reach",
-  "walkthroughMenuDescription": "Use the menu to filter by subject, find important assignments, open the trash, or change settings."
+  "walkthroughMenuDescription": "Use the menu to filter by subject, find important assignments, open the trash, or change settings.",
+  "walkthroughTaskTitleTitle": "Give your assignment a title",
+  "walkthroughTaskTitleDescription": "Use a short, clear name so you can recognize it at a glance.",
+  "walkthroughTaskSubjectTitle": "Choose or create a subject",
+  "walkthroughTaskSubjectDescription": "Subjects keep related assignments together. You can create your first one here.",
+  "walkthroughTaskScheduleTitle": "Plan the deadline",
+  "walkthroughTaskScheduleDescription": "Choose a due date and time, then decide whether you want a reminder.",
+  "walkthroughTaskSaveTitle": "Create your first assignment",
+  "walkthroughTaskSaveDescription": "Complete the required title and subject, then tap Save. Your walkthrough will finish when the assignment is created.",
+  "walkthroughCreateTaskPrompt": "Now complete the form and save your first assignment.",
+  "walkthroughCompleteTitle": "Walkthrough complete!",
+  "walkthroughCompleteDescription": "Your first assignment is ready. You now know everything you need to stay organized.",
+  "done": "Done"
 }

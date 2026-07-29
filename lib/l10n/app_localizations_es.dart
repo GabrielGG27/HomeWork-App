@@ -301,4 +301,46 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get walkthroughMenuDescription =>
       'Usa el menú para filtrar por materia, ver tareas importantes, abrir la papelera o cambiar la configuración.';
+
+  @override
+  String get walkthroughTaskTitleTitle => 'Ponle un título a tu tarea';
+
+  @override
+  String get walkthroughTaskTitleDescription =>
+      'Usa un nombre corto y claro para reconocerla fácilmente.';
+
+  @override
+  String get walkthroughTaskSubjectTitle => 'Elige o crea una materia';
+
+  @override
+  String get walkthroughTaskSubjectDescription =>
+      'Las materias mantienen juntas las tareas relacionadas. Aquí puedes crear la primera.';
+
+  @override
+  String get walkthroughTaskScheduleTitle => 'Planea la entrega';
+
+  @override
+  String get walkthroughTaskScheduleDescription =>
+      'Elige la fecha y hora de entrega, y decide si quieres recibir un recordatorio.';
+
+  @override
+  String get walkthroughTaskSaveTitle => 'Crea tu primera tarea';
+
+  @override
+  String get walkthroughTaskSaveDescription =>
+      'Completa el título y la materia obligatorios, luego pulsa Guardar. El recorrido terminará cuando se cree la tarea.';
+
+  @override
+  String get walkthroughCreateTaskPrompt =>
+      'Ahora completa el formulario y guarda tu primera tarea.';
+
+  @override
+  String get walkthroughCompleteTitle => '¡Recorrido completado!';
+
+  @override
+  String get walkthroughCompleteDescription =>
+      'Tu primera tarea está lista. Ya conoces todo lo necesario para mantenerte organizado.';
+
+  @override
+  String get done => 'Listo';
 }
