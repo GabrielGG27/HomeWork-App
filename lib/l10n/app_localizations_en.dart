@@ -222,4 +222,83 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restoringPurchases => 'Restoring purchases...';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get getStarted => 'Get started';
+
+  @override
+  String get onboardingWelcomeTitle => 'Your assignments, under control';
+
+  @override
+  String get onboardingWelcomeDescription =>
+      'Keep schoolwork organized in one simple place and always know what comes next.';
+
+  @override
+  String get onboardingSubjectsTitle => 'Organize by subject';
+
+  @override
+  String get onboardingSubjectsDescription =>
+      'Create subjects with their own icons so every assignment is easy to find.';
+
+  @override
+  String get onboardingRemindersTitle => 'Never miss a deadline';
+
+  @override
+  String get onboardingRemindersDescription =>
+      'Add due dates and optional reminders. Notification access is requested only when you choose to use one.';
+
+  @override
+  String get onboardingProgressTitle => 'See your progress';
+
+  @override
+  String get onboardingProgressDescription =>
+      'Move between pending and completed assignments, and highlight the work that matters most.';
+
+  @override
+  String onboardingProgress(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get viewIntroduction => 'View introduction';
+
+  @override
+  String get viewIntroductionDescription =>
+      'Replay the welcome and app walkthrough';
+
+  @override
+  String get skipWalkthrough => 'Skip walkthrough';
+
+  @override
+  String get walkthroughDialogLabel => 'App walkthrough';
+
+  @override
+  String get walkthroughTabsTitle => 'Track every assignment';
+
+  @override
+  String get walkthroughTabsDescription =>
+      'Switch between pending work and assignments you have already completed.';
+
+  @override
+  String get walkthroughNewTaskTitle => 'Create an assignment';
+
+  @override
+  String get walkthroughNewTaskDescription =>
+      'Tap New to add its subject, due date, reminder, importance, and notes.';
+
+  @override
+  String get walkthroughMenuTitle => 'Everything is within reach';
+
+  @override
+  String get walkthroughMenuDescription =>
+      'Use the menu to filter by subject, find important assignments, open the trash, or change settings.';
 }

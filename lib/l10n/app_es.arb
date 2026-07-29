@@ -67,5 +67,34 @@
   "premiumActive": "Premium Activo ✅",
   "adsRemoved": "Anuncios eliminados",
   "processingPurchase": "Procesando compra...",
-  "restoringPurchases": "Restaurando compras..."
+  "restoringPurchases": "Restaurando compras...",
+  "skip": "Omitir",
+  "back": "Atrás",
+  "next": "Siguiente",
+  "getStarted": "Comenzar",
+  "onboardingWelcomeTitle": "Tus tareas, bajo control",
+  "onboardingWelcomeDescription": "Organiza tus deberes escolares en un solo lugar y ten claro qué sigue.",
+  "onboardingSubjectsTitle": "Organiza por materia",
+  "onboardingSubjectsDescription": "Crea materias con sus propios íconos para encontrar cada tarea fácilmente.",
+  "onboardingRemindersTitle": "No olvides una entrega",
+  "onboardingRemindersDescription": "Agrega fechas y recordatorios opcionales. El permiso de notificaciones se solicita solo cuando decidas usarlos.",
+  "onboardingProgressTitle": "Observa tu progreso",
+  "onboardingProgressDescription": "Cambia entre tareas pendientes y completadas, y destaca el trabajo más importante.",
+  "onboardingProgress": "Paso {current} de {total}",
+  "@onboardingProgress": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "viewIntroduction": "Ver introducción",
+  "viewIntroductionDescription": "Repite la bienvenida y el recorrido por la app",
+  "skipWalkthrough": "Omitir recorrido",
+  "walkthroughDialogLabel": "Recorrido por la aplicación",
+  "walkthroughTabsTitle": "Controla cada tarea",
+  "walkthroughTabsDescription": "Cambia entre tus trabajos pendientes y las tareas que ya completaste.",
+  "walkthroughNewTaskTitle": "Crea una tarea",
+  "walkthroughNewTaskDescription": "Pulsa Nueva para agregar su materia, fecha, recordatorio, importancia y notas.",
+  "walkthroughMenuTitle": "Todo está a tu alcance",
+  "walkthroughMenuDescription": "Usa el menú para filtrar por materia, ver tareas importantes, abrir la papelera o cambiar la configuración."
 }

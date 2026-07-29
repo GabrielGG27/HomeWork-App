@@ -9,6 +9,7 @@ import 'package:homework_app/models/attachment.dart';
 import 'package:homework_app/widgets/attachment_picker.dart';
 import 'package:homework_app/services/attachment_storage_service.dart';
 import 'package:homework_app/icons_helper.dart';
+import 'package:homework_app/services/notification_service.dart';
 
 class AddHomeworkScreen extends StatefulWidget {
   final Homework? homework;
@@ -60,7 +61,6 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       _isImportant = widget.homework!.isImportant;
       _hasDueDate = widget.homework!.hasDueDate;
       _attachments = widget.homework!.attachments;
-
     } else {
       _titleController = TextEditingController();
       _subjectController = TextEditingController();
@@ -72,7 +72,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       _notificationOffset = 0;
       _isImportant = false;
       _hasDueDate = true;
-      _attachments = []; 
+      _attachments = [];
     }
     _initialAttachmentIds = _attachments.map((a) => a.id).toSet();
   }
@@ -221,9 +221,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
       final stagedAttachments = _attachments.where(
         (attachment) => !_initialAttachmentIds.contains(attachment.id),
       );
-      unawaited(
-        AttachmentStorageService.deleteManagedFiles(stagedAttachments),
-      );
+      unawaited(AttachmentStorageService.deleteManagedFiles(stagedAttachments));
     }
     _titleController.dispose();
     _subjectController.dispose();
@@ -320,8 +318,8 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                     },
                     validator: (value) =>
                         (value == null && _subjectController.text.isEmpty)
-                            ? AppLocalizations.of(context)!.selectSubjectValidator
-                            : null,
+                        ? AppLocalizations.of(context)!.selectSubjectValidator
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -394,7 +392,9 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                         items: [
                           DropdownMenuItem(
                             value: 0,
-                            child: Text(AppLocalizations.of(context)!.atDueTime),
+                            child: Text(
+                              AppLocalizations.of(context)!.atDueTime,
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 10,
@@ -410,7 +410,9 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                           ),
                           DropdownMenuItem(
                             value: 60,
-                            child: Text(AppLocalizations.of(context)!.hourBefore),
+                            child: Text(
+                              AppLocalizations.of(context)!.hourBefore,
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 120,
@@ -420,7 +422,9 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                           ),
                           DropdownMenuItem(
                             value: 1440,
-                            child: Text(AppLocalizations.of(context)!.dayBefore),
+                            child: Text(
+                              AppLocalizations.of(context)!.dayBefore,
+                            ),
                           ),
                         ],
                         onChanged: (value) {
@@ -444,7 +448,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                   ),
                   const SizedBox(height: 30),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (_formKey.currentState!.validate() &&
                           _subjectController.text.isNotEmpty) {
                         final due = DateTime(
@@ -461,12 +465,18 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                           dueDate: due,
                           hasDueDate: _hasDueDate,
                           isCompleted: widget.homework?.isCompleted ?? false,
-                          enableNotification: _hasDueDate ? _enableNotification : false,
+                          enableNotification: _hasDueDate
+                              ? _enableNotification
+                              : false,
                           notificationOffset: _notificationOffset,
                           isImportant: _isImportant,
                           description: _descriptionController.text.trim(),
                           attachments: _attachments,
                         );
+                        if (_hasDueDate && _enableNotification) {
+                          await NotificationService.requestNotificationsPermission();
+                          if (!mounted) return;
+                        }
                         _didSubmit = true;
                         Navigator.of(context).pop(homework);
                       } else if (_subjectController.text.isEmpty) {

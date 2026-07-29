@@ -70,7 +70,10 @@ void main() {
     expect(find.text('Title'), findsOneWidget);
     expect(find.text('Subject'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
+    final saveButton = find.widgetWithText(ElevatedButton, 'Save');
+    await tester.ensureVisible(saveButton);
+    await tester.pumpAndSettle();
+    await tester.tap(saveButton);
     await tester.pump();
 
     expect(find.text('Enter a title'), findsOneWidget);

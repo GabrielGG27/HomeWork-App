@@ -222,4 +222,83 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get restoringPurchases => 'Restaurando compras...';
+
+  @override
+  String get skip => 'Omitir';
+
+  @override
+  String get back => 'Atrás';
+
+  @override
+  String get next => 'Siguiente';
+
+  @override
+  String get getStarted => 'Comenzar';
+
+  @override
+  String get onboardingWelcomeTitle => 'Tus tareas, bajo control';
+
+  @override
+  String get onboardingWelcomeDescription =>
+      'Organiza tus deberes escolares en un solo lugar y ten claro qué sigue.';
+
+  @override
+  String get onboardingSubjectsTitle => 'Organiza por materia';
+
+  @override
+  String get onboardingSubjectsDescription =>
+      'Crea materias con sus propios íconos para encontrar cada tarea fácilmente.';
+
+  @override
+  String get onboardingRemindersTitle => 'No olvides una entrega';
+
+  @override
+  String get onboardingRemindersDescription =>
+      'Agrega fechas y recordatorios opcionales. El permiso de notificaciones se solicita solo cuando decidas usarlos.';
+
+  @override
+  String get onboardingProgressTitle => 'Observa tu progreso';
+
+  @override
+  String get onboardingProgressDescription =>
+      'Cambia entre tareas pendientes y completadas, y destaca el trabajo más importante.';
+
+  @override
+  String onboardingProgress(int current, int total) {
+    return 'Paso $current de $total';
+  }
+
+  @override
+  String get viewIntroduction => 'Ver introducción';
+
+  @override
+  String get viewIntroductionDescription =>
+      'Repite la bienvenida y el recorrido por la app';
+
+  @override
+  String get skipWalkthrough => 'Omitir recorrido';
+
+  @override
+  String get walkthroughDialogLabel => 'Recorrido por la aplicación';
+
+  @override
+  String get walkthroughTabsTitle => 'Controla cada tarea';
+
+  @override
+  String get walkthroughTabsDescription =>
+      'Cambia entre tus trabajos pendientes y las tareas que ya completaste.';
+
+  @override
+  String get walkthroughNewTaskTitle => 'Crea una tarea';
+
+  @override
+  String get walkthroughNewTaskDescription =>
+      'Pulsa Nueva para agregar su materia, fecha, recordatorio, importancia y notas.';
+
+  @override
+  String get walkthroughMenuTitle => 'Todo está a tu alcance';
+
+  @override
+  String get walkthroughMenuDescription =>
+      'Usa el menú para filtrar por materia, ver tareas importantes, abrir la papelera o cambiar la configuración.';
 }

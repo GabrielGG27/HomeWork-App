@@ -505,6 +505,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restoring purchases...'**
   String get restoringPurchases;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get getStarted;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your assignments, under control'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep schoolwork organized in one simple place and always know what comes next.'**
+  String get onboardingWelcomeDescription;
+
+  /// No description provided for @onboardingSubjectsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Organize by subject'**
+  String get onboardingSubjectsTitle;
+
+  /// No description provided for @onboardingSubjectsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Create subjects with their own icons so every assignment is easy to find.'**
+  String get onboardingSubjectsDescription;
+
+  /// No description provided for @onboardingRemindersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Never miss a deadline'**
+  String get onboardingRemindersTitle;
+
+  /// No description provided for @onboardingRemindersDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Add due dates and optional reminders. Notification access is requested only when you choose to use one.'**
+  String get onboardingRemindersDescription;
+
+  /// No description provided for @onboardingProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See your progress'**
+  String get onboardingProgressTitle;
+
+  /// No description provided for @onboardingProgressDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Move between pending and completed assignments, and highlight the work that matters most.'**
+  String get onboardingProgressDescription;
+
+  /// No description provided for @onboardingProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String onboardingProgress(int current, int total);
+
+  /// No description provided for @viewIntroduction.
+  ///
+  /// In en, this message translates to:
+  /// **'View introduction'**
+  String get viewIntroduction;
+
+  /// No description provided for @viewIntroductionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay the welcome and app walkthrough'**
+  String get viewIntroductionDescription;
+
+  /// No description provided for @skipWalkthrough.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip walkthrough'**
+  String get skipWalkthrough;
+
+  /// No description provided for @walkthroughDialogLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'App walkthrough'**
+  String get walkthroughDialogLabel;
+
+  /// No description provided for @walkthroughTabsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track every assignment'**
+  String get walkthroughTabsTitle;
+
+  /// No description provided for @walkthroughTabsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch between pending work and assignments you have already completed.'**
+  String get walkthroughTabsDescription;
+
+  /// No description provided for @walkthroughNewTaskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an assignment'**
+  String get walkthroughNewTaskTitle;
+
+  /// No description provided for @walkthroughNewTaskDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap New to add its subject, due date, reminder, importance, and notes.'**
+  String get walkthroughNewTaskDescription;
+
+  /// No description provided for @walkthroughMenuTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything is within reach'**
+  String get walkthroughMenuTitle;
+
+  /// No description provided for @walkthroughMenuDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the menu to filter by subject, find important assignments, open the trash, or change settings.'**
+  String get walkthroughMenuDescription;
 }
 
 class _AppLocalizationsDelegate

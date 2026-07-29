@@ -4,6 +4,7 @@ import 'package:homework_app/main.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:provider/provider.dart';
 import 'package:homework_app/services/purchases_service.dart';
+import 'package:homework_app/screens/onboarding_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -15,9 +16,7 @@ class SettingsScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.settings),
-      ),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.settings)),
       body: ListView(
         children: [
           _buildSectionHeader(context, AppLocalizations.of(context)!.language),
@@ -46,7 +45,29 @@ class SettingsScreen extends StatelessWidget {
             },
           ),
           const Divider(),
-          _buildSectionHeader(context, AppLocalizations.of(context)!.supportAndMore),
+          ListTile(
+            leading: const Icon(Icons.explore_outlined, color: Colors.blue),
+            title: Text(AppLocalizations.of(context)!.viewIntroduction),
+            subtitle: Text(
+              AppLocalizations.of(context)!.viewIntroductionDescription,
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () async {
+              final startWalkthrough = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(
+                  builder: (_) => const OnboardingScreen(isReplay: true),
+                ),
+              );
+              if (context.mounted && startWalkthrough == true) {
+                Navigator.of(context).pop(true);
+              }
+            },
+          ),
+          const Divider(),
+          _buildSectionHeader(
+            context,
+            AppLocalizations.of(context)!.supportAndMore,
+          ),
           ListTile(
             leading: const Icon(Icons.star, color: Colors.amber),
             title: Text(AppLocalizations.of(context)!.rateApp),
@@ -80,7 +101,9 @@ class SettingsScreen extends StatelessWidget {
                 purchasesService.restorePurchases();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(AppLocalizations.of(context)!.restoringPurchases),
+                    content: Text(
+                      AppLocalizations.of(context)!.restoringPurchases,
+                    ),
                     duration: const Duration(seconds: 2),
                   ),
                 );

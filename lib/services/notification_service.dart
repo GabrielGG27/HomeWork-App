@@ -36,8 +36,8 @@ class NotificationService {
     await androidPlatform?.createNotificationChannel(channel);
   }
 
-  static void requestNotificationsPermission() {
-    flutterLocalNotificationsPlugin
+  static Future<void> requestNotificationsPermission() async {
+    await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >()
@@ -61,11 +61,17 @@ class NotificationService {
     final notificationId = homework.id.hashCode & 0x7FFFFFFF;
 
     final prefs = await SharedPreferences.getInstance();
-    final langCode = prefs.getString('languageCode') ?? Platform.localeName.split('_')[0];
+    final langCode =
+        prefs.getString('languageCode') ?? Platform.localeName.split('_')[0];
     final isEs = langCode == 'es';
 
-    final upcomingStr = isEs ? 'Próxima tarea: ${homework.title}' : 'Upcoming assignment: ${homework.title}';
-    final smartDate = SmartDateFormatter.formatForNotification(homework.dueDate, isSpanish: isEs);
+    final upcomingStr = isEs
+        ? 'Próxima tarea: ${homework.title}'
+        : 'Upcoming assignment: ${homework.title}';
+    final smartDate = SmartDateFormatter.formatForNotification(
+      homework.dueDate,
+      isSpanish: isEs,
+    );
     final dueStr = isEs ? 'Entrega $smartDate' : 'Due $smartDate';
 
     try {
@@ -91,9 +97,7 @@ class NotificationService {
             playSound: true,
             color: Colors.blue,
             styleInformation: BigTextStyleInformation(
-              homework.description.isNotEmpty
-                  ? homework.description
-                  : dueStr,
+              homework.description.isNotEmpty ? homework.description : dueStr,
               contentTitle: upcomingStr,
             ),
           ),

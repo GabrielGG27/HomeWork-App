@@ -88,5 +88,34 @@
   "premiumActive": "Premium Active ✅",
   "adsRemoved": "Ads removed",
   "processingPurchase": "Processing purchase...",
-  "restoringPurchases": "Restoring purchases..."
+  "restoringPurchases": "Restoring purchases...",
+  "skip": "Skip",
+  "back": "Back",
+  "next": "Next",
+  "getStarted": "Get started",
+  "onboardingWelcomeTitle": "Your assignments, under control",
+  "onboardingWelcomeDescription": "Keep schoolwork organized in one simple place and always know what comes next.",
+  "onboardingSubjectsTitle": "Organize by subject",
+  "onboardingSubjectsDescription": "Create subjects with their own icons so every assignment is easy to find.",
+  "onboardingRemindersTitle": "Never miss a deadline",
+  "onboardingRemindersDescription": "Add due dates and optional reminders. Notification access is requested only when you choose to use one.",
+  "onboardingProgressTitle": "See your progress",
+  "onboardingProgressDescription": "Move between pending and completed assignments, and highlight the work that matters most.",
+  "onboardingProgress": "Step {current} of {total}",
+  "@onboardingProgress": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "viewIntroduction": "View introduction",
+  "viewIntroductionDescription": "Replay the welcome and app walkthrough",
+  "skipWalkthrough": "Skip walkthrough",
+  "walkthroughDialogLabel": "App walkthrough",
+  "walkthroughTabsTitle": "Track every assignment",
+  "walkthroughTabsDescription": "Switch between pending work and assignments you have already completed.",
+  "walkthroughNewTaskTitle": "Create an assignment",
+  "walkthroughNewTaskDescription": "Tap New to add its subject, due date, reminder, importance, and notes.",
+  "walkthroughMenuTitle": "Everything is within reach",
+  "walkthroughMenuDescription": "Use the menu to filter by subject, find important assignments, open the trash, or change settings."
 }

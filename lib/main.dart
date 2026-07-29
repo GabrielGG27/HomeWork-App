@@ -9,6 +9,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'services/notification_service.dart';
 import 'screens/homework_list_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'services/purchases_service.dart';
 import 'services/ads_service.dart';
 
@@ -63,23 +64,30 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   Locale? _locale;
   ThemeMode _themeMode = ThemeMode.system;
+  bool _isReady = false;
+  bool _hasCompletedOnboarding = false;
 
   @override
   void initState() {
     super.initState();
-    _loadLocale();
-    _loadThemeMode();
+    _loadPreferences();
   }
 
-  Future<void> _loadLocale() async {
+  Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     final languageCode = prefs.getString('languageCode');
-    if (languageCode != null) {
-      setState(() {
-        _locale = Locale(languageCode);
-      });
-    }
+    final themeString = prefs.getString('themeMode');
+    setState(() {
+      if (languageCode != null) _locale = Locale(languageCode);
+      _themeMode = switch (themeString) {
+        'dark' => ThemeMode.dark,
+        'light' => ThemeMode.light,
+        _ => ThemeMode.system,
+      };
+      _hasCompletedOnboarding = prefs.getBool(onboardingCompletedKey) ?? false;
+      _isReady = true;
+    });
   }
 
   void setLocale(Locale value) async {
@@ -89,23 +97,6 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _locale = value;
     });
-  }
-
-  Future<void> _loadThemeMode() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    final themeString = prefs.getString('themeMode');
-    if (themeString != null) {
-      setState(() {
-        if (themeString == 'dark') {
-          _themeMode = ThemeMode.dark;
-        } else if (themeString == 'light') {
-          _themeMode = ThemeMode.light;
-        } else {
-          _themeMode = ThemeMode.system;
-        }
-      });
-    }
   }
 
   void setThemeMode(ThemeMode mode) async {
@@ -149,7 +140,11 @@ class _MyAppState extends State<MyApp> {
           Locale('en'), // English
           Locale('es'), // Spanish
         ],
-        home: const HomeworkListScreen(),
+        home: !_isReady
+            ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+            : _hasCompletedOnboarding
+            ? const HomeworkListScreen()
+            : const OnboardingScreen(),
       ),
     );
   }
