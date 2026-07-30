@@ -108,5 +108,8 @@
   "walkthroughCreateTaskPrompt": "Ahora completa el formulario y guarda tu primera tarea.",
   "walkthroughCompleteTitle": "¡Recorrido completado!",
   "walkthroughCompleteDescription": "Tu primera tarea está lista. Ya conoces todo lo necesario para mantenerte organizado.",
-  "done": "Listo"
+  "done": "Listo",
+  "privacyOptions": "Opciones de privacidad",
+  "privacyOptionsDescription": "Revisa o cambia tu consentimiento para anuncios",
+  "privacyOptionsError": "No se pudieron abrir las opciones de privacidad. Inténtalo de nuevo."
 }

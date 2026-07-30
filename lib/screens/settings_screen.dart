@@ -5,9 +5,38 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:provider/provider.dart';
 import 'package:homework_app/services/purchases_service.dart';
 import 'package:homework_app/screens/onboarding_screen.dart';
+import 'package:homework_app/services/consent_service.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  late Future<bool> _privacyOptionsRequired;
+
+  @override
+  void initState() {
+    super.initState();
+    _privacyOptionsRequired = ConsentService.isPrivacyOptionsRequired();
+  }
+
+  Future<void> _showPrivacyOptions() async {
+    final success = await ConsentService.showPrivacyOptions();
+    if (!mounted) return;
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.privacyOptionsError),
+        ),
+      );
+    }
+    setState(() {
+      _privacyOptionsRequired = ConsentService.isPrivacyOptionsRequired();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +74,29 @@ class SettingsScreen extends StatelessWidget {
             },
           ),
           const Divider(),
+          FutureBuilder<bool>(
+            future: _privacyOptionsRequired,
+            builder: (context, snapshot) {
+              if (snapshot.data != true) return const SizedBox.shrink();
+              return Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(
+                      Icons.privacy_tip_outlined,
+                      color: Colors.blue,
+                    ),
+                    title: Text(AppLocalizations.of(context)!.privacyOptions),
+                    subtitle: Text(
+                      AppLocalizations.of(context)!.privacyOptionsDescription,
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: _showPrivacyOptions,
+                  ),
+                  const Divider(),
+                ],
+              );
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.explore_outlined, color: Colors.blue),
             title: Text(AppLocalizations.of(context)!.viewIntroduction),

@@ -574,7 +574,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                         );
                         if (_hasDueDate && _enableNotification) {
                           await NotificationService.requestNotificationsPermission();
-                          if (!mounted) return;
+                          if (!context.mounted) return;
                         }
                         _didSubmit = true;
                         Navigator.of(context).pop(homework);

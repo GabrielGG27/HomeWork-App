@@ -343,4 +343,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get done => 'Listo';
+
+  @override
+  String get privacyOptions => 'Opciones de privacidad';
+
+  @override
+  String get privacyOptionsDescription =>
+      'Revisa o cambia tu consentimiento para anuncios';
+
+  @override
+  String get privacyOptionsError =>
+      'No se pudieron abrir las opciones de privacidad. Inténtalo de nuevo.';
 }

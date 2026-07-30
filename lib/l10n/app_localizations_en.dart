@@ -343,4 +343,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get done => 'Done';
+
+  @override
+  String get privacyOptions => 'Privacy options';
+
+  @override
+  String get privacyOptionsDescription =>
+      'Review or change your advertising consent';
+
+  @override
+  String get privacyOptionsError =>
+      'Privacy options could not be opened. Please try again.';
 }

@@ -715,6 +715,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Done'**
   String get done;
+
+  /// No description provided for @privacyOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy options'**
+  String get privacyOptions;
+
+  /// No description provided for @privacyOptionsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Review or change your advertising consent'**
+  String get privacyOptionsDescription;
+
+  /// No description provided for @privacyOptionsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy options could not be opened. Please try again.'**
+  String get privacyOptionsError;
 }
 
 class _AppLocalizationsDelegate

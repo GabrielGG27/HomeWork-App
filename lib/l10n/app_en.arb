@@ -129,5 +129,8 @@
   "walkthroughCreateTaskPrompt": "Now complete the form and save your first assignment.",
   "walkthroughCompleteTitle": "Walkthrough complete!",
   "walkthroughCompleteDescription": "Your first assignment is ready. You now know everything you need to stay organized.",
-  "done": "Done"
+  "done": "Done",
+  "privacyOptions": "Privacy options",
+  "privacyOptionsDescription": "Review or change your advertising consent",
+  "privacyOptionsError": "Privacy options could not be opened. Please try again."
 }
