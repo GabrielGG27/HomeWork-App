@@ -46,6 +46,7 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
   List<Attachment> _attachments = [];
   late final Set<String> _initialAttachmentIds;
   bool _didSubmit = false;
+  bool _isSubmitting = false;
 
   List<String> _subjects = [];
   Map<String, int> _subjectIcons = {};
@@ -547,45 +548,49 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                   const SizedBox(height: 30),
                   ElevatedButton(
                     key: _saveTutorialKey,
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate() &&
-                          _subjectController.text.isNotEmpty) {
-                        final due = DateTime(
-                          _selectedDate.year,
-                          _selectedDate.month,
-                          _selectedDate.day,
-                          _selectedTime.hour,
-                          _selectedTime.minute,
-                        );
-                        final homework = Homework(
-                          id: widget.homework?.id,
-                          title: _titleController.text,
-                          subject: _subjectController.text,
-                          dueDate: due,
-                          hasDueDate: _hasDueDate,
-                          isCompleted: widget.homework?.isCompleted ?? false,
-                          enableNotification: _hasDueDate
-                              ? _enableNotification
-                              : false,
-                          notificationOffset: _notificationOffset,
-                          isImportant: _isImportant,
-                          description: _descriptionController.text.trim(),
-                          attachments: _attachments,
-                        );
-                        if (_hasDueDate && _enableNotification) {
-                          await NotificationService.requestNotificationsPermission();
-                          if (!context.mounted) return;
-                        }
-                        _didSubmit = true;
-                        Navigator.of(context).pop(homework);
-                      } else if (_subjectController.text.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please select a subject'),
-                          ),
-                        );
-                      }
-                    },
+                    onPressed: _isSubmitting
+                        ? null
+                        : () async {
+                            if (_formKey.currentState!.validate() &&
+                                _subjectController.text.isNotEmpty) {
+                              setState(() => _isSubmitting = true);
+                              final due = DateTime(
+                                _selectedDate.year,
+                                _selectedDate.month,
+                                _selectedDate.day,
+                                _selectedTime.hour,
+                                _selectedTime.minute,
+                              );
+                              final homework = Homework(
+                                id: widget.homework?.id,
+                                title: _titleController.text,
+                                subject: _subjectController.text,
+                                dueDate: due,
+                                hasDueDate: _hasDueDate,
+                                isCompleted:
+                                    widget.homework?.isCompleted ?? false,
+                                enableNotification: _hasDueDate
+                                    ? _enableNotification
+                                    : false,
+                                notificationOffset: _notificationOffset,
+                                isImportant: _isImportant,
+                                description: _descriptionController.text.trim(),
+                                attachments: _attachments,
+                              );
+                              if (_hasDueDate && _enableNotification) {
+                                await NotificationService.requestNotificationsPermission();
+                                if (!context.mounted) return;
+                              }
+                              _didSubmit = true;
+                              Navigator.of(context).pop(homework);
+                            } else if (_subjectController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please select a subject'),
+                                ),
+                              );
+                            }
+                          },
                     child: Text(
                       widget.homework != null
                           ? AppLocalizations.of(context)!.update

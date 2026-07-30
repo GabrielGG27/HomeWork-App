@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/services.dart';
 import 'package:homework_app/services/analytics_service.dart';
 import 'package:homework_app/utils/date_formatter.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -13,6 +14,8 @@ const String notificationChannelId = 'homework_channel_id_max_priority';
 late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
 class NotificationService {
+  static Future<bool?>? _notificationPermissionRequest;
+
   static Future<void> initializeNotifications() async {
     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -50,12 +53,39 @@ class NotificationService {
     await androidPlatform?.createNotificationChannel(channel);
   }
 
-  static Future<void> requestNotificationsPermission() async {
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestNotificationsPermission();
+  static Future<bool?> requestNotificationsPermission() {
+    final pendingRequest = _notificationPermissionRequest;
+    if (pendingRequest != null) return pendingRequest;
+
+    final request = _requestNotificationsPermission();
+    _notificationPermissionRequest = request;
+    request.whenComplete(() {
+      if (identical(_notificationPermissionRequest, request)) {
+        _notificationPermissionRequest = null;
+      }
+    });
+    return request;
+  }
+
+  static Future<bool?> _requestNotificationsPermission() async {
+    try {
+      return await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.requestNotificationsPermission();
+    } on PlatformException catch (error) {
+      // Android rejects concurrent runtime permission dialogs. A request can
+      // already be active after a rapid double tap or another plugin prompt.
+      // The task can still be saved; permission may be requested again later.
+      debugPrint('Notification permission request failed: $error');
+      return null;
+    } catch (error) {
+      // A permission prompt must never prevent the task itself from being
+      // created. Future attempts can request the permission again.
+      debugPrint('Unexpected notification permission error: $error');
+      return null;
+    }
   }
 
   static Future<void> scheduleNotification(Homework homework) async {
