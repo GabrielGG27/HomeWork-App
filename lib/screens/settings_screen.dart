@@ -124,9 +124,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: const Icon(Icons.star, color: Colors.amber),
             title: Text(AppLocalizations.of(context)!.rateApp),
             onTap: () async {
-              final InAppReview inAppReview = InAppReview.instance;
-              if (await inAppReview.isAvailable()) {
-                inAppReview.requestReview();
+              try {
+                final inAppReview = InAppReview.instance;
+                if (await inAppReview.isAvailable()) {
+                  await inAppReview.requestReview();
+                }
+              } catch (error) {
+                debugPrint('[InAppReview] Could not request review: $error');
               }
             },
           ),

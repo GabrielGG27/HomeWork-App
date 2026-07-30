@@ -10,6 +10,7 @@ import 'package:homework_app/widgets/attachment_picker.dart';
 import 'package:homework_app/services/attachment_storage_service.dart';
 import 'package:homework_app/icons_helper.dart';
 import 'package:homework_app/services/notification_service.dart';
+import 'package:homework_app/services/homework_service.dart';
 import 'package:homework_app/widgets/walkthrough_overlay.dart';
 
 class AddHomeworkScreen extends StatefulWidget {
@@ -166,14 +167,12 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
   }
 
   Future<void> _loadSubjects() async {
-    final prefs = await SharedPreferences.getInstance();
+    final subjects = await HomeworkService.loadSubjects();
+    final subjectIcons = await HomeworkService.loadSubjectIcons();
     if (!mounted) return;
     setState(() {
-      _subjects = prefs.getStringList('subjects') ?? [];
-      final iconsJson = prefs.getString('subject_icons');
-      if (iconsJson != null) {
-        _subjectIcons = Map<String, int>.from(jsonDecode(iconsJson));
-      }
+      _subjects = subjects;
+      _subjectIcons = subjectIcons;
       if (widget.homework != null &&
           !_subjects.contains(widget.homework!.subject)) {
         _subjects.add(widget.homework!.subject);

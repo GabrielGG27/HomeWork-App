@@ -7,6 +7,7 @@ import 'package:homework_app/services/notification_service.dart';
 import 'package:homework_app/services/attachment_storage_service.dart';
 import 'package:homework_app/icons_helper.dart';
 import 'package:homework_app/screens/homework_list_screen.dart';
+import 'package:homework_app/utils/homework_grouping.dart';
 import 'settings_screen.dart';
 
 class TrashScreen extends StatefulWidget {
@@ -34,6 +35,7 @@ class _TrashScreenState extends State<TrashScreen> {
       _isLoading = true;
     });
     final all = await HomeworkService.loadHomework();
+    if (!mounted) return;
     setState(() {
       _deletedTasks = all.where((t) => t.isDeleted).toList();
       _isLoading = false;
@@ -43,51 +45,11 @@ class _TrashScreenState extends State<TrashScreen> {
   Future<void> _loadSubjects() async {
     final subjects = await HomeworkService.loadSubjects();
     final icons = await HomeworkService.loadSubjectIcons();
+    if (!mounted) return;
     setState(() {
       _subjects = subjects;
       _subjectIcons = icons;
     });
-  }
-
-  Map<String, List<Homework>> _groupHomeworkByDate(
-    List<Homework> homeworkList,
-  ) {
-    final now = DateTime.now();
-    final todayStart = DateTime(now.year, now.month, now.day);
-    final todayEnd = todayStart.add(const Duration(days: 1));
-    final tomorrowStart = todayEnd;
-    final tomorrowEnd = tomorrowStart.add(const Duration(days: 1));
-    final endOfWeek = todayStart.add(const Duration(days: 7));
-
-    final Map<String, List<Homework>> groups = {
-      'overdue': [],
-      'today': [],
-      'tomorrow': [],
-      'week': [],
-      'upcoming': [],
-      'no_date': [],
-    };
-
-    for (final hw in homeworkList) {
-      if (!hw.hasDueDate) {
-        groups['no_date']!.add(hw);
-      } else if (hw.dueDate.isBefore(now)) {
-        groups['overdue']!.add(hw);
-      } else if (hw.dueDate.isAfter(now) && hw.dueDate.isBefore(todayEnd)) {
-        groups['today']!.add(hw);
-      } else if (hw.dueDate.isAfter(todayEnd) &&
-          hw.dueDate.isBefore(tomorrowEnd)) {
-        groups['tomorrow']!.add(hw);
-      } else if (hw.dueDate.isAfter(tomorrowEnd) &&
-          hw.dueDate.isBefore(endOfWeek)) {
-        groups['week']!.add(hw);
-      } else if (hw.dueDate.isAfter(endOfWeek)) {
-        groups['upcoming']!.add(hw);
-      }
-    }
-
-    groups.removeWhere((key, value) => value.isEmpty);
-    return groups;
   }
 
   Future<void> _restoreTask(Homework task) async {
@@ -239,7 +201,10 @@ class _TrashScreenState extends State<TrashScreen> {
                       decoration: const BoxDecoration(color: Colors.blue),
                       child: Text(
                         AppLocalizations.of(context)!.subjects,
-                        style: const TextStyle(color: Colors.white, fontSize: 24),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                        ),
                       ),
                     ),
                     ListTile(
@@ -256,7 +221,10 @@ class _TrashScreenState extends State<TrashScreen> {
                       },
                     ),
                     ListTile(
-                      leading: const Icon(Icons.priority_high, color: Colors.red),
+                      leading: const Icon(
+                        Icons.priority_high,
+                        color: Colors.red,
+                      ),
                       title: Text(AppLocalizations.of(context)!.important),
                       onTap: () async {
                         Navigator.pop(context);
@@ -348,7 +316,7 @@ class _TrashScreenState extends State<TrashScreen> {
             );
           }
 
-          final grouped = _groupHomeworkByDate(_deletedTasks);
+          final grouped = groupHomeworkByDate(_deletedTasks);
           return Column(
             children: [
               Expanded(
@@ -405,7 +373,9 @@ class _TrashScreenState extends State<TrashScreen> {
                         fontSize = 23;
                         break;
                       case 'no_date':
-                        displayTitle = AppLocalizations.of(context)!.sectionNoDate;
+                        displayTitle = AppLocalizations.of(
+                          context,
+                        )!.sectionNoDate;
                         textColor = Colors.grey;
                         icon = Icons.event_busy;
                         fontSize = 23;

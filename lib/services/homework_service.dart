@@ -34,7 +34,14 @@ class HomeworkService {
     // Auto-delete expired deleted tasks (older than 30 days)
     final now = DateTime.now();
     final thirtyDaysAgo = now.subtract(const Duration(days: 30));
-    final expiredTasks = loaded.where((h) => h.isDeleted && h.deletedAt != null && h.deletedAt!.isBefore(thirtyDaysAgo)).toList();
+    final expiredTasks = loaded
+        .where(
+          (h) =>
+              h.isDeleted &&
+              h.deletedAt != null &&
+              h.deletedAt!.isBefore(thirtyDaysAgo),
+        )
+        .toList();
     if (expiredTasks.isNotEmpty) {
       loaded.removeWhere((h) => expiredTasks.contains(h));
       final updatedData = loaded.map((h) => jsonEncode(h.toJson())).toList();
@@ -62,7 +69,13 @@ class HomeworkService {
     final prefs = await SharedPreferences.getInstance();
     final iconsJson = prefs.getString('subject_icons');
     if (iconsJson != null) {
-      return Map<String, int>.from(jsonDecode(iconsJson));
+      try {
+        return Map<String, int>.from(jsonDecode(iconsJson));
+      } on FormatException catch (error) {
+        debugPrint('Invalid subject icon data: $error');
+      } on TypeError catch (error) {
+        debugPrint('Invalid subject icon types: $error');
+      }
     }
     return {};
   }
@@ -85,9 +98,15 @@ class HomeworkService {
 
     final iconsJson = prefs.getString('subject_icons');
     if (iconsJson != null) {
-      final icons = Map<String, dynamic>.from(jsonDecode(iconsJson));
-      icons.remove(subject);
-      await prefs.setString('subject_icons', jsonEncode(icons));
+      try {
+        final icons = Map<String, dynamic>.from(jsonDecode(iconsJson));
+        icons.remove(subject);
+        await prefs.setString('subject_icons', jsonEncode(icons));
+      } on FormatException catch (error) {
+        debugPrint('Could not update invalid subject icon data: $error');
+      } on TypeError catch (error) {
+        debugPrint('Could not update invalid subject icon types: $error');
+      }
     }
   }
 }

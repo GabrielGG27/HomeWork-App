@@ -20,6 +20,7 @@ import 'package:homework_app/services/ads_service.dart';
 import 'package:homework_app/services/attachment_storage_service.dart';
 import 'package:homework_app/services/analytics_service.dart';
 import 'package:homework_app/widgets/walkthrough_overlay.dart';
+import 'package:homework_app/utils/homework_grouping.dart';
 
 class HomeworkListScreen extends StatefulWidget {
   final String? subjectFilter;
@@ -90,6 +91,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     });
     await _loadSubjects();
     final loaded = await HomeworkService.loadHomework();
+    if (!mounted) return;
     setState(() {
       _homeworkList = loaded;
       _isLoading = false;
@@ -235,6 +237,11 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
           request: const AdRequest(),
           adLoadCallback: InterstitialAdLoadCallback(
             onAdLoaded: (InterstitialAd ad) {
+              if (!mounted) {
+                ad.dispose();
+                if (!completion.isCompleted) completion.complete();
+                return;
+              }
               debugPrint('Ad was loaded.');
               _interstitialAd = ad;
               if (!completion.isCompleted) completion.complete();
@@ -284,6 +291,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   Future<void> _loadSubjects() async {
     final subjects = await HomeworkService.loadSubjects();
     final icons = await HomeworkService.loadSubjectIcons();
+    if (!mounted) return;
     setState(() {
       _subjects = subjects;
       _subjectIcons = icons;
@@ -299,6 +307,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     );
 
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     final isFirstTask =
         _homeworkList.isEmpty && (prefs.getInt('homeworkAddedCount') ?? 0) == 0;
     setState(() {
@@ -355,10 +364,11 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   }
 
   void _updateHomework(int index, Homework updatedHomework) async {
+    if (index < 0 || index >= _homeworkList.length) return;
     final retainedIds = updatedHomework.attachments.map((a) => a.id).toSet();
-    final removedAttachments = _homeworkList[index].attachments.where(
-      (attachment) => !retainedIds.contains(attachment.id),
-    );
+    final removedAttachments = _homeworkList[index].attachments
+        .where((attachment) => !retainedIds.contains(attachment.id))
+        .toList();
     setState(() {
       _homeworkList[index] = updatedHomework;
     });
@@ -369,12 +379,14 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   }
 
   void _deleteHomework(int index) async {
+    if (index < 0 || index >= _homeworkList.length) return;
+    final homeworkId = _homeworkList[index].id;
     setState(() {
       _homeworkList[index].isDeleted = true;
       _homeworkList[index].deletedAt = DateTime.now();
     });
     await HomeworkService.saveHomework(_homeworkList);
-    await NotificationService.cancelNotification(_homeworkList[index].id);
+    await NotificationService.cancelNotification(homeworkId);
   }
 
   void _toggleCompleted(Homework homework) async {
@@ -388,20 +400,26 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
         _homeworkList[index].isCompleted = !_homeworkList[index].isCompleted;
       });
 
-      await HomeworkService.saveHomework(_homeworkList);
+      final toggledHomework = _homeworkList[index];
       if (isBeingCompleted) {
         unawaited(
           AnalyticsService.logTaskCompleted(
-            _homeworkList[index],
+            toggledHomework,
             hasPreviousCompletedTasks: hasPreviousCompletedTasks,
           ),
         );
       }
 
-      if (_homeworkList[index].isCompleted) {
+      await HomeworkService.saveHomework(_homeworkList);
+      final currentIndex = _homeworkList.indexWhere(
+        (task) => task.id == homework.id,
+      );
+      if (currentIndex == -1) return;
+      final currentHomework = _homeworkList[currentIndex];
+      if (currentHomework.isCompleted) {
         await NotificationService.cancelNotification(homework.id);
       } else {
-        await NotificationService.scheduleNotification(_homeworkList[index]);
+        await NotificationService.scheduleNotification(currentHomework);
       }
     }
   }
@@ -425,47 +443,6 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     if (index != -1) {
       _deleteHomework(index);
     }
-  }
-
-  Map<String, List<Homework>> _groupHomeworkByDate(
-    List<Homework> homeworkList,
-  ) {
-    final now = DateTime.now();
-    final todayStart = DateTime(now.year, now.month, now.day);
-    final todayEnd = todayStart.add(const Duration(days: 1));
-    final tomorrowStart = todayEnd;
-    final tomorrowEnd = tomorrowStart.add(const Duration(days: 1));
-    final endOfWeek = todayStart.add(const Duration(days: 7));
-
-    final Map<String, List<Homework>> groups = {
-      'overdue': [],
-      'today': [],
-      'tomorrow': [],
-      'week': [],
-      'upcoming': [],
-      'no_date': [],
-    };
-
-    for (final hw in homeworkList) {
-      if (!hw.hasDueDate) {
-        groups['no_date']!.add(hw);
-      } else if (hw.dueDate.isBefore(now)) {
-        groups['overdue']!.add(hw);
-      } else if (hw.dueDate.isAfter(now) && hw.dueDate.isBefore(todayEnd)) {
-        groups['today']!.add(hw);
-      } else if (hw.dueDate.isAfter(todayEnd) &&
-          hw.dueDate.isBefore(tomorrowEnd)) {
-        groups['tomorrow']!.add(hw);
-      } else if (hw.dueDate.isAfter(tomorrowEnd) &&
-          hw.dueDate.isBefore(endOfWeek)) {
-        groups['week']!.add(hw);
-      } else if (hw.dueDate.isAfter(endOfWeek)) {
-        groups['upcoming']!.add(hw);
-      }
-    }
-
-    groups.removeWhere((key, value) => value.isEmpty);
-    return groups;
   }
 
   void _confirmClearCompleted(BuildContext context) {
@@ -868,7 +845,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     }
 
     if (isPendingTab) {
-      final grouped = _groupHomeworkByDate(filteredList);
+      final grouped = groupHomeworkByDate(filteredList);
       return ListView.builder(
         itemCount: grouped.keys.length,
         itemBuilder: (context, sectionIndex) {

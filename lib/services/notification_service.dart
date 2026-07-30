@@ -11,6 +11,8 @@ import 'package:homework_app/models/homework.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const String notificationChannelId = 'homework_channel_id_max_priority';
+const String _exactAlarmPermissionRequestedKey =
+    'exact_alarm_permission_requested';
 late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
 class NotificationService {
@@ -69,11 +71,25 @@ class NotificationService {
 
   static Future<bool?> _requestNotificationsPermission() async {
     try {
-      return await flutterLocalNotificationsPlugin
+      final androidPlatform = flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
-          >()
+          >();
+      final notificationGranted = await androidPlatform
           ?.requestNotificationsPermission();
+
+      if (notificationGranted != false &&
+          await androidPlatform?.canScheduleExactNotifications() == false) {
+        final prefs = await SharedPreferences.getInstance();
+        final alreadyRequested =
+            prefs.getBool(_exactAlarmPermissionRequestedKey) ?? false;
+        if (!alreadyRequested) {
+          await prefs.setBool(_exactAlarmPermissionRequestedKey, true);
+          await androidPlatform?.requestExactAlarmsPermission();
+        }
+      }
+
+      return notificationGranted;
     } on PlatformException catch (error) {
       // Android rejects concurrent runtime permission dialogs. A request can
       // already be active after a rapid double tap or another plugin prompt.
@@ -118,44 +134,75 @@ class NotificationService {
     );
     final dueStr = isEs ? 'Entrega $smartDate' : 'Due $smartDate';
 
-    try {
-      await flutterLocalNotificationsPlugin.zonedSchedule(
-        notificationId,
-        upcomingStr,
-        dueStr,
-        tz.TZDateTime.local(
-          scheduledDate.year,
-          scheduledDate.month,
-          scheduledDate.day,
-          scheduledDate.hour,
-          scheduledDate.minute,
-          scheduledDate.second,
-        ),
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            notificationChannelId,
-            'Homework Notifications',
-            channelDescription: 'Notifications for upcoming homework tasks',
-            importance: Importance.max,
-            priority: Priority.max,
-            playSound: true,
-            color: Colors.blue,
-            styleInformation: BigTextStyleInformation(
-              homework.description.isNotEmpty ? homework.description : dueStr,
-              contentTitle: upcomingStr,
+    Future<void> schedule(AndroidScheduleMode scheduleMode) =>
+        flutterLocalNotificationsPlugin.zonedSchedule(
+          notificationId,
+          upcomingStr,
+          dueStr,
+          tz.TZDateTime.local(
+            scheduledDate.year,
+            scheduledDate.month,
+            scheduledDate.day,
+            scheduledDate.hour,
+            scheduledDate.minute,
+            scheduledDate.second,
+          ),
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              notificationChannelId,
+              'Homework Notifications',
+              channelDescription: 'Notifications for upcoming homework tasks',
+              importance: Importance.max,
+              priority: Priority.max,
+              playSound: true,
+              color: Colors.blue,
+              styleInformation: BigTextStyleInformation(
+                homework.description.isNotEmpty ? homework.description : dueStr,
+                contentTitle: upcomingStr,
+              ),
             ),
           ),
-        ),
-        payload: homework.id,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-      );
+          payload: homework.id,
+          androidScheduleMode: scheduleMode,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+        );
+
+    var scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
+    try {
+      final canScheduleExact = await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.canScheduleExactNotifications();
+      if (canScheduleExact == true) {
+        scheduleMode = AndroidScheduleMode.exactAllowWhileIdle;
+      }
+    } catch (error) {
+      debugPrint('Could not check exact alarm permission: $error');
+    }
+
+    try {
+      await schedule(scheduleMode);
       debugPrint(
         "Notification scheduled for: $scheduledDate (Due: ${homework.dueDate})",
       );
-    } catch (e) {
-      debugPrint("Error scheduling notification: $e");
+    } on PlatformException catch (error) {
+      if (scheduleMode == AndroidScheduleMode.exactAllowWhileIdle) {
+        try {
+          await schedule(AndroidScheduleMode.inexactAllowWhileIdle);
+          debugPrint(
+            'Exact alarm was unavailable; notification scheduled inexactly.',
+          );
+          return;
+        } catch (fallbackError) {
+          debugPrint('Error scheduling fallback notification: $fallbackError');
+          return;
+        }
+      }
+      debugPrint('Error scheduling notification: $error');
+    } catch (error) {
+      debugPrint('Error scheduling notification: $error');
     }
   }
 
