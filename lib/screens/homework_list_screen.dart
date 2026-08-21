@@ -42,7 +42,8 @@ class HomeworkListScreen extends StatefulWidget {
   State<HomeworkListScreen> createState() => _HomeworkListScreenState();
 }
 
-class _HomeworkListScreenState extends State<HomeworkListScreen> {
+class _HomeworkListScreenState extends State<HomeworkListScreen>
+    with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey _tabsKey = GlobalKey();
   final GlobalKey _newTaskKey = GlobalKey();
@@ -69,6 +70,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _firstTaskFlowActive = widget.startFirstTaskFlow;
     if (!_firstTaskFlowActive) {
       _loadData();
@@ -94,6 +96,15 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
         setState(() {});
       }
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      // Date-based sections are calculated during build with DateTime.now().
+      // Rebuild immediately because foreground timers may have been suspended.
+      setState(() {});
+    }
   }
 
   @override
@@ -167,6 +178,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _interstitialAd?.dispose();
     _bannerAd?.dispose();
