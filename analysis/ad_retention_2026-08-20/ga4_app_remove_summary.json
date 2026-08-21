@@ -1,0 +1,36 @@
+{
+  "property": "properties/541344008",
+  "executed_at": "2026-08-20",
+  "timezone": "Etc/GMT+6",
+  "period_event_users": [
+    {"period": "Pre window", "start": "2026-06-20", "end": "2026-06-29", "event": "first_open", "users": 24, "event_count": 24},
+    {"period": "Pre window", "start": "2026-06-20", "end": "2026-06-29", "event": "app_remove", "users": 5, "event_count": 5},
+    {"period": "Transition", "start": "2026-06-30", "end": "2026-07-03", "event": "first_open", "users": 48, "event_count": 48},
+    {"period": "Transition", "start": "2026-06-30", "end": "2026-07-03", "event": "app_remove", "users": 11, "event_count": 11},
+    {"period": "July spike", "start": "2026-07-04", "end": "2026-07-15", "event": "first_open", "users": 1443, "event_count": 1446},
+    {"period": "July spike", "start": "2026-07-04", "end": "2026-07-15", "event": "app_remove", "users": 928, "event_count": 952},
+    {"period": "July decline", "start": "2026-07-16", "end": "2026-07-31", "event": "first_open", "users": 3309, "event_count": 3316},
+    {"period": "July decline", "start": "2026-07-16", "end": "2026-07-31", "event": "app_remove", "users": 2482, "event_count": 2528},
+    {"period": "August", "start": "2026-08-01", "end": "2026-08-16", "event": "first_open", "users": 2910, "event_count": 2916},
+    {"period": "August", "start": "2026-08-01", "end": "2026-08-16", "event": "app_remove", "users": 2320, "event_count": 2334}
+  ],
+  "source_event_users": [
+    {"source_medium": "(direct) / (none)", "event": "app_remove", "users": 58},
+    {"source_medium": "(direct) / (none)", "event": "first_open", "users": 130},
+    {"source_medium": "google / cpc", "event": "app_remove", "users": 5326},
+    {"source_medium": "google / cpc", "event": "first_open", "users": 7116},
+    {"source_medium": "google / organic", "event": "app_remove", "users": 13},
+    {"source_medium": "google / organic", "event": "first_open", "users": 17},
+    {"source_medium": "google-play / organic", "event": "app_remove", "users": 333},
+    {"source_medium": "google-play / organic", "event": "first_open", "users": 458}
+  ],
+  "queries": {
+    "periods": "GA4 Data API runReport; dimensions=eventName; metrics=eventCount,totalUsers; eventName IN (app_remove,first_open); five explicit date ranges",
+    "sources": "GA4 Data API runReport; dateRange=2026-07-04..2026-08-16; dimensions=firstUserSourceMedium,eventName; metric=totalUsers; eventName IN (app_remove,first_open)"
+  },
+  "limitations": [
+    "app_remove is not the same metric as Play Console user loss.",
+    "app_remove users divided by first_open users in the same calendar period is not a cohort uninstall rate.",
+    "Users removed in a period may have installed before that period."
+  ]
+}

@@ -48,10 +48,36 @@
   "selectSubjectValidator": "Seleccione o cree una materia",
   "language": "Idioma",
   "atDueTime": "A la hora de entrega",
+  "minuteBefore": "1 minuto antes",
   "minutesBefore": "{minutes} minutos antes",
   "hourBefore": "1 hora antes",
   "hoursBefore": "{hours} horas antes",
   "dayBefore": "1 día antes",
+  "daysBefore": "{days} días antes",
+  "@daysBefore": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "reminderNumber": "Recordatorio {number}",
+  "@reminderNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "addReminder": "Agregar otro recordatorio",
+  "removeReminder": "Quitar recordatorio",
+  "customReminder": "Tiempo personalizado…",
+  "timeAmount": "Cantidad",
+  "minutes": "Minutos",
+  "hours": "Horas",
+  "days": "Días",
+  "enterPositiveNumber": "Ingresa un número mayor que cero",
+  "remindersMustBeDifferent": "Elige un tiempo diferente para cada recordatorio",
   "darkMode": "Modo oscuro",
   "rateApp": "Calificar aplicación",
   "hasDueDate": "Fecha de Entrega",
@@ -87,8 +113,8 @@
       "total": {"type": "int"}
     }
   },
-  "viewIntroduction": "Ver introducción",
-  "viewIntroductionDescription": "Repite la bienvenida y el recorrido por la app",
+  "viewIntroduction": "Ver guía para crear una tarea",
+  "viewIntroductionDescription": "Repite paso a paso la creación y organización de una tarea",
   "skipWalkthrough": "Omitir recorrido",
   "walkthroughDialogLabel": "Recorrido por la aplicación",
   "walkthroughTabsTitle": "Controla cada tarea",
@@ -108,6 +134,30 @@
   "walkthroughCreateTaskPrompt": "Ahora completa el formulario y guarda tu primera tarea.",
   "walkthroughCompleteTitle": "¡Recorrido completado!",
   "walkthroughCompleteDescription": "Tu primera tarea está lista. Ya conoces todo lo necesario para mantenerte organizado.",
+  "firstTaskIntroTitle": "Crea tu primera tarea",
+  "firstTaskIntroDescription": "HomeWork App se encarga de organizarla por ti.",
+  "firstTaskDetailsTitle": "Añade detalles si los necesitas",
+  "firstTaskDetailsDescription": "Puedes escribir instrucciones, notas o cualquier información adicional. Este paso es opcional.",
+  "firstTaskScheduleTitle": "Elige cuándo debes terminarla",
+  "firstTaskScheduleDescription": "Asigna una fecha y hora. HomeWork App colocará la tarea automáticamente en la sección correspondiente.",
+  "firstTaskReminderTitle": "Recibe un aviso antes de la entrega",
+  "firstTaskReminderDescription": "Los recordatorios son opcionales. Actívalos para elegir cuándo debe avisarte HomeWork App. Puedes agregar hasta dos y usar una antelación personalizada.",
+  "firstTaskImportanceTitle": "Destaca lo más importante",
+  "firstTaskImportanceDescription": "Las tareas importantes aparecen primero dentro de su sección. Activarlo es opcional.",
+  "firstTaskSaveTitle": "Guarda tu primera tarea",
+  "firstTaskSaveDescription": "Todo está listo. Pulsa Guardar para verla organizada en la lista.",
+  "firstTaskCompletedTitle": "¡Felicidades! Creaste tu primera tarea.",
+  "firstTaskCompletedDescription": "Ahora relájate: HomeWork App organizará tus tareas por ti.",
+  "starterSubjectMath": "Matemáticas",
+  "starterSubjectSpanish": "Español",
+  "starterSubjectGeography": "Geografía",
+  "starterSubjectHistory": "Historia",
+  "starterSubjectBiology": "Biología",
+  "demoTaskToday": "Resolver ejercicios de álgebra",
+  "demoTaskTomorrow": "Leer el siguiente capítulo",
+  "demoTaskWeek": "Preparar exposición de geografía",
+  "demoTaskHistory": "Entregar resumen de historia",
+  "demoTaskBiology": "Estudiar las células",
   "done": "Listo",
   "privacyOptions": "Opciones de privacidad",
   "privacyOptionsDescription": "Revisa o cambia tu consentimiento para anuncios",

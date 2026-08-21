@@ -4,7 +4,6 @@ import 'package:homework_app/main.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:provider/provider.dart';
 import 'package:homework_app/services/purchases_service.dart';
-import 'package:homework_app/screens/onboarding_screen.dart';
 import 'package:homework_app/services/consent_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -104,16 +103,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               AppLocalizations.of(context)!.viewIntroductionDescription,
             ),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () async {
-              final startWalkthrough = await Navigator.of(context).push<bool>(
-                MaterialPageRoute(
-                  builder: (_) => const OnboardingScreen(isReplay: true),
-                ),
-              );
-              if (context.mounted && startWalkthrough == true) {
-                Navigator.of(context).pop(true);
-              }
-            },
+            onTap: () => Navigator.of(context).pop(true),
           ),
           const Divider(),
           _buildSectionHeader(

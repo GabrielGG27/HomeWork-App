@@ -1,0 +1,142 @@
+{
+  "source": {
+    "file": "play_console_user_loss_rate.csv",
+    "sha256": "f4672676e3117982f1237bc7726a1e3551d380b9adb1c88aea0a96d9e1408bf6",
+    "row_count": 87,
+    "date_start": "2026-05-22",
+    "date_end": "2026-08-16",
+    "missing_rate_days": [
+      "2026-05-28",
+      "2026-06-16"
+    ],
+    "unique_date_count": 87,
+    "expected_calendar_days": 87,
+    "duplicate_date_count": 0,
+    "invalid_rate_count": 0
+  },
+  "known_changes": {
+    "real_ad_ids_commit_date": "2026-06-30",
+    "release_1_0_30_and_campaign_start": "2026-07-02",
+    "peak_date": "2026-07-08",
+    "peak_percent": 39.01
+  },
+  "phase_summary": {
+    "Pre real ads": {
+      "observed_days": 37,
+      "mean_percent": 3.0589,
+      "median_percent": 2.5,
+      "minimum_percent": 1.11,
+      "maximum_percent": 7.14,
+      "days_above_5_percent": 4,
+      "share_days_above_5_percent": 0.1081
+    },
+    "Transition": {
+      "observed_days": 4,
+      "mean_percent": 3.9225,
+      "median_percent": 4.165,
+      "minimum_percent": 1.19,
+      "maximum_percent": 6.17,
+      "days_above_5_percent": 1,
+      "share_days_above_5_percent": 0.25
+    },
+    "July spike": {
+      "observed_days": 12,
+      "mean_percent": 22.2858,
+      "median_percent": 21.1,
+      "minimum_percent": 8.93,
+      "maximum_percent": 39.01,
+      "days_above_5_percent": 12,
+      "share_days_above_5_percent": 1.0
+    },
+    "July decline": {
+      "observed_days": 16,
+      "mean_percent": 13.1844,
+      "median_percent": 12.83,
+      "minimum_percent": 10.16,
+      "maximum_percent": 19.03,
+      "days_above_5_percent": 16,
+      "share_days_above_5_percent": 1.0
+    },
+    "August": {
+      "observed_days": 16,
+      "mean_percent": 7.7956,
+      "median_percent": 7.375,
+      "minimum_percent": 5.8,
+      "maximum_percent": 12.12,
+      "days_above_5_percent": 16,
+      "share_days_above_5_percent": 1.0
+    }
+  },
+  "release_summary": {
+    "1.0.30": {
+      "start": "2026-07-02",
+      "end": "2026-07-19",
+      "observed_days": 18,
+      "mean_percent": 18.8361,
+      "median_percent": 19.665,
+      "minimum_percent": 1.19,
+      "maximum_percent": 39.01,
+      "days_above_5_percent": 16,
+      "share_days_above_5_percent": 0.8889
+    },
+    "1.0.31": {
+      "start": "2026-07-20",
+      "end": "2026-07-23",
+      "observed_days": 4,
+      "mean_percent": 14.03,
+      "median_percent": 14.365,
+      "minimum_percent": 12.7,
+      "maximum_percent": 14.69,
+      "days_above_5_percent": 4,
+      "share_days_above_5_percent": 1.0
+    },
+    "1.0.32": {
+      "start": "2026-07-24",
+      "end": "2026-07-28",
+      "observed_days": 5,
+      "mean_percent": 11.31,
+      "median_percent": 10.5,
+      "minimum_percent": 10.26,
+      "maximum_percent": 12.96,
+      "days_above_5_percent": 5,
+      "share_days_above_5_percent": 1.0
+    },
+    "1.0.34": {
+      "start": "2026-07-29",
+      "end": "2026-07-29",
+      "observed_days": 1,
+      "mean_percent": 10.95,
+      "median_percent": 10.95,
+      "minimum_percent": 10.95,
+      "maximum_percent": 10.95,
+      "days_above_5_percent": 1,
+      "share_days_above_5_percent": 1.0
+    },
+    "1.0.35": {
+      "start": "2026-07-30",
+      "end": "2026-08-16",
+      "observed_days": 18,
+      "mean_percent": 8.06,
+      "median_percent": 7.665,
+      "minimum_percent": 5.8,
+      "maximum_percent": 12.12,
+      "days_above_5_percent": 18,
+      "share_days_above_5_percent": 1.0
+    }
+  },
+  "pre_vs_post_spike": {
+    "pre_mean_percent": 3.0589,
+    "post_mean_percent": 13.707,
+    "mean_difference_points": 10.6481,
+    "mean_ratio": 4.481,
+    "pre_median_percent": 2.5,
+    "post_median_percent": 10.725
+  },
+  "limitations": [
+    "The export contains daily rates but not user-loss numerators or installed-audience denominators.",
+    "Daily averages are unweighted descriptive summaries, not recomputed aggregate loss rates.",
+    "Real ads and paid acquisition changed within two days, so the export cannot identify their separate causal effects.",
+    "The file is aggregated across all countries and cannot compare India with organic or other markets.",
+    "Play installation statistics use Pacific Time, which can shift day-level alignment against the Google Ads account timezone."
+  ]
+}

@@ -146,4 +146,81 @@ void main() {
 
     expect(scheduleMode, 'inexactAllowWhileIdle');
   });
+
+  test('schedules two reminders with different notification IDs', () async {
+    final scheduledIds = <int>[];
+
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          switch (call.method) {
+            case 'initialize':
+              return true;
+            case 'getNotificationAppLaunchDetails':
+              return <String, Object?>{'notificationLaunchedApp': false};
+            case 'createNotificationChannel':
+              return null;
+            case 'canScheduleExactNotifications':
+              return false;
+            case 'zonedSchedule':
+              final arguments = Map<String, dynamic>.from(call.arguments);
+              scheduledIds.add(arguments['id'] as int);
+              return null;
+          }
+          return null;
+        });
+
+    await NotificationService.initializeNotifications();
+    await NotificationService.scheduleNotification(
+      Homework(
+        id: 'two-reminders',
+        title: 'Future task',
+        subject: 'Math',
+        dueDate: DateTime.now().add(const Duration(days: 3)),
+        notificationOffsets: const [1440, 30],
+      ),
+    );
+
+    expect(scheduledIds, hasLength(2));
+    expect(scheduledIds.toSet(), hasLength(2));
+  });
+
+  test('clears old reminder IDs before rescheduling', () async {
+    var cancelCalls = 0;
+    var scheduleCalls = 0;
+
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          switch (call.method) {
+            case 'initialize':
+              return true;
+            case 'getNotificationAppLaunchDetails':
+              return <String, Object?>{'notificationLaunchedApp': false};
+            case 'createNotificationChannel':
+              return null;
+            case 'cancel':
+              cancelCalls++;
+              return null;
+            case 'canScheduleExactNotifications':
+              return false;
+            case 'zonedSchedule':
+              scheduleCalls++;
+              return null;
+          }
+          return null;
+        });
+
+    await NotificationService.initializeNotifications();
+    await NotificationService.scheduleNotification(
+      Homework(
+        id: 'edited-task',
+        title: 'Edited task',
+        subject: 'Math',
+        dueDate: DateTime.now().add(const Duration(days: 1)),
+        notificationOffsets: const [30],
+      ),
+    );
+
+    expect(cancelCalls, greaterThanOrEqualTo(2));
+    expect(scheduleCalls, 1);
+  });
 }

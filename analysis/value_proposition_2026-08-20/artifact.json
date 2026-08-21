@@ -1,0 +1,155 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "Cómo hacer visible el valor de HomeWork",
+    "description": "Propuesta de primera experiencia centrada en la organización automática por tiempo.",
+    "generatedAt": "2026-08-21",
+    "sources": [
+      {
+        "id": "ga4_activation",
+        "label": "Google Analytics 4 · activación de usuarios nuevos",
+        "href": "https://analytics.google.com/analytics/web/#/p541344008/reports",
+        "path": "analysis/product_audit_2026-08-19/artifact.json",
+        "query": {
+          "engine": "SQLite",
+          "language": "SQL",
+          "description": "Transformación reproducible de las filas GA4 revisadas y conservadas en la auditoría de producto.",
+          "sql": "WITH reviewed_ga4(stage, users, share_of_first_open_percent, period) AS (VALUES ('Primera apertura', 1497, 100.0, '11–18 ago'), ('Primera tarea creada', 344, 22.98, '11–18 ago'), ('Primera tarea completada', 190, 12.69, '11–18 ago')) SELECT stage, users, share_of_first_open_percent, period FROM reviewed_ga4",
+          "executed_at": "2026-08-19",
+          "filters": ["Property 541344008", "11–18 de agosto de 2026", "Eventos posteriores al lanzamiento del 30 de julio"],
+          "metric_definitions": ["Primera apertura: usuarios con first_open.", "Primera tarea creada: usuarios con first_task_created.", "Primera tarea completada: usuarios con first_task_completed."]
+        }
+      },
+      {
+        "id": "current_first_experience",
+        "label": "Implementación actual · onboarding y lista vacía",
+        "query": {
+          "engine": "Revisión de código Flutter",
+          "description": "Revisión de lib/screens/onboarding_screen.dart y lib/screens/homework_list_screen.dart.",
+          "executed_at": "2026-08-20",
+          "filters": ["Flujo para nuevos usuarios", "Estado vacío de tareas pendientes"],
+          "metric_definitions": ["El onboarding actual contiene cuatro páginas sobre funciones generales.", "La lista vacía actual muestra únicamente un mensaje de texto."]
+        }
+      },
+      {
+        "id": "timeline_implementation",
+        "label": "Implementación actual · agrupación temporal",
+        "query": {
+          "engine": "Revisión de código Flutter",
+          "description": "Revisión de lib/utils/homework_grouping.dart y su uso en la lista principal.",
+          "executed_at": "2026-08-20",
+          "filters": ["Tareas pendientes con y sin fecha"],
+          "metric_definitions": ["Las tareas se agrupan automáticamente en atrasadas, hoy, mañana, próximos siete días, posteriores y sin fecha."]
+        }
+      }
+    ],
+    "charts": [
+      {
+        "id": "activation_funnel",
+        "title": "Progresión de la primera experiencia",
+        "subtitle": "Usuarios únicos, 11–18 de agosto de 2026",
+        "type": "bar",
+        "dataset": "activation_funnel",
+        "encodings": {
+          "x": {"field": "stage", "type": "nominal"},
+          "y": {"field": "users", "type": "quantitative"}
+        },
+        "sourceId": "ga4_activation"
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# Cómo hacer visible el valor de HomeWork"
+      },
+      {
+        "id": "summary",
+        "type": "markdown",
+        "body": "## Executive Summary\n\n- **La propuesta de valor es reducir la carga mental de planear.** La promesa más precisa es: `Tú dinos qué tienes que hacer y cuándo; HomeWork organiza lo que sigue`.\n- **El onboarding debe ser una demostración, no una explicación.** La primera pantalla mostrará el timeline real con tres tareas temporales marcadas como ejemplo y un único CTA: `Organizar mi primera tarea`.\n- **La fecha es el mecanismo central.** Al elegirla, el formulario anticipará el resultado —`Se organizará en Mañana`— y, después de guardar, la tarea aparecerá resaltada en esa sección.\n- **Los recordatorios apoyan la promesa, pero no deben competir con ella.** Se ofrecerán después de seleccionar fecha y permanecerán desactivados por defecto. La activación reciente fue 23.0%; el lanzamiento debería buscar al menos 28% sin empeorar D1 ni la primera tarea completada."
+      },
+      {
+        "id": "problem",
+        "type": "markdown",
+        "body": "## El producto posee una diferencia, pero la oculta\n\nEl código ya contiene la función diferenciadora: organiza automáticamente cada tarea según su fecha. Sin embargo, el onboarding actual dedica cuatro páginas a materias, recordatorios y progreso —funciones que el usuario espera de cualquier lista— y el walkthrough explica controles. Cuando la lista está vacía, solo muestra texto. El resultado es que un usuario debe confiar en una promesa genérica antes de ver el timeline.",
+        "sourceId": "current_first_experience"
+      },
+      {
+        "id": "funnel_intro",
+        "type": "markdown",
+        "body": "## La pérdida sucede antes de experimentar el valor\n\nEntre el 11 y el 18 de agosto hubo 1,497 usuarios con primera apertura, 344 que crearon una primera tarea y 190 que completaron una. La gráfica no demuestra que el mensaje sea la única causa, pero sí delimita el problema: aproximadamente tres de cada cuatro usuarios se van antes de tener suficiente contenido para ver el timeline funcionando.",
+        "sourceId": "ga4_activation"
+      },
+      {
+        "id": "funnel_chart",
+        "type": "chart",
+        "chartId": "activation_funnel"
+      },
+      {
+        "id": "funnel_implication",
+        "type": "markdown",
+        "body": "### Implicación\n\nAñadir explicaciones antes de la primera tarea aumenta el tiempo hasta el valor. La experiencia debe reducir ese tiempo y hacer visible el resultado de la organización automática."
+      },
+      {
+        "id": "experience",
+        "type": "markdown",
+        "body": "## La propuesta debe demostrarse en cinco momentos\n\n1. **Abrir directamente la lista real.** Sin carrusel ni recorrido obligatorio.\n2. **Mostrar una demostración temporal del timeline.** Tres tarjetas atenuadas y rotuladas `Ejemplo`: una en Hoy, otra en Mañana y otra en Próximos 7 días. No se guardan, no generan notificaciones ni cuentan en Analytics.\n3. **Invitar a organizar, no solo a añadir.** El CTA `Organizar mi primera tarea` abre el formulario normal simplificado.\n4. **Hacer visible la consecuencia de elegir fecha.** Accesos rápidos `Hoy`, `Mañana`, `Esta semana` y `Elegir fecha`; al seleccionar uno, aparece una previsualización como `Se organizará en Mañana` y el botón cambia a `Añadir a Mañana`.\n5. **Probar el valor después de guardar.** Los ejemplos desaparecen, la lista se desplaza hasta la sección correcta, resalta brevemente la tarea real y confirma: `“Ensayo de historia” quedó en Mañana`."
+      },
+      {
+        "id": "copy",
+        "type": "markdown",
+        "body": "## Mensaje recomendado para la pantalla vacía\n\n**Promesa principal:** `Tú dinos qué tienes que hacer y cuándo. HomeWork organiza lo que sigue.`\n\n**Título:** `Lo próximo, siempre claro`\n\n**Descripción:** `Tus tareas aparecen automáticamente en Hoy, Mañana y Próximos 7 días, para que dediques menos tiempo a planear y más a avanzar.`\n\n**CTA:** `Organizar mi primera tarea`\n\n**Confirmación posterior:** `“Proyecto de historia” quedó en Mañana`\n\n`Añade tu primera tarea y dile hola a una vida con menos estrés` funciona como tono emocional, pero es demasiado amplia como promesa principal. `HomeWork organiza. Tú avanzas.` puede funcionar como línea breve de marca."
+      },
+      {
+        "id": "visual_direction",
+        "type": "markdown",
+        "body": "## La interfaz debe mostrar el producto, no ilustrarlo\n\nLa demostración debe usar los mismos encabezados, tarjetas, iconos de materia y colores del timeline real. Las tarjetas de ejemplo deben decir `Ejemplo` para evitar que parezcan datos creados por la app y desaparecer al guardar la primera tarea real. No usaría una ilustración abstracta ni una captura estática: una vista construida con componentes reales se adapta al tema oscuro, texto ampliado y pantallas pequeñas, y mantiene coherencia cuando el diseño cambie.\n\nEn el formulario no prellenaría un título que pueda guardarse por accidente. Usaría un ejemplo como placeholder —`Ej. Entregar ensayo de historia`— y dejaría que el usuario escriba algo propio. La fecha sí debe ser protagonista. Si aún no la conoce, `Todavía no lo sé` conserva la salida hacia Sin fecha sin romper el flujo."
+      },
+      {
+        "id": "reminder_role",
+        "type": "markdown",
+        "body": "## El recordatorio debe llegar después de entender el timeline\n\nUna vez elegida la fecha, puede aparecer `¿Quieres que te avisemos antes?`, con el recordatorio desactivado por defecto y opciones sencillas de antelación. El permiso del sistema solo se solicita si el usuario lo activa. De este modo, las notificaciones refuerzan la tranquilidad prometida sin desviar la atención del diferenciador principal: la organización automática."
+      },
+      {
+        "id": "measurement",
+        "type": "markdown",
+        "body": "## Cómo sabremos si funciona\n\nPublicaría el cambio para todos los usuarios nuevos y compararía una cohorte posterior al lanzamiento contra la ventana reciente. La métrica principal será primera tarea creada sobre primera apertura: línea base 23.0% y objetivo de producto 28% o más. Como protecciones, primera tarea completada no debe caer por debajo de 12.7% y D1 no debe caer por debajo de 7.6%. También registraría la sección elegida para la primera tarea y si el usuario regresó a la lista después de guardarla.",
+        "sourceId": "ga4_activation"
+      },
+      {
+        "id": "next_steps",
+        "type": "markdown",
+        "body": "## Siguiente implementación recomendada\n\n1. Sustituir el onboarding obligatorio por entrada directa a la lista.\n2. Diseñar el estado vacío con tres tareas de demostración temporales y el mensaje propuesto.\n3. Hacer que el CTA abra la creación simplificada sin un título real prellenado.\n4. Dar prioridad visual a la fecha, mostrar una previsualización de sección y usar un CTA dinámico como `Añadir a Mañana`.\n5. Ofrecer el recordatorio después de elegir fecha y pedir permiso únicamente si se activa.\n6. Al guardar, retirar los ejemplos y resaltar la tarea real en su sección con una confirmación breve.\n7. Mantener la primera sesión sin anuncios hasta que el usuario vea su primera tarea en el timeline.\n8. Actualizar la primera captura de Google Play y los anuncios con el mismo mensaje solo después de validar el flujo dentro de la app."
+      },
+      {
+        "id": "questions",
+        "type": "markdown",
+        "body": "## Preguntas que resolverá el prototipo\n\n- ¿Las tres tareas de ejemplo hacen comprensible el timeline sin parecer datos reales?\n- ¿Materia debe seguir siendo obligatoria en la primera tarea o puede usarse `General` de forma predeterminada?\n- ¿La selección rápida debe ser `Hoy / Mañana / Esta semana` o `Hoy / Mañana / Elegir fecha`?\n- ¿Conviene mostrar el recordatorio dentro del formulario o inmediatamente después de guardar?\n- ¿Qué duración de resaltado comunica la colocación sin sentirse como otro tutorial?"
+      },
+      {
+        "id": "caveats",
+        "type": "markdown",
+        "body": "## Caveats y supuestos\n\nLa evidencia disponible demuestra una pérdida fuerte antes de la primera tarea, pero no identifica por sí sola la causa. La recomendación combina esa evidencia con la revisión del flujo actual y con la propuesta de valor declarada por el propietario del producto. El objetivo de 28% es un umbral operativo para evaluar el lanzamiento, no una predicción garantizada ni un benchmark externo."
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "status": "ready",
+    "generatedAt": "2026-08-21",
+    "datasets": {
+      "activation_funnel": [
+        {"stage": "Primera apertura", "users": 1497, "share_of_first_open_percent": 100.0, "period": "11–18 ago"},
+        {"stage": "Primera tarea creada", "users": 344, "share_of_first_open_percent": 22.98, "period": "11–18 ago"},
+        {"stage": "Primera tarea completada", "users": 190, "share_of_first_open_percent": 12.69, "period": "11–18 ago"}
+      ]
+    }
+  },
+  "sources": [
+    {"id": "ga4_activation", "label": "Google Analytics 4 · property 541344008", "href": "https://analytics.google.com/analytics/web/#/p541344008/reports", "path": "analysis/product_audit_2026-08-19/artifact.json"},
+    {"id": "current_first_experience", "label": "Código Flutter · onboarding y estado vacío"},
+    {"id": "timeline_implementation", "label": "Código Flutter · agrupación temporal"}
+  ]
+}

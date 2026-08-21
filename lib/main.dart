@@ -9,7 +9,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'services/notification_service.dart';
 import 'screens/homework_list_screen.dart';
-import 'screens/onboarding_screen.dart';
+import 'services/onboarding_service.dart';
 import 'services/purchases_service.dart';
 import 'services/ads_service.dart';
 
@@ -144,7 +144,7 @@ class _MyAppState extends State<MyApp> {
             ? const Scaffold(body: Center(child: CircularProgressIndicator()))
             : _hasCompletedOnboarding
             ? const HomeworkListScreen()
-            : const OnboardingScreen(),
+            : const HomeworkListScreen(startFirstTaskFlow: true),
       ),
     );
   }

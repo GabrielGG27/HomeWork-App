@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:homework_app/l10n/app_localizations.dart';
 import 'package:homework_app/screens/homework_list_screen.dart';
 import 'package:homework_app/services/analytics_service.dart';
+import 'package:homework_app/services/onboarding_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const String onboardingCompletedKey = 'onboardingCompleted';
+export 'package:homework_app/services/onboarding_service.dart'
+    show onboardingCompletedKey;
 
 class OnboardingScreen extends StatefulWidget {
   final bool isReplay;

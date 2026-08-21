@@ -1,0 +1,125 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "Auditoría actualizada de producto y adquisición · Homework App",
+    "description": "Comparación de adquisición, activación y retención entre el 3–10 y el 11–18 de agosto de 2026.",
+    "generatedAt": "2026-08-19",
+    "sources": [
+      {
+        "id": "google_ads_periods",
+        "label": "Google Ads · campaña HomeWork_App_Installs_India_V1",
+        "query": {
+          "engine": "Google Ads Query Language",
+          "language": "GAQL",
+          "description": "Rendimiento agregado de dos periodos comparables de ocho días.",
+          "sql": "SELECT campaign.id, campaign.name, metrics.impressions, metrics.clicks, metrics.interactions, metrics.cost_micros, metrics.conversions, metrics.biddable_app_install_conversions, metrics.biddable_app_post_install_conversions FROM campaign WHERE campaign.id = 23991985899 AND segments.date BETWEEN '2026-08-03' AND '2026-08-18'",
+          "executed_at": "2026-08-19",
+          "filters": ["Cuenta 8368535464", "Moneda MXN", "Zona horaria America/Mexico_City", "Periodos 3–10 y 11–18 de agosto"],
+          "metric_definitions": ["Instalaciones: biddable_app_install_conversions atribuidas por Google Ads.", "CPI: gasto dividido entre instalaciones."]
+        }
+      },
+      {
+        "id": "google_ads_config",
+        "label": "Google Ads · configuración de campaña y conversiones",
+        "query": {
+          "engine": "Google Ads Query Language",
+          "language": "GAQL",
+          "description": "Estado, presupuesto, estrategia de puja y acciones de conversión no eliminadas.",
+          "sql": "SELECT campaign.id, campaign.status, campaign.primary_status, campaign.primary_status_reasons, campaign.app_campaign_setting.bidding_strategy_goal_type, campaign_budget.amount_micros, conversion_action.name, conversion_action.status, conversion_action.category, conversion_action.primary_for_goal FROM campaign, campaign_budget, conversion_action WHERE campaign.id = 23991985899",
+          "executed_at": "2026-08-19",
+          "filters": ["Campaign 23991985899", "Conversion actions status != REMOVED"],
+          "metric_definitions": ["Presupuesto diario configurado en Google Ads.", "Una acción primaria puede orientar la optimización de campaña; las acciones ocultas no prueban importación de eventos nuevos."]
+        }
+      },
+      {
+        "id": "ga4_periods",
+        "label": "Google Analytics 4 · homework-app-9421c",
+        "href": "https://analytics.google.com/analytics/web/#/p541344008/reports",
+        "query": {
+          "engine": "Google Analytics Data API",
+          "description": "Usuarios, sesiones, eventos, fuentes, países, ingresos y cohortes para periodos comparables.",
+          "executed_at": "2026-08-19",
+          "filters": ["Property 541344008", "3–10 agosto 2026", "11–18 agosto 2026", "Zona horaria Etc/GMT+6"],
+          "metric_definitions": ["Activación: usuarios con first_task_created divididos entre usuarios con first_open.", "Valor inicial: usuarios con first_task_completed divididos entre usuarios con first_open.", "D1/D7: usuarios activos uno o siete días después de firstSessionDate divididos entre nuevos usuarios del día de cohorte."]
+        }
+      },
+      {
+        "id": "ga4_sources",
+        "label": "Google Analytics 4 · calidad por fuente inicial",
+        "href": "https://analytics.google.com/analytics/web/#/p541344008/reports",
+        "query": {
+          "engine": "Google Analytics Data API",
+          "description": "Eventos de primera tarea y cohortes desglosados por firstUserSourceMedium.",
+          "executed_at": "2026-08-19",
+          "filters": ["google / cpc", "google-play / organic", "Periodos 3–10 y 11–18 de agosto"],
+          "metric_definitions": ["La fuente es firstUserSourceMedium de GA4 y no sustituye la atribución de conversiones de Google Ads.", "Las muestras orgánicas son pequeñas y sus porcentajes tienen intervalos amplios."]
+        }
+      }
+    ],
+    "charts": [
+      {
+        "id": "installs_comparison",
+        "title": "Instalaciones atribuidas por periodo",
+        "subtitle": "Dos ventanas comparables de ocho días; CPI prácticamente idéntico",
+        "type": "bar",
+        "dataset": "ads_periods",
+        "encodings": {
+          "x": {"field": "period", "type": "nominal"},
+          "y": {"field": "installs", "type": "quantitative"}
+        },
+        "sourceId": "google_ads_periods"
+      }
+    ],
+    "blocks": [
+      {"id": "title", "type": "markdown", "body": "# Auditoría actualizada de producto y adquisición · Homework App"},
+      {"id": "summary", "type": "markdown", "body": "## Resumen ejecutivo\n\n- **No aumentaría el presupuesto ni abriría países todavía.** La campaña sigue optimizando instalaciones, no usuarios que crean o completan tareas.\n- **Mantendría temporalmente India en MXN 130/día solo si Facturación → Promociones confirma que aún necesitas completar el gasto elegible.** En cuanto la promoción cambie a Processing, pausaría la campaña mientras se mejora medición y producto.\n- **El producto mejoró ligeramente en activación, no en retención.** La primera tarea creada pasó de 20.2% a 23.0%, pero el intervalo de confianza todavía incluye ausencia de cambio; D1 se mantuvo en 7.3% frente a 7.6%.\n- **La siguiente acción obligatoria es importar `first_task_created` y `first_task_completed` a Google Ads.** Ninguna aparece actualmente entre las acciones de conversión de la cuenta."},
+      {"id": "definitions", "type": "markdown", "body": "## Qué se comparó\n\nSe compararon dos ventanas completas de ocho días: **3–10 de agosto** y **11–18 de agosto de 2026**. Activación usa usuarios con `first_task_created` sobre usuarios con `first_open`; valor inicial usa `first_task_completed` sobre `first_open`. D1 y D7 son retención exacta por `firstSessionDate`, no usuarios recurrentes agregados."},
+      {"id": "acquisition", "type": "markdown", "body": "## La adquisición continuó estable y barata\n\nEl gasto bajó de MXN 1,060.29 a MXN 1,039.23 y las instalaciones atribuidas de 1,838 a 1,800. El CPI permaneció prácticamente plano: MXN 0.577 en ambos periodos. La campaña está habilitada, limitada por presupuesto y configurada como `OPTIMIZE_INSTALLS_TARGET_INSTALL_COST`; Google no recibió conversiones post-instalación.", "sourceId": "google_ads_periods"},
+      {"id": "installs_chart", "type": "chart", "chartId": "installs_comparison"},
+      {"id": "installs_read", "type": "markdown", "body": "### Implicación\n\nGoogle Ads está cumpliendo exactamente el objetivo configurado: volumen barato. Aumentar el presupuesto produciría más instalaciones bajo el mismo criterio, pero no hay evidencia de que mejore la retención."},
+      {"id": "product_health", "type": "markdown", "body": "## La activación avanzó, pero el hábito sigue sin mejorar\n\nLos usuarios activos crecieron 7.1%, los nuevos 6.8% y las sesiones con interacción 8.3%. La tasa de engagement subió 1.9 puntos porcentuales. La activación pasó de 20.2% a 23.0% y la primera tarea completada de 10.9% a 12.7% de primeras aperturas. Sin embargo, ambas mejoras son direccionales: sus intervalos de confianza del 95% incluyen cero. D1 apenas cambió de 7.27% a 7.60%, también sin diferencia confiable.", "sourceId": "ga4_periods"},
+      {"id": "rates_read", "type": "markdown", "body": "### Implicación\n\nLa nueva muestra no demuestra que el producto haya empeorado durante tus vacaciones; tampoco demuestra una mejora estructural. El cuello de botella continúa después de la primera sesión: aproximadamente 92 de cada 100 nuevos usuarios no vuelven al día siguiente."},
+      {"id": "retention", "type": "markdown", "body": "## D7 sigue siendo débil y el periodo reciente aún está incompleto\n\nPara las cohortes del 3–10 de agosto, D7 fue 2.07% (29 de 1,403). Del periodo de vacaciones solo la cohorte del 11 de agosto tuvo oportunidad completa de alcanzar D7: 2.45% (4 de 163). Un solo día no permite comparar periodos; la cohorte completa del 11–18 podrá evaluarse a partir del 25 de agosto.", "sourceId": "ga4_periods"},
+      {"id": "source_quality", "type": "markdown", "body": "## Lo orgánico activa mejor, pero la muestra no decide todavía un mercado\n\nEn el periodo reciente, Google Ads produjo 313 activaciones entre 1,389 primeras aperturas atribuidas a `google / cpc` (22.5%). Google Play orgánico produjo 27 entre 86 (31.4%). La diferencia orgánica es prometedora, pero solo hay 86 primeras aperturas y el intervalo es amplio. D1 orgánico cayó de 13.0% a 7.9%, mientras pagado pasó de 6.8% a 7.7%; estos movimientos tampoco son concluyentes.", "sourceId": "ga4_sources"},
+      {"id": "countries", "type": "markdown", "body": "## No existe evidencia internacional suficiente\n\nIndia representó 1,788 de 1,806 usuarios activos del periodo reciente. Estados Unidos tuvo cuatro y los demás países tres o menos. No es posible decidir entre México, Sudáfrica u otros mercados usando estos datos orgánicos; una campaña mundial mezclaría países sin generar muestras controlables.", "sourceId": "ga4_periods"},
+      {"id": "measurement", "type": "markdown", "body": "## Google Ads todavía optimiza la acción equivocada\n\nLa única acción activa que produjo conversiones fue la descarga de Google Play. `first_task_created` y `first_task_completed` no aparecen en la lista de acciones importadas. El presupuesto es MXN 130/día y el estado `BUDGET_CONSTRAINED` solo significa que Google podría gastar más; no es una recomendación económica de producto.", "sourceId": "google_ads_config"},
+      {"id": "unit_economics", "type": "markdown", "body": "## Mejoró el costo por activación, pero el negocio sigue lejos de recuperar adquisición\n\nComo aproximación cruzada entre plataformas, el costo por usuario pagado que creó su primera tarea bajó de MXN 4.17 a MXN 3.32; el costo por primera tarea completada bajó de MXN 7.85 a MXN 6.08. GA4 registró solo USD 0.87 de ingreso publicitario durante el periodo reciente frente a MXN 1,039.23 de gasto. No es rentable en su forma actual."},
+      {"id": "data_quality", "type": "markdown", "body": "## Riesgos de calidad y atribución\n\nAds atribuyó 1,800 instalaciones en el periodo reciente, mientras GA4 observó 1,499 primeras aperturas: una diferencia de 16.7%, menor que el 23.7% del periodo anterior. Instalación atribuida y primera apertura observada no son la misma unidad; por eso los costos por activación son aproximaciones. Además, `onboarding_completed` ocurrió para 978 usuarios, muchos más que los 344 con primera tarea, por lo que no debe interpretarse como activación. Los datos no presentan muestreo ni pérdida por fila `other`."},
+      {"id": "decision", "type": "markdown", "body": "## Qué haría hoy\n\n1. **No cambiar países ni aumentar presupuesto.** Mantener el experimento interpretable.\n2. **Abrir Facturación → Promociones.** Si aún falta gasto elegible, mantener India en MXN 130/día únicamente hasta que el estado cambie a Processing; si ya se completó, pausar hoy.\n3. **Importar en Google Ads `first_task_created` como conversión primaria y `first_task_completed` como secundaria de observación.** No cambiar inmediatamente la puja: primero comprobar volumen y atribución durante al menos siete días.\n4. **No usar todavía el crédito promocional para una campaña mundial.** Reservarlo para campañas separadas cuando el timeline y la primera experiencia estén listos.\n5. **Reevaluar D7 el 26 de agosto.** Para entonces todas las cohortes del 11–18 habrán tenido siete días completos."},
+      {"id": "caveats", "type": "markdown", "body": "## Caveats y preguntas pendientes\n\nLa API de Google Ads no expone el progreso específico de tu promoción; Facturación → Promociones es la fuente de verdad. La recomendación de mantener gasto depende de que la oferta siga elegible. Las comparaciones son observacionales, no experimentales, y no atribuyen los cambios a una versión, anuncio o comportamiento concreto. Los eventos de primera tarea comenzaron después del 30 de julio, por lo que esta auditoría usa únicamente periodos posteriores. La monetización se reporta en USD y el gasto en MXN; no se aplicó un tipo de cambio porque la conclusión económica no depende de una conversión precisa."}
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "status": "ready",
+    "generatedAt": "2026-08-19",
+    "datasets": {
+      "ads_periods": [
+        {"period": "3–10 ago", "spend_mxn": 1060.29, "impressions": 346603, "clicks": 8732, "installs": 1838, "cpi_mxn": 0.577, "post_install_conversions": 0},
+        {"period": "11–18 ago", "spend_mxn": 1039.23, "impressions": 352690, "clicks": 8650, "installs": 1800, "cpi_mxn": 0.577, "post_install_conversions": 0}
+      ],
+      "product_rates": [
+        {"label": "Activación · 3–10", "period": "3–10 ago", "metric": "Primera tarea creada", "rate_percent": 20.23, "numerator": 283, "denominator": 1399},
+        {"label": "Activación · 11–18", "period": "11–18 ago", "metric": "Primera tarea creada", "rate_percent": 22.98, "numerator": 344, "denominator": 1497},
+        {"label": "Tarea completada · 3–10", "period": "3–10 ago", "metric": "Primera tarea completada", "rate_percent": 10.86, "numerator": 152, "denominator": 1399},
+        {"label": "Tarea completada · 11–18", "period": "11–18 ago", "metric": "Primera tarea completada", "rate_percent": 12.69, "numerator": 190, "denominator": 1497},
+        {"label": "D1 · 3–10", "period": "3–10 ago", "metric": "Retención D1", "rate_percent": 7.27, "numerator": 102, "denominator": 1403},
+        {"label": "D1 · 11–17", "period": "11–18 ago", "metric": "Retención D1", "rate_percent": 7.60, "numerator": 100, "denominator": 1316}
+      ],
+      "source_activation": [
+        {"label": "Ads · 3–10", "period": "3–10 ago", "source": "google / cpc", "activation_percent": 19.87, "activated_users": 254, "first_open_users": 1278},
+        {"label": "Ads · 11–18", "period": "11–18 ago", "source": "google / cpc", "activation_percent": 22.53, "activated_users": 313, "first_open_users": 1389},
+        {"label": "Orgánico · 3–10", "period": "3–10 ago", "source": "google-play / organic", "activation_percent": 24.74, "activated_users": 24, "first_open_users": 97},
+        {"label": "Orgánico · 11–18", "period": "11–18 ago", "source": "google-play / organic", "activation_percent": 31.40, "activated_users": 27, "first_open_users": 86}
+      ]
+    }
+  },
+  "sources": [
+    {"id": "google_ads_periods", "label": "Google Ads · campaign 23991985899"},
+    {"id": "google_ads_config", "label": "Google Ads · configuración de campaña y conversiones"},
+    {"id": "ga4_periods", "label": "Google Analytics 4 · property 541344008", "href": "https://analytics.google.com/analytics/web/#/p541344008/reports"},
+    {"id": "ga4_sources", "label": "Google Analytics 4 · adquisición por fuente", "href": "https://analytics.google.com/analytics/web/#/p541344008/reports"}
+  ]
+}

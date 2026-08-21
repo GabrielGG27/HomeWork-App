@@ -55,6 +55,7 @@
   "selectSubjectValidator": "Select or create a subject",
   "language": "Language",
   "atDueTime": "At due time",
+  "minuteBefore": "1 minute before",
   "minutesBefore": "{minutes} minutes before",
   "@minutesBefore": {
     "placeholders": {
@@ -73,6 +74,31 @@
     }
   },
   "dayBefore": "1 day before",
+  "daysBefore": "{days} days before",
+  "@daysBefore": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "reminderNumber": "Reminder {number}",
+  "@reminderNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "addReminder": "Add another reminder",
+  "removeReminder": "Remove reminder",
+  "customReminder": "Custom time…",
+  "timeAmount": "Amount",
+  "minutes": "Minutes",
+  "hours": "Hours",
+  "days": "Days",
+  "enterPositiveNumber": "Enter a number greater than zero",
+  "remindersMustBeDifferent": "Choose a different time for each reminder",
   "darkMode": "Dark Mode",
   "rateApp": "Rate App",
   "hasDueDate": "Due Date",
@@ -108,8 +134,8 @@
       "total": {"type": "int"}
     }
   },
-  "viewIntroduction": "View introduction",
-  "viewIntroductionDescription": "Replay the welcome and app walkthrough",
+  "viewIntroduction": "View task creation guide",
+  "viewIntroductionDescription": "Replay the step-by-step assignment creation and organization guide",
   "skipWalkthrough": "Skip walkthrough",
   "walkthroughDialogLabel": "App walkthrough",
   "walkthroughTabsTitle": "Track every assignment",
@@ -129,6 +155,30 @@
   "walkthroughCreateTaskPrompt": "Now complete the form and save your first assignment.",
   "walkthroughCompleteTitle": "Walkthrough complete!",
   "walkthroughCompleteDescription": "Your first assignment is ready. You now know everything you need to stay organized.",
+  "firstTaskIntroTitle": "Create your first assignment",
+  "firstTaskIntroDescription": "HomeWork App will organize it for you.",
+  "firstTaskDetailsTitle": "Add details if you need them",
+  "firstTaskDetailsDescription": "You can add instructions, notes, or any other information. This step is optional.",
+  "firstTaskScheduleTitle": "Choose when it is due",
+  "firstTaskScheduleDescription": "Set a due date and time. HomeWork App will automatically place the assignment in the right section.",
+  "firstTaskReminderTitle": "Get a heads-up before it is due",
+  "firstTaskReminderDescription": "Reminders are optional. Turn them on to choose when HomeWork App should notify you. You can add up to two and use a custom lead time.",
+  "firstTaskImportanceTitle": "Highlight what matters most",
+  "firstTaskImportanceDescription": "Important assignments appear first within their section. Turning this on is optional.",
+  "firstTaskSaveTitle": "Save your first assignment",
+  "firstTaskSaveDescription": "Everything is ready. Tap Save to see it organized in your list.",
+  "firstTaskCompletedTitle": "Congratulations! You created your first assignment.",
+  "firstTaskCompletedDescription": "Now relax: HomeWork App will organize your homework for you.",
+  "starterSubjectMath": "Mathematics",
+  "starterSubjectSpanish": "English",
+  "starterSubjectGeography": "Geography",
+  "starterSubjectHistory": "History",
+  "starterSubjectBiology": "Biology",
+  "demoTaskToday": "Solve algebra exercises",
+  "demoTaskTomorrow": "Read the next chapter",
+  "demoTaskWeek": "Prepare a geography presentation",
+  "demoTaskHistory": "Submit a history summary",
+  "demoTaskBiology": "Study cells",
   "done": "Done",
   "privacyOptions": "Privacy options",
   "privacyOptionsDescription": "Review or change your advertising consent",

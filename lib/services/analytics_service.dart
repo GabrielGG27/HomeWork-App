@@ -12,6 +12,7 @@ class AnalyticsService {
   static Map<String, Object> _taskParameters(Homework homework) => {
     'has_due_date': homework.hasDueDate ? 1 : 0,
     'notification_enabled': homework.enableNotification ? 1 : 0,
+    'notification_count': homework.notificationOffsets.length,
     'is_important': homework.isImportant ? 1 : 0,
     'attachment_count': homework.attachments.length,
   };
@@ -79,4 +80,10 @@ class AnalyticsService {
         'onboarding_skipped',
         parameters: {'is_replay': isReplay ? 1 : 0},
       );
+
+  static Future<void> logFirstTaskSetupStarted() =>
+      _logEvent('first_task_setup_started');
+
+  static Future<void> logFirstTaskSetupAbandoned() =>
+      _logEvent('first_task_setup_abandoned');
 }

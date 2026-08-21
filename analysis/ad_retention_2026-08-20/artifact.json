@@ -1,0 +1,923 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "Anuncios y pérdida de usuarios · HomeWork",
+    "description": "Diagnóstico del user loss rate después de activar monetización y adquisición pagada.",
+    "generatedAt": "2026-08-20",
+    "sources": [
+      {
+        "id": "play_daily",
+        "label": "Play Console · user loss rate diario",
+        "path": "analysis/ad_retention_2026-08-20/loss_rate_analysis.sqlite",
+        "query": {
+          "engine": "SQLite",
+          "language": "SQL",
+          "description": "Serie diaria validada del exporte de Play Console.",
+          "sql": "SELECT date, loss_rate_percent, rolling_7d_percent, phase, note\nFROM daily_loss_rate\nWHERE loss_rate_percent IS NOT NULL\nORDER BY date",
+          "tables_used": [
+            "daily_loss_rate"
+          ],
+          "executed_at": "2026-08-20",
+          "filters": [
+            "22 de mayo–16 de agosto de 2026",
+            "Filas con tasa observada"
+          ],
+          "metric_definitions": [
+            "User loss rate diario es el porcentaje publicado por Play Console.",
+            "Promedio móvil de siete días ignora los dos días sin dato y exige al menos cuatro observaciones."
+          ]
+        }
+      },
+      {
+        "id": "play_phases",
+        "label": "Play Console · resumen descriptivo por fase",
+        "path": "analysis/ad_retention_2026-08-20/loss_rate_analysis.sqlite",
+        "query": {
+          "engine": "SQLite",
+          "language": "SQL",
+          "description": "Promedios diarios no ponderados por ventanas alrededor de los cambios del 30 de junio y 2 de julio.",
+          "sql": "SELECT\n  phase,\n  ROUND(AVG(loss_rate_percent), 4) AS mean_percent,\n  ROUND(MIN(loss_rate_percent), 4) AS minimum_percent,\n  ROUND(MAX(loss_rate_percent), 4) AS maximum_percent,\n  COUNT(*) AS observed_days,\n  SUM(CASE WHEN loss_rate_percent > 5 THEN 1 ELSE 0 END) AS days_above_5_percent\nFROM daily_loss_rate\nWHERE loss_rate_percent IS NOT NULL\nGROUP BY phase\nORDER BY CASE phase\n  WHEN 'Pre real ads' THEN 1\n  WHEN 'Transition' THEN 2\n  WHEN 'July spike' THEN 3\n  WHEN 'July decline' THEN 4\n  WHEN 'August' THEN 5\nEND",
+          "tables_used": [
+            "daily_loss_rate"
+          ],
+          "executed_at": "2026-08-20",
+          "filters": [
+            "Filas con tasa observada",
+            "Fases definidas antes de calcular resultados"
+          ],
+          "metric_definitions": [
+            "Los promedios son medias simples de porcentajes diarios; no son tasas agregadas porque faltan los denominadores diarios.",
+            "El umbral de 5% es la referencia de core value publicada por Google Play."
+          ]
+        }
+      },
+      {
+        "id": "ga4_remove",
+        "label": "GA4 · app_remove y first_open",
+        "href": "https://analytics.google.com/analytics/web/#/p541344008/reports",
+        "path": "analysis/ad_retention_2026-08-20/ga4_app_remove_summary.json",
+        "query": {
+          "engine": "Google Analytics Data API",
+          "description": "Consultas agregadas de usuarios por evento, periodo y fuente inicial.",
+          "executed_at": "2026-08-20",
+          "filters": [
+            "Property 541344008",
+            "app_remove y first_open",
+            "20 de junio–16 de agosto de 2026"
+          ],
+          "metric_definitions": [
+            "app_remove es el evento automático de Android cuando se elimina el paquete; no es idéntico a User loss de Play Console.",
+            "app_remove dividido por first_open en el mismo periodo es una relación descriptiva, no una tasa de cohorte."
+          ]
+        }
+      },
+      {
+        "id": "ad_implementation",
+        "label": "Código Flutter · implementación publicitaria actual",
+        "path": "lib/screens/homework_list_screen.dart",
+        "query": {
+          "engine": "Revisión de código",
+          "description": "Inspección de carga y colocación de banner, anuncios nativos e intersticiales.",
+          "executed_at": "2026-08-20",
+          "filters": [
+            "Usuarios no premium",
+            "Pantalla principal"
+          ],
+          "metric_definitions": [
+            "El banner se carga al abrir la pantalla principal aunque no existan tareas.",
+            "Los anuncios nativos requieren contenido suficiente y el intersticial se intenta cada siete tareas creadas."
+          ]
+        }
+      },
+      {
+        "id": "release_history",
+        "label": "Historial Git · activación de anuncios reales",
+        "query": {
+          "engine": "Git",
+          "description": "Historial de versiones e IDs publicitarios alrededor del lanzamiento.",
+          "executed_at": "2026-08-20",
+          "filters": [
+            "Commit 56b9e77 del 30 de junio",
+            "Commit 3d93ae4 del 2 de julio"
+          ],
+          "metric_definitions": [
+            "1.0.27 cambió IDs de prueba por IDs reales el 30 de junio.",
+            "1.0.30 quedó versionada el 2 de julio."
+          ]
+        }
+      },
+      {
+        "id": "play_definition",
+        "label": "Google Play Console Help · View app statistics",
+        "href": "https://support.google.com/googleplay/android-developer/answer/139628"
+      },
+      {
+        "id": "admob_guidance",
+        "label": "Google AdMob Help · Implementation guidance",
+        "href": "https://support.google.com/admob/answer/2936217"
+      }
+    ],
+    "charts": [
+      {
+        "id": "loss_rate_daily",
+        "title": "User loss rate diario",
+        "subtitle": "22 de mayo–16 de agosto de 2026; porcentaje de Play Console",
+        "type": "line",
+        "dataset": "daily_loss_rate",
+        "encodings": {
+          "x": {
+            "field": "date",
+            "type": "temporal"
+          },
+          "y": {
+            "field": "loss_rate_percent",
+            "type": "quantitative"
+          }
+        },
+        "sourceId": "play_daily"
+      },
+      {
+        "id": "loss_rate_phases",
+        "title": "Promedio diario por fase",
+        "subtitle": "Media simple de días observados; no ponderada por audiencia instalada",
+        "type": "bar",
+        "dataset": "phase_summary",
+        "encodings": {
+          "x": {
+            "field": "phase",
+            "type": "nominal"
+          },
+          "y": {
+            "field": "mean_percent",
+            "type": "quantitative"
+          }
+        },
+        "sourceId": "play_phases"
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# Anuncios y pérdida de usuarios · HomeWork"
+      },
+      {
+        "id": "summary",
+        "type": "markdown",
+        "body": "## Executive Summary\n\n- **Sí, el banner puede estar contribuyendo a la pérdida de usuarios, especialmente porque aparece antes de que el usuario cree su primera tarea.** El patrón temporal es compatible con esa hipótesis, pero no la demuestra.\n- **El deterioro observado es real y grande.** El promedio diario pasó de 3.06% antes de los anuncios reales a 22.29% durante el pico del 4–15 de julio; en agosto bajó a 7.80%, todavía por encima del umbral de 5% de Google Play.\n- **No se puede separar banner de campaña con este antes/después.** Los anuncios reales entraron el 30 de junio y la campaña comenzó el 2 de julio; también cambió de golpe el volumen y tipo de usuarios.\n- **No eliminaría todavía el banner para siempre, pero sí impediría que aparezca antes del primer valor.** Después probaría banner frente a no banner de forma aleatoria para medir D7, `app_remove` e ingreso por usuario."
+      },
+      {
+        "id": "definition",
+        "type": "markdown",
+        "body": "## Qué mide realmente Play Console\n\n`User loss rate` es la relación entre usuarios que desinstalaron la app de todos sus dispositivos —o cuyos dispositivos quedaron inactivos por más de 30 días— y la audiencia instalada activa. No equivale a D1 o D7. Google Play usa 5% como umbral de core value y calcula estadísticas de instalación en horario del Pacífico.",
+        "sourceId": "play_definition"
+      },
+      {
+        "id": "pattern",
+        "type": "markdown",
+        "body": "## La ruptura empieza días después de monetización y adquisición\n\nLa serie contiene 87 fechas consecutivas, dos valores faltantes, ninguna fecha duplicada y ninguna tasa fuera de 0–100%. Antes del 30 de junio, solo 4 de 37 días superaron 5%. Del 4 de julio al 16 de agosto, los 44 días observados lo superaron. El máximo fue 39.01% el 8 de julio.",
+        "sourceId": "play_daily"
+      },
+      {
+        "id": "trend_chart",
+        "type": "chart",
+        "chartId": "loss_rate_daily"
+      },
+      {
+        "id": "trend_implication",
+        "type": "markdown",
+        "body": "### Implicación\n\nNo parece una oscilación normal de la pequeña base anterior. Existe una ruptura alrededor del lanzamiento monetizado, seguida por una recuperación lenta; aun así, el nivel de agosto continúa elevado."
+      },
+      {
+        "id": "phases",
+        "type": "markdown",
+        "body": "## El pico se reduce, pero no vuelve a la línea base\n\nEl promedio diario fue 3.06% antes de los anuncios reales, 3.92% durante el 30 de junio–3 de julio, 22.29% en el pico del 4–15 de julio, 13.18% durante el resto de julio y 7.80% del 1–16 de agosto. Son medias simples porque el CSV no incluye la audiencia instalada diaria.",
+        "sourceId": "play_phases"
+      },
+      {
+        "id": "phase_chart",
+        "type": "chart",
+        "chartId": "loss_rate_phases"
+      },
+      {
+        "id": "causality",
+        "type": "markdown",
+        "body": "## El momento encaja con dos explicaciones simultáneas\n\nEl historial del proyecto muestra que la versión 1.0.27 sustituyó IDs de prueba por IDs publicitarios reales el 30 de junio. La versión 1.0.30 y la campaña se lanzaron el 2 de julio. La tasa todavía fue baja el 2–3 de julio y subió desde el 4, con máximo el 8. Ese retraso es compatible tanto con usuarios que desinstalan tras probar una app con anuncios como con una ola de instalaciones pagadas de baja intención. Como ambos tratamientos coincidieron, el gráfico no puede repartir su efecto.",
+        "sourceId": "release_history"
+      },
+      {
+        "id": "ga4_check",
+        "type": "markdown",
+        "body": "## GA4 confirma volumen de eliminaciones y debilita la explicación de solo adquisición\n\nGA4 registró 928 usuarios con `app_remove` durante el pico del 4–15 de julio, 2,482 durante el 16–31 de julio y 2,320 durante el 1–16 de agosto. Entre el 4 de julio y el 16 de agosto, `app_remove` representó descriptivamente 74.8% de los usuarios con primera apertura pagada y 72.7% de Google Play orgánico. No son tasas de cohorte —las eliminaciones pueden pertenecer a instalaciones anteriores—, pero la similitud entre pago y orgánico no respalda que la campaña sea la única causa.",
+        "sourceId": "ga4_remove"
+      },
+      {
+        "id": "banner_risk",
+        "type": "markdown",
+        "body": "## El banner es el formato con mayor riesgo antes de la activación\n\nEn la implementación actual, el banner se solicita al abrir la pantalla principal y puede mostrarse incluso con la lista vacía. Los anuncios nativos aparecen cuando ya existen varias tareas y el intersticial se intenta cada siete tareas creadas. Por eso el banner es el único formato capaz de afectar directamente la impresión inicial y la creación de la primera tarea. Google AdMob recomienda decidir la colocación según el flujo de engagement y experimentar, porque una mala integración puede sacrificar experiencia de usuario.",
+        "sourceId": "ad_implementation"
+      },
+      {
+        "id": "decision",
+        "type": "markdown",
+        "body": "## Qué haría con el banner\n\n1. **Eliminarlo de la primera sesión y de cualquier lista vacía.** Ningún anuncio debe aparecer antes de que el usuario cree y vea su primera tarea organizada.\n2. **No eliminarlo permanentemente de toda la app todavía.** La evidencia no cuantifica cuánto churn causa ni cuánto ingreso específico aporta.\n3. **Probar su efecto después de la activación durante 21 días.** Asignación estable 50/50 entre banner desde la segunda sesión y ningún banner; mantener iguales anuncios nativos e intersticiales para aislar el formato.\n4. **Usar D7 como métrica principal.** Secundarias: D1, sesiones por usuario, primera tarea completada y `app_remove`; protección económica: ingreso publicitario por usuario.\n5. **No evaluar con un simple antes/después.** El presupuesto promocional terminará pronto y cambiará la mezcla de adquisición; una comparación aleatoria contemporánea evita repetir el problema del 2 de julio."
+      },
+      {
+        "id": "expectation",
+        "type": "markdown",
+        "body": "## Qué resultado esperar razonablemente\n\nQuitar el banner inicial probablemente mejore la percepción de calidad y reduzca distracción, pero no esperaría que por sí solo lleve D1 de 7.6% a un nivel saludable. La propuesta de valor, el tiempo hasta la primera tarea y la utilidad recurrente siguen siendo problemas separados. La decisión correcta es tratar el banner como un posible multiplicador de fricción, no como la explicación única del churn."
+      },
+      {
+        "id": "questions",
+        "type": "markdown",
+        "body": "## Datos que aumentarían la confianza\n\n- Ingreso e impresiones desglosados por formato publicitario.\n- Numerador `User loss` y denominador `Installed audience` diarios de Play Console.\n- Exporte por país para separar India de otros mercados.\n- Variante experimental disponible como dimensión en GA4 para analizar `app_remove`."
+      },
+      {
+        "id": "caveats",
+        "type": "markdown",
+        "body": "## Caveats y nivel de confianza\n\n**Alta confianza** en que el user loss rate cambió de nivel después de los lanzamientos. **Confianza media** en que los anuncios, y particularmente el banner temprano, contribuyen. **Baja confianza** en que sean la causa principal o en el tamaño de mejora al retirarlos. El CSV es agregado, carece de numeradores y denominadores y contiene dos días sin dato. Play Console y GA4 usan definiciones y zonas horarias distintas; sus cifras se usan como señales complementarias, no para reconciliación exacta."
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "status": "ready",
+    "generatedAt": "2026-08-20",
+    "datasets": {
+      "daily_loss_rate": [
+        {
+          "date": "2026-05-22",
+          "loss_rate_percent": 2.5,
+          "rolling_7d_percent": null,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-05-23",
+          "loss_rate_percent": 2.56,
+          "rolling_7d_percent": null,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-05-24",
+          "loss_rate_percent": 3.9,
+          "rolling_7d_percent": null,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-05-25",
+          "loss_rate_percent": 4.82,
+          "rolling_7d_percent": 3.445,
+          "phase": "Pre real ads",
+          "note": "Rollout of release: Started rollout of 22 (1.0.22+22) at 100%."
+        },
+        {
+          "date": "2026-05-26",
+          "loss_rate_percent": 1.3,
+          "rolling_7d_percent": 3.016,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-05-27",
+          "loss_rate_percent": 5.19,
+          "rolling_7d_percent": 3.3783,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-05-29",
+          "loss_rate_percent": 2.5,
+          "rolling_7d_percent": 3.3783,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-05-30",
+          "loss_rate_percent": 4.82,
+          "rolling_7d_percent": 3.755,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-05-31",
+          "loss_rate_percent": 2.33,
+          "rolling_7d_percent": 3.4933,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-01",
+          "loss_rate_percent": 4.35,
+          "rolling_7d_percent": 3.415,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-02",
+          "loss_rate_percent": 2.35,
+          "rolling_7d_percent": 3.59,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-03",
+          "loss_rate_percent": 2.41,
+          "rolling_7d_percent": 3.1267,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-04",
+          "loss_rate_percent": 2.35,
+          "rolling_7d_percent": 3.0157,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-05",
+          "loss_rate_percent": 2.41,
+          "rolling_7d_percent": 3.0029,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-06",
+          "loss_rate_percent": 1.2,
+          "rolling_7d_percent": 2.4857,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-07",
+          "loss_rate_percent": 3.3,
+          "rolling_7d_percent": 2.6243,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-08",
+          "loss_rate_percent": 1.11,
+          "rolling_7d_percent": 2.1614,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-09",
+          "loss_rate_percent": 4.6,
+          "rolling_7d_percent": 2.4829,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-10",
+          "loss_rate_percent": 2.38,
+          "rolling_7d_percent": 2.4786,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-11",
+          "loss_rate_percent": 1.2,
+          "rolling_7d_percent": 2.3143,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-12",
+          "loss_rate_percent": 1.12,
+          "rolling_7d_percent": 2.13,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-13",
+          "loss_rate_percent": 3.75,
+          "rolling_7d_percent": 2.4943,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-14",
+          "loss_rate_percent": 1.19,
+          "rolling_7d_percent": 2.1929,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-15",
+          "loss_rate_percent": 2.44,
+          "rolling_7d_percent": 2.3829,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-17",
+          "loss_rate_percent": 1.25,
+          "rolling_7d_percent": 1.825,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-18",
+          "loss_rate_percent": 2.38,
+          "rolling_7d_percent": 2.0217,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-19",
+          "loss_rate_percent": 2.5,
+          "rolling_7d_percent": 2.2517,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-20",
+          "loss_rate_percent": 3.75,
+          "rolling_7d_percent": 2.2517,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-21",
+          "loss_rate_percent": 3.57,
+          "rolling_7d_percent": 2.6483,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-22",
+          "loss_rate_percent": 4.88,
+          "rolling_7d_percent": 3.055,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-23",
+          "loss_rate_percent": 7.14,
+          "rolling_7d_percent": 3.6386,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-24",
+          "loss_rate_percent": 2.44,
+          "rolling_7d_percent": 3.8086,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-25",
+          "loss_rate_percent": 1.18,
+          "rolling_7d_percent": 3.6371,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-26",
+          "loss_rate_percent": 2.5,
+          "rolling_7d_percent": 3.6371,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-27",
+          "loss_rate_percent": 2.35,
+          "rolling_7d_percent": 3.4371,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-28",
+          "loss_rate_percent": 7.14,
+          "rolling_7d_percent": 3.9471,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-29",
+          "loss_rate_percent": 6.02,
+          "rolling_7d_percent": 4.11,
+          "phase": "Pre real ads",
+          "note": ""
+        },
+        {
+          "date": "2026-06-30",
+          "loss_rate_percent": 4.88,
+          "rolling_7d_percent": 3.7871,
+          "phase": "Transition",
+          "note": "Rollout of release: Started rollout of 27 (1.0.27+27) at 100%."
+        },
+        {
+          "date": "2026-07-01",
+          "loss_rate_percent": 6.17,
+          "rolling_7d_percent": 4.32,
+          "phase": "Transition",
+          "note": ""
+        },
+        {
+          "date": "2026-07-02",
+          "loss_rate_percent": 3.45,
+          "rolling_7d_percent": 4.6443,
+          "phase": "Transition",
+          "note": "Rollout of release: Started rollout of 30 (1.0.30+30) at 100%."
+        },
+        {
+          "date": "2026-07-03",
+          "loss_rate_percent": 1.19,
+          "rolling_7d_percent": 4.4571,
+          "phase": "Transition",
+          "note": ""
+        },
+        {
+          "date": "2026-07-04",
+          "loss_rate_percent": 9.9,
+          "rolling_7d_percent": 5.5357,
+          "phase": "July spike",
+          "note": ""
+        },
+        {
+          "date": "2026-07-05",
+          "loss_rate_percent": 8.93,
+          "rolling_7d_percent": 5.7914,
+          "phase": "July spike",
+          "note": ""
+        },
+        {
+          "date": "2026-07-06",
+          "loss_rate_percent": 20.9,
+          "rolling_7d_percent": 7.9171,
+          "phase": "July spike",
+          "note": ""
+        },
+        {
+          "date": "2026-07-07",
+          "loss_rate_percent": 21.3,
+          "rolling_7d_percent": 10.2629,
+          "phase": "July spike",
+          "note": ""
+        },
+        {
+          "date": "2026-07-08",
+          "loss_rate_percent": 39.01,
+          "rolling_7d_percent": 14.9543,
+          "phase": "July spike",
+          "note": ""
+        },
+        {
+          "date": "2026-07-09",
+          "loss_rate_percent": 29.63,
+          "rolling_7d_percent": 18.6943,
+          "phase": "July spike",
+          "note": ""
+        },
+        {
+          "date": "2026-07-10",
+          "loss_rate_percent": 31.11,
+          "rolling_7d_percent": 22.9686,
+          "phase": "July spike",
+          "note": ""
+        },
+        {
+          "date": "2026-07-11",
+          "loss_rate_percent": 19.79,
+          "rolling_7d_percent": 24.3814,
+          "phase": "July spike",
+          "note": ""
+        },
+        {
+          "date": "2026-07-12",
+          "loss_rate_percent": 19.54,
+          "rolling_7d_percent": 25.8971,
+          "phase": "July spike",
+          "note": ""
+        },
+        {
+          "date": "2026-07-13",
+          "loss_rate_percent": 22.69,
+          "rolling_7d_percent": 26.1529,
+          "phase": "July spike",
+          "note": ""
+        },
+        {
+          "date": "2026-07-14",
+          "loss_rate_percent": 24.53,
+          "rolling_7d_percent": 26.6143,
+          "phase": "July spike",
+          "note": ""
+        },
+        {
+          "date": "2026-07-15",
+          "loss_rate_percent": 20.1,
+          "rolling_7d_percent": 23.9129,
+          "phase": "July spike",
+          "note": ""
+        },
+        {
+          "date": "2026-07-16",
+          "loss_rate_percent": 15.61,
+          "rolling_7d_percent": 21.91,
+          "phase": "July decline",
+          "note": ""
+        },
+        {
+          "date": "2026-07-17",
+          "loss_rate_percent": 19.03,
+          "rolling_7d_percent": 20.1843,
+          "phase": "July decline",
+          "note": ""
+        },
+        {
+          "date": "2026-07-18",
+          "loss_rate_percent": 18.3,
+          "rolling_7d_percent": 19.9714,
+          "phase": "July decline",
+          "note": ""
+        },
+        {
+          "date": "2026-07-19",
+          "loss_rate_percent": 14.04,
+          "rolling_7d_percent": 19.1857,
+          "phase": "July decline",
+          "note": ""
+        },
+        {
+          "date": "2026-07-20",
+          "loss_rate_percent": 14.69,
+          "rolling_7d_percent": 18.0429,
+          "phase": "July decline",
+          "note": "Rollout of release: Started rollout of 31 (1.0.31+31) at 100%."
+        },
+        {
+          "date": "2026-07-21",
+          "loss_rate_percent": 14.3,
+          "rolling_7d_percent": 16.5814,
+          "phase": "July decline",
+          "note": ""
+        },
+        {
+          "date": "2026-07-22",
+          "loss_rate_percent": 14.43,
+          "rolling_7d_percent": 15.7714,
+          "phase": "July decline",
+          "note": ""
+        },
+        {
+          "date": "2026-07-23",
+          "loss_rate_percent": 12.7,
+          "rolling_7d_percent": 15.3557,
+          "phase": "July decline",
+          "note": ""
+        },
+        {
+          "date": "2026-07-24",
+          "loss_rate_percent": 12.49,
+          "rolling_7d_percent": 14.4214,
+          "phase": "July decline",
+          "note": "Rollout of release: Started rollout of 32 (1.0.32+32) at 100%."
+        },
+        {
+          "date": "2026-07-25",
+          "loss_rate_percent": 12.96,
+          "rolling_7d_percent": 13.6586,
+          "phase": "July decline",
+          "note": ""
+        },
+        {
+          "date": "2026-07-26",
+          "loss_rate_percent": 10.34,
+          "rolling_7d_percent": 13.13,
+          "phase": "July decline",
+          "note": ""
+        },
+        {
+          "date": "2026-07-27",
+          "loss_rate_percent": 10.5,
+          "rolling_7d_percent": 12.5314,
+          "phase": "July decline",
+          "note": ""
+        },
+        {
+          "date": "2026-07-28",
+          "loss_rate_percent": 10.26,
+          "rolling_7d_percent": 11.9543,
+          "phase": "July decline",
+          "note": ""
+        },
+        {
+          "date": "2026-07-29",
+          "loss_rate_percent": 10.95,
+          "rolling_7d_percent": 11.4571,
+          "phase": "July decline",
+          "note": "Rollout of release: Started rollout of 34 (1.0.34+34) at 100%."
+        },
+        {
+          "date": "2026-07-30",
+          "loss_rate_percent": 10.16,
+          "rolling_7d_percent": 11.0943,
+          "phase": "July decline",
+          "note": "Rollout of release: Started rollout of 35 (1.0.35+35) at 100%."
+        },
+        {
+          "date": "2026-07-31",
+          "loss_rate_percent": 10.19,
+          "rolling_7d_percent": 10.7657,
+          "phase": "July decline",
+          "note": ""
+        },
+        {
+          "date": "2026-08-01",
+          "loss_rate_percent": 12.12,
+          "rolling_7d_percent": 10.6457,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-02",
+          "loss_rate_percent": 8.98,
+          "rolling_7d_percent": 10.4514,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-03",
+          "loss_rate_percent": 7.05,
+          "rolling_7d_percent": 9.9586,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-04",
+          "loss_rate_percent": 7.73,
+          "rolling_7d_percent": 9.5971,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-05",
+          "loss_rate_percent": 8.9,
+          "rolling_7d_percent": 9.3043,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-06",
+          "loss_rate_percent": 8.72,
+          "rolling_7d_percent": 9.0986,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-07",
+          "loss_rate_percent": 8.15,
+          "rolling_7d_percent": 8.8071,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-08",
+          "loss_rate_percent": 8.79,
+          "rolling_7d_percent": 8.3314,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-09",
+          "loss_rate_percent": 7.12,
+          "rolling_7d_percent": 8.0657,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-10",
+          "loss_rate_percent": 7.15,
+          "rolling_7d_percent": 8.08,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-11",
+          "loss_rate_percent": 6.89,
+          "rolling_7d_percent": 7.96,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-12",
+          "loss_rate_percent": 6.88,
+          "rolling_7d_percent": 7.6714,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-13",
+          "loss_rate_percent": 6.22,
+          "rolling_7d_percent": 7.3143,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-14",
+          "loss_rate_percent": 5.8,
+          "rolling_7d_percent": 6.9786,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-15",
+          "loss_rate_percent": 7.6,
+          "rolling_7d_percent": 6.8086,
+          "phase": "August",
+          "note": ""
+        },
+        {
+          "date": "2026-08-16",
+          "loss_rate_percent": 6.63,
+          "rolling_7d_percent": 6.7386,
+          "phase": "August",
+          "note": ""
+        }
+      ],
+      "phase_summary": [
+        {
+          "phase": "Pre real ads",
+          "mean_percent": 3.0589,
+          "minimum_percent": 1.11,
+          "maximum_percent": 7.14,
+          "observed_days": 37,
+          "days_above_5_percent": 4
+        },
+        {
+          "phase": "Transition",
+          "mean_percent": 3.9225,
+          "minimum_percent": 1.19,
+          "maximum_percent": 6.17,
+          "observed_days": 4,
+          "days_above_5_percent": 1
+        },
+        {
+          "phase": "July spike",
+          "mean_percent": 22.2858,
+          "minimum_percent": 8.93,
+          "maximum_percent": 39.01,
+          "observed_days": 12,
+          "days_above_5_percent": 12
+        },
+        {
+          "phase": "July decline",
+          "mean_percent": 13.1844,
+          "minimum_percent": 10.16,
+          "maximum_percent": 19.03,
+          "observed_days": 16,
+          "days_above_5_percent": 16
+        },
+        {
+          "phase": "August",
+          "mean_percent": 7.7956,
+          "minimum_percent": 5.8,
+          "maximum_percent": 12.12,
+          "observed_days": 16,
+          "days_above_5_percent": 16
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "play_daily",
+      "label": "Play Console · user loss rate diario"
+    },
+    {
+      "id": "play_phases",
+      "label": "Play Console · resumen descriptivo por fase"
+    },
+    {
+      "id": "ga4_remove",
+      "label": "GA4 · app_remove y first_open",
+      "href": "https://analytics.google.com/analytics/web/#/p541344008/reports"
+    },
+    {
+      "id": "ad_implementation",
+      "label": "Código Flutter · implementación publicitaria actual"
+    },
+    {
+      "id": "release_history",
+      "label": "Historial Git · activación de anuncios reales"
+    },
+    {
+      "id": "play_definition",
+      "label": "Google Play Console Help · View app statistics",
+      "href": "https://support.google.com/googleplay/android-developer/answer/139628"
+    },
+    {
+      "id": "admob_guidance",
+      "label": "Google AdMob Help · Implementation guidance",
+      "href": "https://support.google.com/admob/answer/2936217"
+    }
+  ]
+}

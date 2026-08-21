@@ -386,6 +386,12 @@ abstract class AppLocalizations {
   /// **'At due time'**
   String get atDueTime;
 
+  /// No description provided for @minuteBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'1 minute before'**
+  String get minuteBefore;
+
   /// No description provided for @minutesBefore.
   ///
   /// In en, this message translates to:
@@ -409,6 +415,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'1 day before'**
   String get dayBefore;
+
+  /// No description provided for @daysBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days before'**
+  String daysBefore(int days);
+
+  /// No description provided for @reminderNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder {number}'**
+  String reminderNumber(int number);
+
+  /// No description provided for @addReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another reminder'**
+  String get addReminder;
+
+  /// No description provided for @removeReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove reminder'**
+  String get removeReminder;
+
+  /// No description provided for @customReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom time…'**
+  String get customReminder;
+
+  /// No description provided for @timeAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get timeAmount;
+
+  /// No description provided for @minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Minutes'**
+  String get minutes;
+
+  /// No description provided for @hours.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours'**
+  String get hours;
+
+  /// No description provided for @days.
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get days;
+
+  /// No description provided for @enterPositiveNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number greater than zero'**
+  String get enterPositiveNumber;
+
+  /// No description provided for @remindersMustBeDifferent.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a different time for each reminder'**
+  String get remindersMustBeDifferent;
 
   /// No description provided for @darkMode.
   ///
@@ -587,13 +659,13 @@ abstract class AppLocalizations {
   /// No description provided for @viewIntroduction.
   ///
   /// In en, this message translates to:
-  /// **'View introduction'**
+  /// **'View task creation guide'**
   String get viewIntroduction;
 
   /// No description provided for @viewIntroductionDescription.
   ///
   /// In en, this message translates to:
-  /// **'Replay the welcome and app walkthrough'**
+  /// **'Replay the step-by-step assignment creation and organization guide'**
   String get viewIntroductionDescription;
 
   /// No description provided for @skipWalkthrough.
@@ -709,6 +781,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your first assignment is ready. You now know everything you need to stay organized.'**
   String get walkthroughCompleteDescription;
+
+  /// No description provided for @firstTaskIntroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first assignment'**
+  String get firstTaskIntroTitle;
+
+  /// No description provided for @firstTaskIntroDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'HomeWork App will organize it for you.'**
+  String get firstTaskIntroDescription;
+
+  /// No description provided for @firstTaskDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add details if you need them'**
+  String get firstTaskDetailsTitle;
+
+  /// No description provided for @firstTaskDetailsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'You can add instructions, notes, or any other information. This step is optional.'**
+  String get firstTaskDetailsDescription;
+
+  /// No description provided for @firstTaskScheduleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose when it is due'**
+  String get firstTaskScheduleTitle;
+
+  /// No description provided for @firstTaskScheduleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a due date and time. HomeWork App will automatically place the assignment in the right section.'**
+  String get firstTaskScheduleDescription;
+
+  /// No description provided for @firstTaskReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a heads-up before it is due'**
+  String get firstTaskReminderTitle;
+
+  /// No description provided for @firstTaskReminderDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders are optional. Turn them on to choose when HomeWork App should notify you. You can add up to two and use a custom lead time.'**
+  String get firstTaskReminderDescription;
+
+  /// No description provided for @firstTaskImportanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight what matters most'**
+  String get firstTaskImportanceTitle;
+
+  /// No description provided for @firstTaskImportanceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Important assignments appear first within their section. Turning this on is optional.'**
+  String get firstTaskImportanceDescription;
+
+  /// No description provided for @firstTaskSaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your first assignment'**
+  String get firstTaskSaveTitle;
+
+  /// No description provided for @firstTaskSaveDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything is ready. Tap Save to see it organized in your list.'**
+  String get firstTaskSaveDescription;
+
+  /// No description provided for @firstTaskCompletedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Congratulations! You created your first assignment.'**
+  String get firstTaskCompletedTitle;
+
+  /// No description provided for @firstTaskCompletedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Now relax: HomeWork App will organize your homework for you.'**
+  String get firstTaskCompletedDescription;
+
+  /// No description provided for @starterSubjectMath.
+  ///
+  /// In en, this message translates to:
+  /// **'Mathematics'**
+  String get starterSubjectMath;
+
+  /// No description provided for @starterSubjectSpanish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get starterSubjectSpanish;
+
+  /// No description provided for @starterSubjectGeography.
+  ///
+  /// In en, this message translates to:
+  /// **'Geography'**
+  String get starterSubjectGeography;
+
+  /// No description provided for @starterSubjectHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get starterSubjectHistory;
+
+  /// No description provided for @starterSubjectBiology.
+  ///
+  /// In en, this message translates to:
+  /// **'Biology'**
+  String get starterSubjectBiology;
+
+  /// No description provided for @demoTaskToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Solve algebra exercises'**
+  String get demoTaskToday;
+
+  /// No description provided for @demoTaskTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Read the next chapter'**
+  String get demoTaskTomorrow;
+
+  /// No description provided for @demoTaskWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Prepare a geography presentation'**
+  String get demoTaskWeek;
+
+  /// No description provided for @demoTaskHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit a history summary'**
+  String get demoTaskHistory;
+
+  /// No description provided for @demoTaskBiology.
+  ///
+  /// In en, this message translates to:
+  /// **'Study cells'**
+  String get demoTaskBiology;
 
   /// No description provided for @done.
   ///

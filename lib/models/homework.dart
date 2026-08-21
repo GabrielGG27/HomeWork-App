@@ -9,8 +9,7 @@ class Homework {
   bool isCompleted;
   bool isDeleted;
   DateTime? deletedAt;
-  bool enableNotification;
-  int notificationOffset;
+  List<int> notificationOffsets;
   bool isImportant;
   String description;
   List<Attachment> attachments;
@@ -23,13 +22,43 @@ class Homework {
     this.isCompleted = false,
     this.isDeleted = false,
     this.deletedAt,
-    this.enableNotification = true,
-    this.notificationOffset = 0,
+    bool enableNotification = true,
+    int notificationOffset = 0,
+    List<int>? notificationOffsets,
     this.isImportant = false,
     this.description = '',
     this.attachments = const [],
     String? id,
-  }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
+  }) : notificationOffsets = _normalizeNotificationOffsets(
+         notificationOffsets ??
+             (enableNotification ? <int>[notificationOffset] : const <int>[]),
+       ),
+       id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
+
+  bool get enableNotification => notificationOffsets.isNotEmpty;
+
+  /// Kept for compatibility with older code and persisted task data.
+  int get notificationOffset =>
+      notificationOffsets.isEmpty ? 0 : notificationOffsets.first;
+
+  static List<int> _normalizeNotificationOffsets(Iterable<int> offsets) {
+    final normalized = <int>[];
+    for (final offset in offsets) {
+      if (offset < 0 || normalized.contains(offset)) continue;
+      normalized.add(offset);
+      if (normalized.length == 2) break;
+    }
+    return normalized;
+  }
+
+  static List<int>? _notificationOffsetsFromJson(Map<String, dynamic> json) {
+    final storedOffsets = json['notificationOffsets'];
+    if (storedOffsets is! List) return null;
+
+    return _normalizeNotificationOffsets(
+      storedOffsets.whereType<num>().map((value) => value.toInt()),
+    );
+  }
 
   /// Añade un adjunto ya construido
   void addAttachment(Attachment attachment) {
@@ -83,6 +112,7 @@ class Homework {
     'deletedAt': deletedAt?.millisecondsSinceEpoch,
     'enableNotification': enableNotification,
     'notificationOffset': notificationOffset,
+    'notificationOffsets': notificationOffsets,
     'isImportant': isImportant,
     'description': description,
     'attachments': attachments.map((a) => a.toJson()).toList(),
@@ -100,10 +130,12 @@ class Homework {
         ? DateTime.fromMillisecondsSinceEpoch(json['deletedAt'])
         : null,
     enableNotification: json['enableNotification'] ?? true,
-    notificationOffset: json['notificationOffset'] ?? 0,
+    notificationOffset: (json['notificationOffset'] as num?)?.toInt() ?? 0,
+    notificationOffsets: _notificationOffsetsFromJson(json),
     isImportant: json['isImportant'] ?? false,
     description: json['description'] ?? '',
-    attachments: (json['attachments'] as List?)
+    attachments:
+        (json['attachments'] as List?)
             ?.map((e) => Attachment.fromJson(Map<String, dynamic>.from(e)))
             .toList() ??
         [],

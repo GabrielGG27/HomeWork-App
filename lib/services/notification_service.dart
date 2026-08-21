@@ -18,6 +18,14 @@ late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 class NotificationService {
   static Future<bool?>? _notificationPermissionRequest;
 
+  static int _legacyNotificationId(String homeworkId) =>
+      homeworkId.hashCode & 0x7FFFFFFF;
+
+  static int _notificationId(String homeworkId, int reminderIndex) {
+    final base = homeworkId.hashCode & 0x3FFFFFFF;
+    return ((base << 1) | reminderIndex) & 0x7FFFFFFF;
+  }
+
   static Future<void> initializeNotifications() async {
     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -105,20 +113,17 @@ class NotificationService {
   }
 
   static Future<void> scheduleNotification(Homework homework) async {
-    if (!homework.enableNotification) {
-      final notificationId = homework.id.hashCode & 0x7FFFFFFF;
-      await flutterLocalNotificationsPlugin.cancel(notificationId);
+    // Clear the previous version's single ID and both current reminder slots.
+    // This prevents orphan notifications after editing an offset or disabling a
+    // reminder.
+    await cancelNotification(homework.id);
+
+    if (!homework.hasDueDate ||
+        homework.isCompleted ||
+        homework.isDeleted ||
+        !homework.enableNotification) {
       return;
     }
-
-    final scheduledDate = homework.dueDate.subtract(
-      Duration(minutes: homework.notificationOffset),
-    );
-    final now = DateTime.now();
-
-    if (scheduledDate.isBefore(now)) return;
-
-    final notificationId = homework.id.hashCode & 0x7FFFFFFF;
 
     final prefs = await SharedPreferences.getInstance();
     final langCode =
@@ -134,39 +139,42 @@ class NotificationService {
     );
     final dueStr = isEs ? 'Entrega $smartDate' : 'Due $smartDate';
 
-    Future<void> schedule(AndroidScheduleMode scheduleMode) =>
-        flutterLocalNotificationsPlugin.zonedSchedule(
-          notificationId,
-          upcomingStr,
-          dueStr,
-          tz.TZDateTime.local(
-            scheduledDate.year,
-            scheduledDate.month,
-            scheduledDate.day,
-            scheduledDate.hour,
-            scheduledDate.minute,
-            scheduledDate.second,
+    Future<void> schedule({
+      required int notificationId,
+      required DateTime scheduledDate,
+      required AndroidScheduleMode scheduleMode,
+    }) => flutterLocalNotificationsPlugin.zonedSchedule(
+      notificationId,
+      upcomingStr,
+      dueStr,
+      tz.TZDateTime.local(
+        scheduledDate.year,
+        scheduledDate.month,
+        scheduledDate.day,
+        scheduledDate.hour,
+        scheduledDate.minute,
+        scheduledDate.second,
+      ),
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          notificationChannelId,
+          'Homework Notifications',
+          channelDescription: 'Notifications for upcoming homework tasks',
+          importance: Importance.max,
+          priority: Priority.max,
+          playSound: true,
+          color: Colors.blue,
+          styleInformation: BigTextStyleInformation(
+            homework.description.isNotEmpty ? homework.description : dueStr,
+            contentTitle: upcomingStr,
           ),
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              notificationChannelId,
-              'Homework Notifications',
-              channelDescription: 'Notifications for upcoming homework tasks',
-              importance: Importance.max,
-              priority: Priority.max,
-              playSound: true,
-              color: Colors.blue,
-              styleInformation: BigTextStyleInformation(
-                homework.description.isNotEmpty ? homework.description : dueStr,
-                contentTitle: upcomingStr,
-              ),
-            ),
-          ),
-          payload: homework.id,
-          androidScheduleMode: scheduleMode,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
-        );
+        ),
+      ),
+      payload: homework.id,
+      androidScheduleMode: scheduleMode,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
 
     var scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
     try {
@@ -182,27 +190,48 @@ class NotificationService {
       debugPrint('Could not check exact alarm permission: $error');
     }
 
-    try {
-      await schedule(scheduleMode);
-      debugPrint(
-        "Notification scheduled for: $scheduledDate (Due: ${homework.dueDate})",
+    final now = DateTime.now();
+    for (final reminder in homework.notificationOffsets.indexed) {
+      final reminderIndex = reminder.$1;
+      final scheduledDate = homework.dueDate.subtract(
+        Duration(minutes: reminder.$2),
       );
-    } on PlatformException catch (error) {
-      if (scheduleMode == AndroidScheduleMode.exactAllowWhileIdle) {
-        try {
-          await schedule(AndroidScheduleMode.inexactAllowWhileIdle);
-          debugPrint(
-            'Exact alarm was unavailable; notification scheduled inexactly.',
-          );
-          return;
-        } catch (fallbackError) {
-          debugPrint('Error scheduling fallback notification: $fallbackError');
-          return;
+      if (scheduledDate.isBefore(now)) continue;
+
+      final notificationId = _notificationId(homework.id, reminderIndex);
+      try {
+        await schedule(
+          notificationId: notificationId,
+          scheduledDate: scheduledDate,
+          scheduleMode: scheduleMode,
+        );
+        debugPrint(
+          'Notification scheduled for: $scheduledDate '
+          '(Due: ${homework.dueDate})',
+        );
+      } on PlatformException catch (error) {
+        if (scheduleMode == AndroidScheduleMode.exactAllowWhileIdle) {
+          try {
+            await schedule(
+              notificationId: notificationId,
+              scheduledDate: scheduledDate,
+              scheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            );
+            debugPrint(
+              'Exact alarm was unavailable; notification scheduled inexactly.',
+            );
+            continue;
+          } catch (fallbackError) {
+            debugPrint(
+              'Error scheduling fallback notification: $fallbackError',
+            );
+            continue;
+          }
         }
+        debugPrint('Error scheduling notification: $error');
+      } catch (error) {
+        debugPrint('Error scheduling notification: $error');
       }
-      debugPrint('Error scheduling notification: $error');
-    } catch (error) {
-      debugPrint('Error scheduling notification: $error');
     }
   }
 
@@ -216,7 +245,13 @@ class NotificationService {
   }
 
   static Future<void> cancelNotification(String homeworkId) async {
-    final notificationId = homeworkId.hashCode & 0x7FFFFFFF;
-    await flutterLocalNotificationsPlugin.cancel(notificationId);
+    final notificationIds = <int>{
+      _legacyNotificationId(homeworkId),
+      _notificationId(homeworkId, 0),
+      _notificationId(homeworkId, 1),
+    };
+    for (final notificationId in notificationIds) {
+      await flutterLocalNotificationsPlugin.cancel(notificationId);
+    }
   }
 }

@@ -19,19 +19,23 @@ import 'package:homework_app/services/purchases_service.dart';
 import 'package:homework_app/services/ads_service.dart';
 import 'package:homework_app/services/attachment_storage_service.dart';
 import 'package:homework_app/services/analytics_service.dart';
+import 'package:homework_app/services/onboarding_service.dart';
 import 'package:homework_app/widgets/walkthrough_overlay.dart';
 import 'package:homework_app/utils/homework_grouping.dart';
+import 'package:homework_app/widgets/onboarding_message_card.dart';
 
 class HomeworkListScreen extends StatefulWidget {
   final String? subjectFilter;
   final bool showImportant;
   final bool startWalkthrough;
+  final bool startFirstTaskFlow;
 
   const HomeworkListScreen({
     super.key,
     this.subjectFilter,
     this.showImportant = false,
     this.startWalkthrough = false,
+    this.startFirstTaskFlow = false,
   });
 
   @override
@@ -51,6 +55,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   InterstitialAd? _interstitialAd;
   BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
+  late bool _firstTaskFlowActive;
+  bool _didPrepareFirstTaskFlow = false;
 
   final String _adUnitId = Platform.isAndroid
       ? 'ca-app-pub-7427500220267639/4890805530' // Interstitial
@@ -63,7 +69,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _firstTaskFlowActive = widget.startFirstTaskFlow;
+    if (!_firstTaskFlowActive) {
+      _loadData();
+    }
     _schedulePendingNotifications();
 
     // Defer ad loading to the post-frame callback to avoid blocking the
@@ -71,7 +80,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     // (nativePollOnce, binder transaction, J.N.JJ).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _loadBannerAd();
+        if (!_firstTaskFlowActive) {
+          _loadBannerAd();
+        }
         if (widget.startWalkthrough) {
           _runWalkthrough();
         }
@@ -83,6 +94,62 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
         setState(() {});
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_firstTaskFlowActive && !_didPrepareFirstTaskFlow) {
+      _didPrepareFirstTaskFlow = true;
+      unawaited(_prepareFirstTaskFlow());
+    }
+  }
+
+  Future<void> _prepareFirstTaskFlow() async {
+    final l10n = AppLocalizations.of(context)!;
+    final starterSubjects = [
+      l10n.starterSubjectMath,
+      l10n.starterSubjectSpanish,
+      l10n.starterSubjectGeography,
+      l10n.starterSubjectHistory,
+      l10n.starterSubjectBiology,
+    ];
+    final starterIcons = <String, int>{
+      l10n.starterSubjectMath: Icons.calculate.codePoint,
+      l10n.starterSubjectSpanish: Icons.menu_book_rounded.codePoint,
+      l10n.starterSubjectGeography: Icons.language.codePoint,
+      l10n.starterSubjectHistory: Icons.school.codePoint,
+      l10n.starterSubjectBiology: Icons.science.codePoint,
+    };
+    final existingSubjects = await HomeworkService.loadSubjects();
+    final existingIcons = await HomeworkService.loadSubjectIcons();
+    final mergedSubjects = [...existingSubjects];
+    for (final subject in starterSubjects) {
+      if (!mergedSubjects.contains(subject)) mergedSubjects.add(subject);
+    }
+    await HomeworkService.saveSubjects(mergedSubjects);
+    await HomeworkService.saveSubjectIcons({...starterIcons, ...existingIcons});
+    await AnalyticsService.logOnboardingStarted(isReplay: false);
+    await _loadData();
+    if (!mounted) return;
+    final hasExistingTask = _homeworkList.any((task) => !task.isDeleted);
+    if (hasExistingTask) {
+      await OnboardingService.markCompleted();
+      if (!mounted) return;
+      setState(() => _firstTaskFlowActive = false);
+      unawaited(_loadBannerAd());
+    }
+  }
+
+  Future<void> _refreshAfterNestedList() async {
+    final prefs = await SharedPreferences.getInstance();
+    final completed = prefs.getBool(onboardingCompletedKey) ?? false;
+    if (!mounted) return;
+    if (_firstTaskFlowActive && completed) {
+      setState(() => _firstTaskFlowActive = false);
+      unawaited(_loadBannerAd());
+    }
+    await _loadData();
   }
 
   Future<void> _loadData() async {
@@ -298,6 +365,107 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     });
   }
 
+  List<Homework> _demoHomework(AppLocalizations l10n) {
+    final now = DateTime.now();
+    final todayCandidate = now.add(const Duration(minutes: 30));
+    final todayDue = todayCandidate.day == now.day
+        ? todayCandidate
+        : DateTime(now.year, now.month, now.day, 23, 59, 59);
+    final tomorrowDue = DateTime(now.year, now.month, now.day + 1, 17);
+    final weekDue = DateTime(now.year, now.month, now.day + 3, 18);
+    final laterDue = DateTime(now.year, now.month, now.day + 9, 18);
+    return [
+      Homework(
+        id: 'onboarding-demo-today',
+        title: l10n.demoTaskToday,
+        subject: l10n.starterSubjectMath,
+        dueDate: todayDue,
+        enableNotification: false,
+      ),
+      Homework(
+        id: 'onboarding-demo-tomorrow',
+        title: l10n.demoTaskTomorrow,
+        subject: l10n.starterSubjectSpanish,
+        dueDate: tomorrowDue,
+        enableNotification: false,
+      ),
+      Homework(
+        id: 'onboarding-demo-week',
+        title: l10n.demoTaskWeek,
+        subject: l10n.starterSubjectGeography,
+        dueDate: weekDue,
+        enableNotification: false,
+        isImportant: true,
+      ),
+      Homework(
+        id: 'onboarding-demo-history',
+        title: l10n.demoTaskHistory,
+        subject: l10n.starterSubjectHistory,
+        dueDate: laterDue,
+        enableNotification: false,
+      ),
+      Homework(
+        id: 'onboarding-demo-biology',
+        title: l10n.demoTaskBiology,
+        subject: l10n.starterSubjectBiology,
+        dueDate: tomorrowDue.add(const Duration(hours: 2)),
+        enableNotification: false,
+      ),
+    ];
+  }
+
+  Future<void> _openAddHomework({bool replayGuide = false}) async {
+    final isFirstTaskSetup = _firstTaskFlowActive && _homeworkList.isEmpty;
+    if (isFirstTaskSetup) {
+      await AnalyticsService.logFirstTaskSetupStarted();
+    }
+    if (!mounted) return;
+    final homework = await Navigator.of(context).push<Homework>(
+      MaterialPageRoute(
+        builder: (_) => AddHomeworkScreen(
+          startWalkthrough: isFirstTaskSetup || replayGuide,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (homework == null) {
+      if (isFirstTaskSetup) {
+        unawaited(AnalyticsService.logFirstTaskSetupAbandoned());
+      }
+      return;
+    }
+    await _addHomework(homework);
+    if (!mounted || !isFirstTaskSetup) return;
+    await OnboardingService.markCompleted();
+    await AnalyticsService.logOnboardingCompleted(isReplay: false);
+    if (!mounted) return;
+    setState(() => _firstTaskFlowActive = false);
+    unawaited(_loadBannerAd());
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.42),
+      builder: (dialogContext) => Dialog(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: OnboardingMessageCard(
+          icon: Icons.celebration_rounded,
+          title: l10n.firstTaskCompletedTitle,
+          description: l10n.firstTaskCompletedDescription,
+          actions: SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.done),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _addHomework(Homework homework) async {
     // Leer el servicio ANTES de cualquier await para evitar usar BuildContext
     // a través de gaps asíncronos.
@@ -314,9 +482,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
       _homeworkList.add(homework);
     });
     await HomeworkService.saveHomework(_homeworkList);
-    unawaited(
-      AnalyticsService.logTaskCreated(homework, isFirstTask: isFirstTask),
-    );
+    await AnalyticsService.logTaskCreated(homework, isFirstTask: isFirstTask);
     await NotificationService.scheduleNotification(homework);
     _loadSubjects();
 
@@ -526,7 +692,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
 
       if (widget.subjectFilter == subject) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (ctx) => const HomeworkListScreen()),
+          MaterialPageRoute(
+            builder: (ctx) =>
+                HomeworkListScreen(startFirstTaskFlow: _firstTaskFlowActive),
+          ),
           (route) => route.isFirst,
         );
       }
@@ -587,8 +756,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                               widget.showImportant) {
                             Navigator.of(context).pushAndRemoveUntil(
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const HomeworkListScreen(),
+                                builder: (context) => HomeworkListScreen(
+                                  startFirstTaskFlow: _firstTaskFlowActive,
+                                ),
                               ),
                               (route) => route.isFirst,
                             );
@@ -606,14 +776,14 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                           await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  const HomeworkListScreen(showImportant: true),
+                              builder: (context) => HomeworkListScreen(
+                                showImportant: true,
+                                startFirstTaskFlow: _firstTaskFlowActive,
+                              ),
                             ),
                           );
                           if (mounted) {
-                            setState(() {
-                              _loadSubjects();
-                            });
+                            await _refreshAfterNestedList();
                           }
                         },
                       ),
@@ -661,13 +831,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                                 MaterialPageRoute(
                                   builder: (context) => HomeworkListScreen(
                                     subjectFilter: subject,
+                                    startFirstTaskFlow: _firstTaskFlowActive,
                                   ),
                                 ),
                               );
                               if (mounted) {
-                                setState(() {
-                                  _loadSubjects();
-                                });
+                                await _refreshAfterNestedList();
                               }
                             },
                           ),
@@ -723,7 +892,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                       ),
                     );
                     if (mounted && replayWalkthrough == true) {
-                      _runWalkthrough();
+                      await _openAddHomework(replayGuide: true);
                     }
                   },
                 ),
@@ -734,16 +903,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
         ),
         floatingActionButton: FloatingActionButton.extended(
           key: _newTaskKey,
-          onPressed: () async {
-            final homework = await Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const AddHomeworkScreen(),
-              ),
-            );
-            if (homework != null) {
-              await _addHomework(homework);
-            }
-          },
+          onPressed: _isLoading ? null : _openAddHomework,
           icon: const Icon(Icons.add),
           label: Text(
             AppLocalizations.of(context)!.newButton,
@@ -751,7 +911,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
           ),
         ),
         bottomNavigationBar:
-            (!isPremium && _isBannerAdLoaded && _bannerAd != null)
+            (!_firstTaskFlowActive &&
+                !isPremium &&
+                _isBannerAdLoaded &&
+                _bannerAd != null)
             ? SafeArea(
                 child: SizedBox(
                   width: _bannerAd!.size.width.toDouble(),
@@ -768,18 +931,23 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             final allHomework = _homeworkList
                 .where((h) => !h.isDeleted)
                 .toList();
+            final showFirstTaskIntro =
+                _firstTaskFlowActive && allHomework.isEmpty;
+            final displayedHomework = showFirstTaskIntro
+                ? _demoHomework(AppLocalizations.of(context)!)
+                : allHomework;
 
             late final List<Homework> filteredHomework;
             if (widget.showImportant) {
-              filteredHomework = allHomework
+              filteredHomework = displayedHomework
                   .where((h) => h.isImportant)
                   .toList();
             } else if (widget.subjectFilter != null) {
-              filteredHomework = allHomework
+              filteredHomework = displayedHomework
                   .where((h) => h.subject == widget.subjectFilter)
                   .toList();
             } else {
-              filteredHomework = allHomework;
+              filteredHomework = displayedHomework;
             }
 
             final pending = filteredHomework
@@ -800,26 +968,48 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             pending.sort(importanceCompare);
             completed.sort(importanceCompare);
 
-            return Padding(
+            final list = Padding(
               padding: const EdgeInsets.only(bottom: 80.0),
               child: TabBarView(
                 children: [
                   _buildHomeworkList(
                     context,
                     pending,
-                    allHomework,
+                    displayedHomework,
                     true,
-                    isPremium,
+                    showFirstTaskIntro ? true : isPremium,
                   ),
                   _buildHomeworkList(
                     context,
                     completed,
-                    allHomework,
+                    displayedHomework,
                     false,
-                    isPremium,
+                    showFirstTaskIntro ? true : isPremium,
                   ),
                 ],
               ),
+            );
+            if (!showFirstTaskIntro) return list;
+            final l10n = AppLocalizations.of(context)!;
+            return Stack(
+              children: [
+                Positioned.fill(
+                  child: AbsorbPointer(
+                    child: Opacity(opacity: 0.62, child: list),
+                  ),
+                ),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: OnboardingMessageCard(
+                      icon: Icons.auto_awesome_rounded,
+                      title: l10n.firstTaskIntroTitle,
+                      description: l10n.firstTaskIntroDescription,
+                      pointDown: true,
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),

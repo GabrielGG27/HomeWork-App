@@ -159,6 +159,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get atDueTime => 'At due time';
 
   @override
+  String get minuteBefore => '1 minute before';
+
+  @override
   String minutesBefore(int minutes) {
     return '$minutes minutes before';
   }
@@ -173,6 +176,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dayBefore => '1 day before';
+
+  @override
+  String daysBefore(int days) {
+    return '$days days before';
+  }
+
+  @override
+  String reminderNumber(int number) {
+    return 'Reminder $number';
+  }
+
+  @override
+  String get addReminder => 'Add another reminder';
+
+  @override
+  String get removeReminder => 'Remove reminder';
+
+  @override
+  String get customReminder => 'Custom time…';
+
+  @override
+  String get timeAmount => 'Amount';
+
+  @override
+  String get minutes => 'Minutes';
+
+  @override
+  String get hours => 'Hours';
+
+  @override
+  String get days => 'Days';
+
+  @override
+  String get enterPositiveNumber => 'Enter a number greater than zero';
+
+  @override
+  String get remindersMustBeDifferent =>
+      'Choose a different time for each reminder';
 
   @override
   String get darkMode => 'Dark Mode';
@@ -269,11 +310,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get viewIntroduction => 'View introduction';
+  String get viewIntroduction => 'View task creation guide';
 
   @override
   String get viewIntroductionDescription =>
-      'Replay the welcome and app walkthrough';
+      'Replay the step-by-step assignment creation and organization guide';
 
   @override
   String get skipWalkthrough => 'Skip walkthrough';
@@ -340,6 +381,86 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get walkthroughCompleteDescription =>
       'Your first assignment is ready. You now know everything you need to stay organized.';
+
+  @override
+  String get firstTaskIntroTitle => 'Create your first assignment';
+
+  @override
+  String get firstTaskIntroDescription =>
+      'HomeWork App will organize it for you.';
+
+  @override
+  String get firstTaskDetailsTitle => 'Add details if you need them';
+
+  @override
+  String get firstTaskDetailsDescription =>
+      'You can add instructions, notes, or any other information. This step is optional.';
+
+  @override
+  String get firstTaskScheduleTitle => 'Choose when it is due';
+
+  @override
+  String get firstTaskScheduleDescription =>
+      'Set a due date and time. HomeWork App will automatically place the assignment in the right section.';
+
+  @override
+  String get firstTaskReminderTitle => 'Get a heads-up before it is due';
+
+  @override
+  String get firstTaskReminderDescription =>
+      'Reminders are optional. Turn them on to choose when HomeWork App should notify you. You can add up to two and use a custom lead time.';
+
+  @override
+  String get firstTaskImportanceTitle => 'Highlight what matters most';
+
+  @override
+  String get firstTaskImportanceDescription =>
+      'Important assignments appear first within their section. Turning this on is optional.';
+
+  @override
+  String get firstTaskSaveTitle => 'Save your first assignment';
+
+  @override
+  String get firstTaskSaveDescription =>
+      'Everything is ready. Tap Save to see it organized in your list.';
+
+  @override
+  String get firstTaskCompletedTitle =>
+      'Congratulations! You created your first assignment.';
+
+  @override
+  String get firstTaskCompletedDescription =>
+      'Now relax: HomeWork App will organize your homework for you.';
+
+  @override
+  String get starterSubjectMath => 'Mathematics';
+
+  @override
+  String get starterSubjectSpanish => 'English';
+
+  @override
+  String get starterSubjectGeography => 'Geography';
+
+  @override
+  String get starterSubjectHistory => 'History';
+
+  @override
+  String get starterSubjectBiology => 'Biology';
+
+  @override
+  String get demoTaskToday => 'Solve algebra exercises';
+
+  @override
+  String get demoTaskTomorrow => 'Read the next chapter';
+
+  @override
+  String get demoTaskWeek => 'Prepare a geography presentation';
+
+  @override
+  String get demoTaskHistory => 'Submit a history summary';
+
+  @override
+  String get demoTaskBiology => 'Study cells';
 
   @override
   String get done => 'Done';

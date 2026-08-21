@@ -1,0 +1,110 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "Auditoría de producto y negocio · Homework App",
+    "description": "Evaluación de adquisición, activación, retención y economía unitaria con datos de Google Ads y GA4.",
+    "generatedAt": "2026-08-10",
+    "sources": [
+      {
+        "id": "google_ads",
+        "label": "Google Ads · cuenta 8368535464",
+        "query": {
+          "engine": "Google Ads Query Language",
+          "language": "GAQL",
+          "description": "Rendimiento de la campaña de instalaciones por fecha.",
+          "sql": "SELECT segments.date, campaign.id, campaign.name, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.biddable_app_install_conversions, metrics.biddable_app_post_install_conversions FROM campaign WHERE campaign.id = 23991985899 AND segments.date BETWEEN '2026-07-26' AND '2026-08-08' ORDER BY segments.date",
+          "executed_at": "2026-08-09",
+          "filters": ["Campaign 23991985899", "2026-07-26 to 2026-08-08", "Currency MXN", "Timezone America/Mexico_City"],
+          "metric_definitions": ["Instalaciones: conversiones biddable_app_install_conversions atribuidas por Google Ads.", "CPI: gasto dividido entre instalaciones."]
+        }
+      },
+      {
+        "id": "ga4",
+        "label": "Google Analytics 4 · homework-app-9421c",
+        "href": "https://analytics.google.com/analytics/web/#/p541344008/reports",
+        "query": {
+          "engine": "Google Analytics Data API",
+          "description": "Usuarios, eventos, embudo, cohortes e ingresos publicitarios de la propiedad 541344008.",
+          "executed_at": "2026-08-10",
+          "filters": ["Product events: 2026-07-30 to 2026-08-08", "Ad experience events: 2026-07-30 to 2026-08-09", "Timezone Etc/GMT+6"],
+          "metric_definitions": ["Activación: primer evento first_task_created.", "Valor inicial: primer evento first_task_completed.", "D1/D7: usuarios activos del mismo firstSessionDate uno o siete días después.", "app_remove: evento agregado de eliminación de Android; no identifica por sí solo la cohorte de instalación ni la causa."]
+        }
+      },
+      {
+        "id": "ads_implementation",
+        "label": "Implementación publicitaria · homework_list_screen.dart",
+        "query": {
+          "engine": "Revisión de código fuente",
+          "description": "Ubicaciones, frecuencia y momento de carga de anuncios en la experiencia principal.",
+          "executed_at": "2026-08-10",
+          "filters": ["Banner en pantalla principal", "Nativo cada cuatro tareas", "Intersticial cada siete tareas creadas"],
+          "metric_definitions": ["La revisión del código establece exposición potencial, no que un anuncio haya causado una desinstalación."]
+        }
+      }
+    ],
+    "charts": [
+      {
+        "id": "weekly_installs",
+        "title": "Instalaciones atribuidas por semana",
+        "subtitle": "La pauta entregó 8.3% más instalaciones en la semana más reciente",
+        "type": "bar",
+        "dataset": "weekly_ads",
+        "encodings": {
+          "x": {"field": "period", "type": "nominal"},
+          "y": {"field": "installs", "type": "quantitative"}
+        },
+        "source": {
+          "id": "google_ads_chart",
+          "label": "Google Ads · campaña HomeWork_App_Installs_India_V1",
+          "query": {
+            "engine": "Google Ads Query Language",
+            "language": "GAQL",
+            "description": "Consulta diaria agregada a dos semanas comparables.",
+            "sql": "SELECT segments.date, campaign.id, campaign.name, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.biddable_app_install_conversions, metrics.biddable_app_post_install_conversions FROM campaign WHERE campaign.id = 23991985899 AND segments.date BETWEEN '2026-07-26' AND '2026-08-08' ORDER BY segments.date",
+            "executed_at": "2026-08-09",
+            "filters": ["Campaign 23991985899", "Currency MXN"],
+            "metric_definitions": ["Installs: sum of biddable_app_install_conversions by seven-day period."]
+          }
+        }
+      }
+    ],
+    "blocks": [
+      {"id": "title", "type": "markdown", "body": "# Auditoría de producto y negocio · Homework App"},
+      {"id": "summary", "type": "markdown", "body": "## Resumen ejecutivo\n\n- **Decisión recomendada hoy:** mantener India en MXN 130 diarios hasta completar los MXN 2,760 restantes de la promoción; después pausar cuando el estado cambie a Processing.\n- **El origen indio previo no está demostrado:** antes de Ads, GA4 registró solo 5 primeras aperturas en India y no conservó una fuente de Reddit; Installed audience era una fotografía de usuarios que aún tenían la app instalada, no una medición de adquisición orgánica.\n- **Usar el crédito como experimento:** cuando los MXN 7,000 aparezcan como crédito activo, repartirlos en campañas separadas para India, México y Sudáfrica, no en una campaña mundial.\n- **El calendario es favorable:** aun si el crédito tarda el máximo indicado, octubre y noviembre coinciden con clases en los tres mercados de prueba."},
+      {"id": "acquisition", "type": "markdown", "body": "## La adquisición es barata, pero optimiza la acción equivocada\n\nEn 30 días, la campaña generó 6,613 instalaciones con MXN 3,885.60 de gasto: CPI de MXN 0.59. En la semana más reciente el gasto subió 10.9%, las instalaciones 8.3% y el CPI empeoró ligeramente de MXN 0.56 a MXN 0.58. La campaña consume prácticamente todo el presupuesto diario de MXN 130 y Google recomienda MXN 220, pero solo reconoce instalaciones; las conversiones post-instalación son cero.", "sourceId": "google_ads"},
+      {"id": "ads_chart", "type": "chart", "chartId": "weekly_installs"},
+      {"id": "ads_chart_read", "type": "markdown", "body": "### Cómo leerlo\n\nLa caída de usuarios en GA4 no se explica por menor entrega publicitaria: Ads atribuyó más instalaciones. La discrepancia aparece entre instalación y primera apertura/actividad, o en la medición entre ambas plataformas."},
+      {"id": "activation", "type": "markdown", "body": "## Existe activación, pero el embudo de onboarding está mal instrumentado\n\nEntre el 30 de julio y el 8 de agosto hubo 1,800 usuarios con primera apertura. El 22.3% creó una primera tarea y el 11.3% llegó a completar una. Sin embargo, no es válido ubicar la fuga respecto a `onboarding_completed`: el código registra ese evento al terminar las cuatro diapositivas, antes de iniciar el recorrido y el tutorial de creación. De hecho, GA4 solo encuentra 6 usuarios con `first_task_created` antes de `onboarding_completed`, aunque ese debería ser el orden según la experiencia descrita. Hasta corregir la instrumentación, la evidencia permite afirmar que la activación es baja, pero no identificar en qué paso exacto se pierde al usuario.", "sourceId": "ga4"},
+      {"id": "paid_quality", "type": "markdown", "body": "## India pagado tiene una calidad inicial parecida al orgánico\n\nEntre el 30 de julio y el 8 de agosto, 343 de 1,562 primeras aperturas atribuidas a Google Ads en India crearon su primera tarea (22.0%) y 179 la completaron (11.5%). En Google Play orgánico de India fueron 19 de 89 (21.3%) y 9 de 89 (10.1%), respectivamente. La pauta no parece estar degradando la activación inicial; está amplificando un producto cuya retención todavía es débil.", "sourceId": "ga4"},
+      {"id": "country_options", "type": "markdown", "body": "## Ningún país alternativo tiene todavía evidencia suficiente\n\nEn los 90 días previos a la nueva instrumentación, Google Play orgánico aportó 216 usuarios activos de India, 14 de México, 11 de Estados Unidos y 7 o menos en cada país restante. México muestra una señal interesante de uso, pero catorce usuarios pueden quedar dominados por uno o dos usuarios intensivos y no permiten estimar activación o retención. No hay base estadística para elegir otro mercado todavía.", "sourceId": "ga4"},
+      {"id": "pre_ads_origin", "type": "markdown", "body": "## Reddit pudo influir, pero la atribución no permite demostrarlo\n\nLa campaña comenzó el 2 de julio. Antes de esa fecha, GA4 registró 62 primeras aperturas: 21 de Estados Unidos, 10 de México, 5 de India, 2 de Australia, 2 del Reino Unido, 1 de Tailandia y 21 sin país. Por fuente, 43 quedaron como directo, 16 como Google Play orgánico y 3 como búsqueda orgánica; ninguna conservó Reddit como referencia. El salto de Estados Unidos durante junio es compatible con una publicación en Reddit si las fechas coinciden, pero el salto entre Reddit, el navegador y Google Play puede perder la referencia.", "sourceId": "ga4"},
+      {"id": "installed_audience_definition", "type": "markdown", "body": "### Installed audience no mide adquisición orgánica\n\nSegún la [definición de Play Console](https://support.google.com/googleplay/android-developer/answer/139628), cuenta usuarios que todavía tienen la app instalada en al menos un dispositivo utilizado durante los últimos 30 días. Es una fotografía del stock instalado y supervivencia, no una medición de dónde ni por qué se adquirió cada usuario. Que India encabezara esa métrica con una base pequeña podía reflejar unas pocas instalaciones más recientes o menos desinstalaciones, no necesariamente demanda orgánica superior."},
+      {"id": "retention", "type": "markdown", "body": "## La retención no sostiene todavía un producto habitual\n\nLas cohortes recientes muestran D1 aproximado de 7.3% y D7 de 1.3%. Además, los usuarios recurrentes bajaron de 511 a 403 entre semanas comparables y su tasa de engagement cayó de 72.9% a 61.3%. La función central resuelve una necesidad para una minoría, pero la app aún no crea un hábito suficientemente fuerte.", "sourceId": "ga4"},
+      {"id": "ad_experience_data", "type": "markdown", "body": "## Los anuncios pueden contribuir al abandono, pero todavía no están demostrados como causa\n\nDel 30 de julio al 9 de agosto, GA4 registró 1,953 usuarios con primera apertura, 1,443 usuarios con al menos una impresión publicitaria y 1,600 usuarios con `app_remove`. Estos totales no forman una misma cohorte: una desinstalación puede corresponder a una instalación anterior, por lo que 1,600 / 1,953 no es una tasa válida de desinstalación. Sí confirma que el volumen de abandono es material, pero GA4 agregado no permite atribuirlo a los anuncios.", "sourceId": "ga4"},
+      {"id": "ad_experience_code", "type": "markdown", "body": "### El banner inicial es el principal riesgo publicitario\n\nEl código hace que el banner se cargue en la primera pantalla, al mismo tiempo que empieza el recorrido; inserta un anuncio nativo después de cada cuatro tareas visibles y muestra un intersticial cada siete tareas creadas. El intersticial es un candidato débil para explicar abandono temprano porque exige que el usuario ya haya creado siete tareas. El banner inicial es el riesgo principal: monetiza antes de que el usuario haya experimentado valor.", "sourceId": "ads_implementation"},
+      {"id": "ad_experience_test", "type": "markdown", "body": "### Probar una primera experiencia sin anuncios\n\n**Experimento recomendado:** durante 21 días, asignar aleatoriamente 50% de nuevos usuarios a la experiencia actual y 50% a una variante sin anuncios durante el onboarding y la primera sesión; empezar anuncios a partir de la segunda sesión o después de tres tareas. Mantener adquisición y producto estables, y comparar primera tarea creada/completada, segunda tarea, D1, D7, `app_remove` e ingreso publicitario por usuario. Si la variante mejora retención con una pérdida publicitaria pequeña, convertirla en la política predeterminada."},
+      {"id": "economics", "type": "markdown", "body": "## La economía unitaria actual destruye valor\n\nDurante los diez días posteriores al 30 de julio se gastaron MXN 1,283.61 y GA4 registró USD 1.09 de ingreso publicitario total. Con un tipo de cambio de referencia cercano a MXN 17.46 por USD, el ingreso equivale aproximadamente a MXN 19: cerca de 1.5% del gasto. Incluso atribuyendo todo el ingreso a nuevos usuarios pagados, el ingreso por usuario tendría que multiplicarse decenas de veces para recuperar adquisición, antes de infraestructura y desarrollo."},
+      {"id": "campaign_action", "type": "markdown", "body": "## La promoción hace razonable mantener el gasto temporalmente\n\n**Mantendría India en MXN 130 diarios hasta que la página Promociones confirme que se cumplieron los MXN 7,000 y muestre Processing.** Con MXN 2,760 restantes y el ritmo reciente, faltan aproximadamente 21–22 días. En ese momento pausaría la campaña: Google indica que el crédito puede tardar hasta 35 días y solo cubre costos futuros desde su aplicación. Cuando los MXN 7,000 estén activos, usaría un presupuesto total aproximado de MXN 130 diarios —India MXN 40, México MXN 45 y Sudáfrica MXN 45— durante hasta 54 días, dejando varios días de margen antes del vencimiento de 60 días."},
+      {"id": "plan", "type": "markdown", "body": "## Plan recomendado alrededor de la promoción\n\n1. **Completar la promoción.** Mantener India en MXN 130 diarios y vigilar el progreso directamente en Facturación → Promociones; esa página, no el gasto bruto de campaña, controla la elegibilidad.\n2. **Pausar al entrar en Processing.** No generar gasto adicional durante la espera porque el crédito no cubre costos anteriores a su aplicación.\n3. **Preparar la medición durante la espera.** Corregir el orden del onboarding, importar `first_task_created` y `first_task_completed`, localizar ficha y creatividades, y crear campañas separadas.\n4. **Activar el experimento con el crédito.** India MXN 40/día, México MXN 45/día y Sudáfrica MXN 45/día; misma estrategia y producto estable.\n5. **Evitar cambios durante 14 días.** Dejar completar la fase de aprendizaje y después observar al menos dos cohortes con oportunidad de alcanzar D7.\n6. **Controlar la caducidad.** Revisar diariamente Spent from Promotion y programar fechas de finalización; Ads continuará cobrando al medio de pago cuando se agote el crédito.\n7. **Escalar solo un ganador.** Exigir mejor activación, D7 y costo por usuario retenido, no solamente menor CPI."},
+      {"id": "caveats", "type": "markdown", "body": "## Caveats y preguntas pendientes\n\nLa recomendación promocional supone que Facturación → Promociones confirma MXN 2,760 restantes, estado Redeemed: currently earning y una vigencia de 60 días después de aplicar el crédito; los términos específicos de tu oferta prevalecen. Los eventos de onboarding y primera tarea comenzaron el 30 de julio y `onboarding_completed` todavía representa el final de las diapositivas. Reddit no aparece como fuente en GA4, por lo que atribuirle las descargas previas es una hipótesis; la fecha y analítica de la publicación permitirían evaluarla mejor. Google Ads usa instalaciones modeladas y GA4 aperturas observadas, así que los costos por activación entre ambas fuentes son aproximados. India no tiene un único calendario escolar nacional; la comparación temporal deberá segmentarse por campaña y fechas, no asumir una temporada idéntica en todo el país. `app_remove`, primeras aperturas e impresiones publicitarias agregadas en el mismo periodo no identifican a los mismos usuarios ni demuestran causalidad; la conclusión sobre anuncios requiere asignación experimental persistente y análisis por cohorte."}
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "status": "ready",
+    "generatedAt": "2026-08-10",
+    "datasets": {
+      "weekly_ads": [
+        {"period": "26 jul–1 ago", "spend_mxn": 832.43, "impressions": 374241, "clicks": 6534, "installs": 1478, "cpi_mxn": 0.563},
+        {"period": "2–8 ago", "spend_mxn": 923.36, "impressions": 307425, "clicks": 7686, "installs": 1600, "cpi_mxn": 0.577}
+      ]
+    }
+  },
+  "sources": [
+    {"id": "google_ads", "label": "Google Ads · cuenta 8368535464"},
+    {"id": "ga4", "label": "Google Analytics 4 · property 541344008", "href": "https://analytics.google.com/analytics/web/#/p541344008/reports"},
+    {"id": "ads_implementation", "label": "Implementación publicitaria · homework_list_screen.dart"}
+  ]
+}
