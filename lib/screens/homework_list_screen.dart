@@ -174,6 +174,15 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
       _homeworkList = loaded;
       _isLoading = false;
     });
+    if (widget.subjectFilter == null && !widget.showImportant) {
+      unawaited(
+        AnalyticsService.logTaskInventorySnapshot(
+          loaded,
+          reason: 'app_open',
+          oncePerSession: true,
+        ),
+      );
+    }
   }
 
   @override
@@ -495,6 +504,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
     });
     await HomeworkService.saveHomework(_homeworkList);
     await AnalyticsService.logTaskCreated(homework, isFirstTask: isFirstTask);
+    unawaited(
+      AnalyticsService.logTaskInventorySnapshot(
+        _homeworkList,
+        reason: 'task_created',
+      ),
+    );
     await NotificationService.scheduleNotification(homework);
     _loadSubjects();
 
@@ -564,6 +579,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
       _homeworkList[index].deletedAt = DateTime.now();
     });
     await HomeworkService.saveHomework(_homeworkList);
+    unawaited(
+      AnalyticsService.logTaskInventorySnapshot(
+        _homeworkList,
+        reason: 'task_deleted',
+      ),
+    );
     await NotificationService.cancelNotification(homeworkId);
   }
 
@@ -589,6 +610,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
       }
 
       await HomeworkService.saveHomework(_homeworkList);
+      unawaited(
+        AnalyticsService.logTaskInventorySnapshot(
+          _homeworkList,
+          reason: isBeingCompleted ? 'task_completed' : 'task_reopened',
+        ),
+      );
       final currentIndex = _homeworkList.indexWhere(
         (task) => task.id == homework.id,
       );
@@ -684,6 +711,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
       }
     });
     await HomeworkService.saveHomework(_homeworkList);
+    unawaited(
+      AnalyticsService.logTaskInventorySnapshot(
+        _homeworkList,
+        reason: 'completed_tasks_cleared',
+      ),
+    );
   }
 
   Future<void> _schedulePendingNotifications() async {

@@ -1,6 +1,7 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:homework_app/models/homework.dart';
+import 'package:homework_app/utils/task_inventory.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AnalyticsService {
@@ -8,6 +9,7 @@ class AnalyticsService {
 
   static const String _firstTaskCreatedKey = 'analytics_first_task_created';
   static const String _firstTaskCompletedKey = 'analytics_first_task_completed';
+  static bool _didLogSessionInventorySnapshot = false;
 
   static Map<String, Object> _taskParameters(Homework homework) => {
     'has_due_date': homework.hasDueDate ? 1 : 0,
@@ -58,6 +60,40 @@ class AnalyticsService {
     if (!alreadyLogged && !hasPreviousCompletedTasks) {
       await prefs.setBool(_firstTaskCompletedKey, true);
       await _logEvent('first_task_completed', parameters: parameters);
+    }
+  }
+
+  static Future<void> logTaskInventorySnapshot(
+    Iterable<Homework> tasks, {
+    required String reason,
+    bool oncePerSession = false,
+  }) async {
+    if (oncePerSession && _didLogSessionInventorySnapshot) return;
+    if (oncePerSession) _didLogSessionInventorySnapshot = true;
+
+    final inventory = TaskInventory.fromTasks(tasks);
+    await _logEvent(
+      'task_list_snapshot',
+      parameters: {
+        'pending_task_count': inventory.pending,
+        'completed_task_count': inventory.completed,
+        'snapshot_reason': reason,
+      },
+    );
+
+    try {
+      await Future.wait([
+        FirebaseAnalytics.instance.setUserProperty(
+          name: 'pending_task_bucket',
+          value: TaskInventory.bucketFor(inventory.pending),
+        ),
+        FirebaseAnalytics.instance.setUserProperty(
+          name: 'completed_task_bucket',
+          value: TaskInventory.bucketFor(inventory.completed),
+        ),
+      ]);
+    } catch (error) {
+      debugPrint('[Analytics] Could not update task count buckets: $error');
     }
   }
 

@@ -5,6 +5,7 @@ import 'package:homework_app/models/homework.dart';
 import 'package:homework_app/services/homework_service.dart';
 import 'package:homework_app/services/notification_service.dart';
 import 'package:homework_app/services/attachment_storage_service.dart';
+import 'package:homework_app/services/analytics_service.dart';
 import 'package:homework_app/icons_helper.dart';
 import 'package:homework_app/screens/homework_list_screen.dart';
 import 'package:homework_app/utils/homework_grouping.dart';
@@ -59,6 +60,10 @@ class _TrashScreenState extends State<TrashScreen> {
 
     all[index].isDeleted = false;
     await HomeworkService.saveHomework(all);
+    await AnalyticsService.logTaskInventorySnapshot(
+      all,
+      reason: 'task_restored',
+    );
     await NotificationService.scheduleNotification(all[index]);
     await _loadDeletedTasks();
   }
