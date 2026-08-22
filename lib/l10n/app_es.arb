@@ -9,6 +9,8 @@
   "noSavedSubjects": "Sin materias guardadas",
   "newButton": "Nueva",
   "deleteAssignment": "Eliminar",
+  "confirmDeleteTaskTitle": "¿Eliminar tarea?",
+  "confirmDeleteTaskMessage": "Esta tarea se moverá a la papelera.",
   "trash": "Papelera",
   "restore": "Restaurar",
   "deleteForever": "Eliminar permanentemente",

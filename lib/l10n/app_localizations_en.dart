@@ -36,6 +36,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAssignment => 'Delete';
 
   @override
+  String get confirmDeleteTaskTitle => 'Delete task?';
+
+  @override
+  String get confirmDeleteTaskMessage =>
+      'This task will be moved to the trash.';
+
+  @override
   String get trash => 'Trash';
 
   @override

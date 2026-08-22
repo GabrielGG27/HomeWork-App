@@ -556,7 +556,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
     _loadSubjects();
   }
 
-  void _deleteHomework(int index) async {
+  Future<void> _deleteHomework(int index) async {
     if (index < 0 || index >= _homeworkList.length) return;
     final homeworkId = _homeworkList[index].id;
     setState(() {
@@ -616,10 +616,33 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
     }
   }
 
-  void _deleteFromFullList(Homework homework, List<Homework> fullList) {
+  Future<void> _confirmDeleteHomework(Homework homework) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.confirmDeleteTaskTitle),
+        content: Text(l10n.confirmDeleteTaskMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(dialogContext).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.deleteAssignment),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmed != true) return;
+
     final index = _homeworkList.indexWhere((h) => h.id == homework.id);
     if (index != -1) {
-      _deleteHomework(index);
+      await _deleteHomework(index);
     }
   }
 
@@ -1243,8 +1266,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
                       ],
                     ),
                     trailing: IconButton(
+                      tooltip: AppLocalizations.of(context)!.deleteAssignment,
                       icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deleteFromFullList(hw, fullList),
+                      onPressed: () => _confirmDeleteHomework(hw),
                     ),
                   ),
                 );
@@ -1358,8 +1382,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
                 ),
               ),
               trailing: IconButton(
+                tooltip: AppLocalizations.of(context)!.deleteAssignment,
                 icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () => _deleteFromFullList(hw, fullList),
+                onPressed: () => _confirmDeleteHomework(hw),
               ),
             ),
           );

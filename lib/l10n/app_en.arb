@@ -9,6 +9,8 @@
   "noSavedSubjects": "No saved subjects",
   "newButton": "New",
   "deleteAssignment": "Delete",
+  "confirmDeleteTaskTitle": "Delete task?",
+  "confirmDeleteTaskMessage": "This task will be moved to the trash.",
   "trash": "Trash",
   "restore": "Restore",
   "deleteForever": "Delete forever",

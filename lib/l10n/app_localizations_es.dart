@@ -36,6 +36,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get deleteAssignment => 'Eliminar';
 
   @override
+  String get confirmDeleteTaskTitle => '¿Eliminar tarea?';
+
+  @override
+  String get confirmDeleteTaskMessage => 'Esta tarea se moverá a la papelera.';
+
+  @override
   String get trash => 'Papelera';
 
   @override
