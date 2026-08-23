@@ -4,11 +4,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:homework_app/models/homework.dart';
 import 'package:homework_app/services/notification_service.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    await Future.wait([
+      initializeDateFormatting('en'),
+      initializeDateFormatting('es'),
+    ]);
+  });
 
   const channel = MethodChannel('dexterous.com/flutter/local_notifications');
 
@@ -222,5 +230,77 @@ void main() {
 
     expect(cancelCalls, greaterThanOrEqualTo(2));
     expect(scheduleCalls, 1);
+  });
+
+  test('serializes reconciliation before a later cancellation', () async {
+    final scheduleStarted = Completer<void>();
+    final releaseSchedule = Completer<void>();
+    final calls = <String>[];
+
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          switch (call.method) {
+            case 'initialize':
+              return true;
+            case 'getNotificationAppLaunchDetails':
+              return <String, Object?>{'notificationLaunchedApp': false};
+            case 'createNotificationChannel':
+              return null;
+            case 'cancel':
+              calls.add('cancel');
+              return null;
+            case 'canScheduleExactNotifications':
+              return false;
+            case 'zonedSchedule':
+              calls.add('schedule');
+              if (!scheduleStarted.isCompleted) scheduleStarted.complete();
+              await releaseSchedule.future;
+              return null;
+          }
+          return null;
+        });
+
+    await NotificationService.initializeNotifications();
+    final task = Homework(
+      id: 'reconciliation-race',
+      title: 'Future task',
+      subject: 'Math',
+      dueDate: DateTime.now().add(const Duration(days: 1)),
+    );
+
+    final reconciliation = NotificationService.schedulePendingNotifications([
+      task,
+    ]);
+    await scheduleStarted.future;
+    final cancellation = NotificationService.cancelNotification(task.id);
+    releaseSchedule.complete();
+    await Future.wait([reconciliation, cancellation]);
+
+    expect(calls.last, 'cancel');
+    expect(
+      calls.lastIndexOf('cancel'),
+      greaterThan(calls.lastIndexOf('schedule')),
+    );
+  });
+
+  test('rejects reminder times that are not in the future', () {
+    final now = DateTime(2026, 8, 21, 12);
+
+    expect(
+      NotificationService.reminderTimesAreInFuture(
+        dueDate: now.add(const Duration(hours: 2)),
+        offsets: const [30, 60],
+        now: now,
+      ),
+      isTrue,
+    );
+    expect(
+      NotificationService.reminderTimesAreInFuture(
+        dueDate: now.add(const Duration(minutes: 30)),
+        offsets: const [30],
+        now: now,
+      ),
+      isFalse,
+    );
   });
 }

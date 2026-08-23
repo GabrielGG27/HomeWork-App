@@ -20,7 +20,15 @@ class HomeworkService {
           json['id'] = '${baseId + i}';
           needsSave = true;
         }
-        loaded.add(Homework.fromJson(json));
+        final homework = Homework.fromJson(json);
+        if (homework.isDeleted && homework.deletedAt == null) {
+          // Old versions stored the deleted flag without a timestamp. Start
+          // their 30-day retention period at migration instead of retaining
+          // them forever or deleting them immediately.
+          homework.deletedAt = DateTime.now();
+          needsSave = true;
+        }
+        loaded.add(homework);
       } catch (e) {
         debugPrint('Error loading homework item: $e');
       }

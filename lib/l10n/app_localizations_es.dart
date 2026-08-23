@@ -222,6 +222,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Elige un tiempo diferente para cada recordatorio';
 
   @override
+  String get reminderMustBeFuture =>
+      'Uno o más recordatorios quedarían en el pasado. Cambia la fecha, la hora de entrega o la antelación.';
+
+  @override
   String get darkMode => 'Modo oscuro';
 
   @override
@@ -481,4 +485,23 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get privacyOptionsError =>
       'No se pudieron abrir las opciones de privacidad. Inténtalo de nuevo.';
+
+  @override
+  String get takePhoto => 'Tomar foto';
+
+  @override
+  String get pickImage => 'Elegir imagen';
+
+  @override
+  String get attachFile => 'Adjuntar archivo';
+
+  @override
+  String couldNotSaveImage(String error) {
+    return 'No se pudo guardar la imagen: $error';
+  }
+
+  @override
+  String couldNotSaveFile(String error) {
+    return 'No se pudo guardar el archivo: $error';
+  }
 }

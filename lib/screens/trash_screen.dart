@@ -217,12 +217,9 @@ class _TrashScreenState extends State<TrashScreen> {
                       title: Text(AppLocalizations.of(context)!.allAssignments),
                       onTap: () {
                         Navigator.pop(context);
-                        Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(
-                            builder: (ctx) => const HomeworkListScreen(),
-                          ),
-                          (route) => route.isFirst,
-                        );
+                        Navigator.of(
+                          context,
+                        ).popUntil((route) => route.isFirst);
                       },
                     ),
                     ListTile(
@@ -420,6 +417,9 @@ class _TrashScreenState extends State<TrashScreen> {
                               SmartDateFormatter.formatForCard(
                                 hw.dueDate,
                                 sectionTitle,
+                                locale: Localizations.localeOf(
+                                  context,
+                                ).toLanguageTag(),
                               );
                           return Card(
                             margin: const EdgeInsets.symmetric(

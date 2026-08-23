@@ -9,7 +9,8 @@ class AnalyticsService {
 
   static const String _firstTaskCreatedKey = 'analytics_first_task_created';
   static const String _firstTaskCompletedKey = 'analytics_first_task_completed';
-  static bool _didLogSessionInventorySnapshot = false;
+  static const Duration _analyticsSessionTimeout = Duration(minutes: 30);
+  static DateTime? _lastSessionInventorySnapshotAt;
 
   static Map<String, Object> _taskParameters(Homework homework) => {
     'has_due_date': homework.hasDueDate ? 1 : 0,
@@ -68,8 +69,14 @@ class AnalyticsService {
     required String reason,
     bool oncePerSession = false,
   }) async {
-    if (oncePerSession && _didLogSessionInventorySnapshot) return;
-    if (oncePerSession) _didLogSessionInventorySnapshot = true;
+    final now = DateTime.now();
+    if (oncePerSession &&
+        _lastSessionInventorySnapshotAt != null &&
+        now.difference(_lastSessionInventorySnapshotAt!) <
+            _analyticsSessionTimeout) {
+      return;
+    }
+    if (oncePerSession) _lastSessionInventorySnapshotAt = now;
 
     final inventory = TaskInventory.fromTasks(tasks);
     await _logEvent(
@@ -100,16 +107,36 @@ class AnalyticsService {
   static Future<void> logNotificationOpened() =>
       _logEvent('notification_opened');
 
+  static Future<void> logBannerConfigurationApplied({
+    required bool showBannerAd,
+  }) async {
+    final variant = showBannerAd ? 'banner_enabled' : 'banner_disabled';
+    try {
+      await FirebaseAnalytics.instance.setUserProperty(
+        name: 'banner_test_group',
+        value: variant,
+      );
+    } catch (error) {
+      debugPrint('[Analytics] Could not update banner test group: $error');
+    }
+    await _logEvent(
+      'banner_config_applied',
+      parameters: {
+        'banner_enabled': showBannerAd ? 1 : 0,
+        'banner_variant': variant,
+      },
+    );
+  }
+
   static Future<void> logOnboardingStarted({required bool isReplay}) async {
     final parameters = {'is_replay': isReplay ? 1 : 0};
     await _logEvent('onboarding_started', parameters: parameters);
   }
 
   static Future<void> logOnboardingCompleted({required bool isReplay}) =>
-      _logEvent(
-        'onboarding_completed',
-        parameters: {'is_replay': isReplay ? 1 : 0},
-      );
+      isReplay
+      ? _logEvent('onboarding_replay_completed')
+      : _logEvent('onboarding_completed');
 
   static Future<void> logOnboardingSkipped({required bool isReplay}) =>
       _logEvent(
@@ -122,4 +149,7 @@ class AnalyticsService {
 
   static Future<void> logFirstTaskSetupAbandoned() =>
       _logEvent('first_task_setup_abandoned');
+
+  static Future<void> logOnboardingReplayAbandoned() =>
+      _logEvent('onboarding_replay_abandoned');
 }

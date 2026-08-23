@@ -39,6 +39,12 @@ class _NativeAdCardState extends State<NativeAdCard> {
     _isLoading = true;
     try {
       await AdsService.ready;
+      if (!AdsService.canRequestAds) {
+        if (mounted) {
+          setState(() => _adFailed = true);
+        }
+        return;
+      }
       await AdsService.enqueueAdLoad(() async {
         if (!mounted) return;
 

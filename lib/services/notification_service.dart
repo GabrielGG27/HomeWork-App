@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/services.dart';
 import 'package:homework_app/services/analytics_service.dart';
+import 'package:homework_app/services/homework_service.dart';
 import 'package:homework_app/utils/date_formatter.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/material.dart';
@@ -17,6 +18,16 @@ late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
 class NotificationService {
   static Future<bool?>? _notificationPermissionRequest;
+  static Future<void> _operationQueue = Future<void>.value();
+  static bool _didInitialReconciliation = false;
+
+  static Future<void> _enqueue(Future<void> Function() operation) {
+    final queuedOperation = _operationQueue.then((_) => operation());
+    _operationQueue = queuedOperation.catchError((Object error) {
+      debugPrint('Notification operation failed: $error');
+    });
+    return queuedOperation;
+  }
 
   static int _legacyNotificationId(String homeworkId) =>
       homeworkId.hashCode & 0x7FFFFFFF;
@@ -24,6 +35,18 @@ class NotificationService {
   static int _notificationId(String homeworkId, int reminderIndex) {
     final base = homeworkId.hashCode & 0x3FFFFFFF;
     return ((base << 1) | reminderIndex) & 0x7FFFFFFF;
+  }
+
+  static bool reminderTimesAreInFuture({
+    required DateTime dueDate,
+    required Iterable<int> offsets,
+    DateTime? now,
+  }) {
+    final reference = now ?? DateTime.now();
+    return offsets.every(
+      (minutes) =>
+          dueDate.subtract(Duration(minutes: minutes)).isAfter(reference),
+    );
   }
 
   static Future<void> initializeNotifications() async {
@@ -112,11 +135,14 @@ class NotificationService {
     }
   }
 
-  static Future<void> scheduleNotification(Homework homework) async {
+  static Future<void> scheduleNotification(Homework homework) =>
+      _enqueue(() => _scheduleNotification(homework));
+
+  static Future<void> _scheduleNotification(Homework homework) async {
     // Clear the previous version's single ID and both current reminder slots.
     // This prevents orphan notifications after editing an offset or disabling a
     // reminder.
-    await cancelNotification(homework.id);
+    await _cancelNotification(homework.id);
 
     if (!homework.hasDueDate ||
         homework.isCompleted ||
@@ -196,7 +222,7 @@ class NotificationService {
       final scheduledDate = homework.dueDate.subtract(
         Duration(minutes: reminder.$2),
       );
-      if (scheduledDate.isBefore(now)) continue;
+      if (!scheduledDate.isAfter(now)) continue;
 
       final notificationId = _notificationId(homework.id, reminderIndex);
       try {
@@ -236,15 +262,51 @@ class NotificationService {
   }
 
   static Future<void> schedulePendingNotifications(
-    List<Homework> allTasks,
-  ) async {
-    final pendingTasks = allTasks.where((task) => !task.isCompleted).toList();
-    for (final task in pendingTasks) {
-      await scheduleNotification(task);
+    List<Homework> allTasks, {
+    bool oncePerProcess = false,
+  }) => _reconcileNotifications(
+    () => Future<List<Homework>>.value(allTasks),
+    oncePerProcess: oncePerProcess,
+  );
+
+  static Future<void> reconcileStoredNotifications({
+    bool oncePerProcess = false,
+  }) => _reconcileNotifications(
+    HomeworkService.loadHomework,
+    oncePerProcess: oncePerProcess,
+  );
+
+  static Future<void> _reconcileNotifications(
+    Future<List<Homework>> Function() loadTasks, {
+    required bool oncePerProcess,
+  }) {
+    if (oncePerProcess && _didInitialReconciliation) {
+      return Future<void>.value();
     }
+    if (oncePerProcess) _didInitialReconciliation = true;
+
+    final reconciliation = _enqueue(() async {
+      // Read storage inside the queue so a cancellation or edit that was
+      // already queued cannot be followed by an older in-memory snapshot.
+      final allTasks = await loadTasks();
+      // Reconcile every stored task. _scheduleNotification first removes all
+      // legacy/current IDs, and only recreates reminders for eligible tasks.
+      // This also cleans up alarms left behind by completed or deleted tasks.
+      for (final task in allTasks) {
+        await _scheduleNotification(task);
+      }
+    });
+    if (!oncePerProcess) return reconciliation;
+    return reconciliation.catchError((Object error, StackTrace stackTrace) {
+      _didInitialReconciliation = false;
+      Error.throwWithStackTrace(error, stackTrace);
+    });
   }
 
-  static Future<void> cancelNotification(String homeworkId) async {
+  static Future<void> cancelNotification(String homeworkId) =>
+      _enqueue(() => _cancelNotification(homeworkId));
+
+  static Future<void> _cancelNotification(String homeworkId) async {
     final notificationIds = <int>{
       _legacyNotificationId(homeworkId),
       _notificationId(homeworkId, 0),

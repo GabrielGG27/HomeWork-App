@@ -101,6 +101,7 @@
   "days": "Days",
   "enterPositiveNumber": "Enter a number greater than zero",
   "remindersMustBeDifferent": "Choose a different time for each reminder",
+  "reminderMustBeFuture": "One or more reminders would occur in the past. Change the due date, due time, or reminder time.",
   "darkMode": "Dark Mode",
   "rateApp": "Rate App",
   "hasDueDate": "Due Date",
@@ -184,5 +185,12 @@
   "done": "Done",
   "privacyOptions": "Privacy options",
   "privacyOptionsDescription": "Review or change your advertising consent",
-  "privacyOptionsError": "Privacy options could not be opened. Please try again."
+  "privacyOptionsError": "Privacy options could not be opened. Please try again.",
+  "takePhoto": "Take photo",
+  "pickImage": "Choose image",
+  "attachFile": "Attach file",
+  "couldNotSaveImage": "Could not save image: {error}",
+  "@couldNotSaveImage": {"placeholders": {"error": {"type": "String"}}},
+  "couldNotSaveFile": "Could not save file: {error}",
+  "@couldNotSaveFile": {"placeholders": {"error": {"type": "String"}}}
 }

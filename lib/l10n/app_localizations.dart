@@ -494,6 +494,12 @@ abstract class AppLocalizations {
   /// **'Choose a different time for each reminder'**
   String get remindersMustBeDifferent;
 
+  /// No description provided for @reminderMustBeFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'One or more reminders would occur in the past. Change the due date, due time, or reminder time.'**
+  String get reminderMustBeFuture;
+
   /// No description provided for @darkMode.
   ///
   /// In en, this message translates to:
@@ -961,6 +967,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Privacy options could not be opened. Please try again.'**
   String get privacyOptionsError;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get takePhoto;
+
+  /// No description provided for @pickImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose image'**
+  String get pickImage;
+
+  /// No description provided for @attachFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach file'**
+  String get attachFile;
+
+  /// No description provided for @couldNotSaveImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save image: {error}'**
+  String couldNotSaveImage(String error);
+
+  /// No description provided for @couldNotSaveFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save file: {error}'**
+  String couldNotSaveFile(String error);
 }
 
 class _AppLocalizationsDelegate

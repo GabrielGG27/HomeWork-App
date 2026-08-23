@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz_data;
-import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'l10n/app_localizations.dart';
 import 'services/notification_service.dart';
@@ -12,6 +10,8 @@ import 'screens/homework_list_screen.dart';
 import 'services/onboarding_service.dart';
 import 'services/purchases_service.dart';
 import 'services/ads_service.dart';
+import 'services/time_zone_service.dart';
+import 'services/remote_config_service.dart';
 
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -22,6 +22,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();
+  unawaited(RemoteConfigService.initialize());
+  await Future.wait([
+    initializeDateFormatting('en'),
+    initializeDateFormatting('es'),
+  ]);
 
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
   PlatformDispatcher.instance.onError = (error, stack) {
@@ -29,14 +34,7 @@ void main() async {
     return true;
   };
 
-  tz_data.initializeTimeZones();
-  try {
-    final tzInfo = await FlutterTimezone.getLocalTimezone();
-    final deviceTimeZone = tzInfo.identifier;
-    tz.setLocalLocation(tz.getLocation(deviceTimeZone));
-  } catch (e) {
-    tz.setLocalLocation(tz.getLocation('UTC'));
-  }
+  await TimeZoneService.configureLocalTimeZone();
 
   await NotificationService.initializeNotifications();
 

@@ -20,6 +20,8 @@ import 'package:homework_app/services/ads_service.dart';
 import 'package:homework_app/services/attachment_storage_service.dart';
 import 'package:homework_app/services/analytics_service.dart';
 import 'package:homework_app/services/onboarding_service.dart';
+import 'package:homework_app/services/time_zone_service.dart';
+import 'package:homework_app/services/remote_config_service.dart';
 import 'package:homework_app/widgets/walkthrough_overlay.dart';
 import 'package:homework_app/utils/homework_grouping.dart';
 import 'package:homework_app/widgets/onboarding_message_card.dart';
@@ -56,6 +58,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
   InterstitialAd? _interstitialAd;
   BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
+  bool _isBannerAdLoadInProgress = false;
   late bool _firstTaskFlowActive;
   bool _didPrepareFirstTaskFlow = false;
 
@@ -75,7 +78,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
     if (!_firstTaskFlowActive) {
       _loadData();
     }
-    _schedulePendingNotifications();
+    _schedulePendingNotifications(oncePerProcess: true);
 
     // Defer ad loading to the post-frame callback to avoid blocking the
     // Android main thread Looper during initState, which was causing ANRs
@@ -104,7 +107,25 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
       // Date-based sections are calculated during build with DateTime.now().
       // Rebuild immediately because foreground timers may have been suspended.
       setState(() {});
+      if (widget.subjectFilter == null && !widget.showImportant) {
+        unawaited(_refreshAfterResume());
+      }
     }
+  }
+
+  Future<void> _refreshAfterResume() async {
+    final timeZoneChanged = await TimeZoneService.configureLocalTimeZone();
+    if (timeZoneChanged) {
+      await NotificationService.reconcileStoredNotifications();
+    }
+    if (!mounted) return;
+    unawaited(
+      AnalyticsService.logTaskInventorySnapshot(
+        _homeworkList,
+        reason: 'app_resume',
+        oncePerSession: true,
+      ),
+    );
   }
 
   @override
@@ -140,7 +161,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
     }
     await HomeworkService.saveSubjects(mergedSubjects);
     await HomeworkService.saveSubjectIcons({...starterIcons, ...existingIcons});
-    await AnalyticsService.logOnboardingStarted(isReplay: false);
+    if (widget.subjectFilter == null && !widget.showImportant) {
+      await AnalyticsService.logOnboardingStarted(isReplay: false);
+    }
     await _loadData();
     if (!mounted) return;
     final hasExistingTask = _homeworkList.any((task) => !task.isDeleted);
@@ -195,7 +218,11 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
   }
 
   Future<void> _loadBannerAd() async {
+    if (_bannerAd != null || _isBannerAdLoadInProgress) return;
+    _isBannerAdLoadInProgress = true;
     try {
+      await RemoteConfigService.ready;
+      if (!mounted || !RemoteConfigService.showBannerAd) return;
       await AdsService.ready;
       await AdsService.enqueueAdLoad(() async {
         if (!mounted) return;
@@ -234,6 +261,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
       debugPrint('BannerAd initialization or load failed: $error');
       _bannerAd?.dispose();
       _bannerAd = null;
+    } finally {
+      _isBannerAdLoadInProgress = false;
     }
   }
 
@@ -436,9 +465,14 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
   }
 
   Future<void> _openAddHomework({bool replayGuide = false}) async {
-    final isFirstTaskSetup = _firstTaskFlowActive && _homeworkList.isEmpty;
+    final isFirstTaskSetup =
+        !replayGuide &&
+        _firstTaskFlowActive &&
+        !_homeworkList.any((task) => !task.isDeleted);
     if (isFirstTaskSetup) {
       await AnalyticsService.logFirstTaskSetupStarted();
+    } else if (replayGuide) {
+      await AnalyticsService.logOnboardingStarted(isReplay: true);
     }
     if (!mounted) return;
     final homework = await Navigator.of(context).push<Homework>(
@@ -452,10 +486,15 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
     if (homework == null) {
       if (isFirstTaskSetup) {
         unawaited(AnalyticsService.logFirstTaskSetupAbandoned());
+      } else if (replayGuide) {
+        unawaited(AnalyticsService.logOnboardingReplayAbandoned());
       }
       return;
     }
     await _addHomework(homework);
+    if (replayGuide) {
+      unawaited(AnalyticsService.logOnboardingCompleted(isReplay: true));
+    }
     if (!mounted || !isFirstTaskSetup) return;
     await OnboardingService.markCompleted();
     await AnalyticsService.logOnboardingCompleted(isReplay: false);
@@ -498,7 +537,8 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     final isFirstTask =
-        _homeworkList.isEmpty && (prefs.getInt('homeworkAddedCount') ?? 0) == 0;
+        !_homeworkList.any((task) => !task.isDeleted) &&
+        (prefs.getInt('homeworkAddedCount') ?? 0) == 0;
     setState(() {
       _homeworkList.add(homework);
     });
@@ -702,15 +742,20 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
 
   void _clearCompletedTasks() async {
     final now = DateTime.now();
+    final clearedTaskIds = <String>[];
     setState(() {
       for (final task in _homeworkList) {
-        if (task.isCompleted) {
+        if (task.isCompleted && !task.isDeleted) {
           task.isDeleted = true;
           task.deletedAt = now;
+          clearedTaskIds.add(task.id);
         }
       }
     });
     await HomeworkService.saveHomework(_homeworkList);
+    for (final taskId in clearedTaskIds) {
+      await NotificationService.cancelNotification(taskId);
+    }
     unawaited(
       AnalyticsService.logTaskInventorySnapshot(
         _homeworkList,
@@ -719,11 +764,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
     );
   }
 
-  Future<void> _schedulePendingNotifications() async {
-    final allTasks = await HomeworkService.loadHomework();
-    final pendingTasks = allTasks.where((t) => !t.isDeleted).toList();
-    await NotificationService.schedulePendingNotifications(pendingTasks);
-  }
+  Future<void> _schedulePendingNotifications({bool oncePerProcess = false}) =>
+      NotificationService.reconcileStoredNotifications(
+        oncePerProcess: oncePerProcess,
+      );
 
   Future<void> _deleteSubject(String subject) async {
     final confirmed = await showDialog<bool>(
@@ -759,13 +803,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
       Navigator.pop(context);
 
       if (widget.subjectFilter == subject) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (ctx) =>
-                HomeworkListScreen(startFirstTaskFlow: _firstTaskFlowActive),
-          ),
-          (route) => route.isFirst,
-        );
+        Navigator.of(context).popUntil((route) => route.isFirst);
       }
     }
   }
@@ -822,14 +860,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
                           Navigator.pop(context);
                           if (widget.subjectFilter != null ||
                               widget.showImportant) {
-                            Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(
-                                builder: (context) => HomeworkListScreen(
-                                  startFirstTaskFlow: _firstTaskFlowActive,
-                                ),
-                              ),
-                              (route) => route.isFirst,
-                            );
+                            Navigator.of(
+                              context,
+                            ).popUntil((route) => route.isFirst);
                           }
                         },
                       ),
@@ -1207,6 +1240,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
                 final formattedDate = SmartDateFormatter.formatForCard(
                   hw.dueDate,
                   sectionTitle,
+                  locale: Localizations.localeOf(context).toLanguageTag(),
                 );
                 return Card(
                   margin: const EdgeInsets.symmetric(
@@ -1312,10 +1346,12 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
       );
     } else {
       if (filteredList.isEmpty) {
-        return Center(child: Text('No completed assignments'));
+        return Center(
+          child: Text(AppLocalizations.of(context)!.noCompletedAssignments),
+        );
       }
 
-      final adsCount = filteredList.length ~/ 4;
+      final adsCount = isPremium ? 0 : filteredList.length ~/ 4;
       final totalItems = filteredList.length + adsCount + 1;
 
       return ListView.builder(
@@ -1344,14 +1380,17 @@ class _HomeworkListScreenState extends State<HomeworkListScreen>
             );
           }
 
-          if (index > 0 && (index + 1) % 5 == 0) {
+          if (!isPremium && index > 0 && (index + 1) % 5 == 0) {
             return const NativeAdCard(marginVertical: 8.0);
           }
 
-          final taskIndex = index - (index ~/ 5);
+          final taskIndex = isPremium ? index : index - (index ~/ 5);
           final hw = filteredList[taskIndex];
           final formattedDate = SmartDateFormatter.formatForCompletedCard(
             hw.dueDate,
+            todayLabel: AppLocalizations.of(context)!.sectionToday,
+            tomorrowLabel: AppLocalizations.of(context)!.sectionTomorrow,
+            locale: Localizations.localeOf(context).toLanguageTag(),
           );
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

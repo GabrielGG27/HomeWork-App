@@ -184,12 +184,18 @@ class PurchasesService extends ChangeNotifier {
     debugPrint('[IAP] Restaurando compras...');
     try {
       _isPurchasePending = true;
+      _purchaseError = null;
       notifyListeners();
       await _inAppPurchase.restorePurchases();
     } catch (e) {
+      _purchaseError = e.toString();
+      debugPrint('[IAP] Error al restaurar compras: $e');
+    } finally {
+      // Google Play may emit no purchase updates when there is nothing to
+      // restore. Always release the progress state when the restore request
+      // itself has finished; later stream events can still deliver a product.
       _isPurchasePending = false;
       notifyListeners();
-      debugPrint('[IAP] Error al restaurar compras: $e');
     }
   }
 

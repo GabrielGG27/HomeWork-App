@@ -80,6 +80,7 @@
   "days": "Días",
   "enterPositiveNumber": "Ingresa un número mayor que cero",
   "remindersMustBeDifferent": "Elige un tiempo diferente para cada recordatorio",
+  "reminderMustBeFuture": "Uno o más recordatorios quedarían en el pasado. Cambia la fecha, la hora de entrega o la antelación.",
   "darkMode": "Modo oscuro",
   "rateApp": "Calificar aplicación",
   "hasDueDate": "Fecha de Entrega",
@@ -163,5 +164,12 @@
   "done": "Listo",
   "privacyOptions": "Opciones de privacidad",
   "privacyOptionsDescription": "Revisa o cambia tu consentimiento para anuncios",
-  "privacyOptionsError": "No se pudieron abrir las opciones de privacidad. Inténtalo de nuevo."
+  "privacyOptionsError": "No se pudieron abrir las opciones de privacidad. Inténtalo de nuevo.",
+  "takePhoto": "Tomar foto",
+  "pickImage": "Elegir imagen",
+  "attachFile": "Adjuntar archivo",
+  "couldNotSaveImage": "No se pudo guardar la imagen: {error}",
+  "@couldNotSaveImage": {"placeholders": {"error": {"type": "String"}}},
+  "couldNotSaveFile": "No se pudo guardar el archivo: {error}",
+  "@couldNotSaveFile": {"placeholders": {"error": {"type": "String"}}}
 }

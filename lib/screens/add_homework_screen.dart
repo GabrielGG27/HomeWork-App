@@ -405,11 +405,18 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
+    final now = DateTime.now();
+    final defaultFirstDate = DateTime(2000);
+    final defaultLastDate = DateTime(now.year + 50, 12, 31);
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      firstDate: _selectedDate.isBefore(defaultFirstDate)
+          ? _selectedDate
+          : defaultFirstDate,
+      lastDate: _selectedDate.isAfter(defaultLastDate)
+          ? _selectedDate
+          : defaultLastDate,
     );
     if (!mounted) return;
     if (picked != null) {
@@ -634,7 +641,8 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(context)!.title,
                       ),
-                      validator: (value) => value?.isEmpty == true
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
                           ? AppLocalizations.of(context)!.enterTitleValidator
                           : null,
                     ),
@@ -679,7 +687,8 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                         }
                       },
                       validator: (value) =>
-                          (value == null && _subjectController.text.isEmpty)
+                          (value == null &&
+                              _subjectController.text.trim().isEmpty)
                           ? AppLocalizations.of(context)!.selectSubjectValidator
                           : null,
                     ),
@@ -728,8 +737,10 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                                 AppLocalizations.of(context)!.dueDate,
                               ),
                               subtitle: Text(
-                                DateFormat(
-                                  'MMM dd, yyyy',
+                                DateFormat.yMMMd(
+                                  Localizations.localeOf(
+                                    context,
+                                  ).toLanguageTag(),
                                 ).format(_selectedDate),
                               ),
                               onTap: () => _selectDate(context),
@@ -834,10 +845,25 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                                   _selectedTime.hour,
                                   _selectedTime.minute,
                                 );
+                                if (_hasDueDate &&
+                                    _enableNotification &&
+                                    !NotificationService.reminderTimesAreInFuture(
+                                      dueDate: due,
+                                      offsets: _notificationOffsets,
+                                    )) {
+                                  if (!mounted) return;
+                                  setState(() => _isSubmitting = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(l10n.reminderMustBeFuture),
+                                    ),
+                                  );
+                                  return;
+                                }
                                 final homework = Homework(
                                   id: widget.homework?.id,
-                                  title: _titleController.text,
-                                  subject: _subjectController.text,
+                                  title: _titleController.text.trim(),
+                                  subject: _subjectController.text.trim(),
                                   dueDate: due,
                                   hasDueDate: _hasDueDate,
                                   isCompleted:
@@ -857,12 +883,6 @@ class _AddHomeworkScreenState extends State<AddHomeworkScreen> {
                                 }
                                 _didSubmit = true;
                                 Navigator.of(context).pop(homework);
-                              } else if (_subjectController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please select a subject'),
-                                  ),
-                                );
                               }
                             },
                       child: Text(

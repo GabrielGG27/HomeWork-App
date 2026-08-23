@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:open_file/open_file.dart';
 import 'package:homework_app/models/attachment.dart';
 import 'package:homework_app/services/attachment_storage_service.dart';
+import 'package:homework_app/l10n/app_localizations.dart';
 
 class AttachmentPicker extends StatefulWidget {
   final List<Attachment> initialAttachments;
@@ -57,7 +58,11 @@ class _AttachmentPickerState extends State<AttachmentPicker> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save image: $error')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.couldNotSaveImage('$error'),
+          ),
+        ),
       );
     }
   }
@@ -95,7 +100,11 @@ class _AttachmentPickerState extends State<AttachmentPicker> {
       await AttachmentStorageService.deleteManagedFiles(copiedAttachments);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save file: $error')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.couldNotSaveFile('$error'),
+          ),
+        ),
       );
     }
   }
@@ -120,17 +129,17 @@ class _AttachmentPickerState extends State<AttachmentPicker> {
         Row(
           children: [
             IconButton(
-              tooltip: 'Take photo',
+              tooltip: AppLocalizations.of(context)!.takePhoto,
               icon: const Icon(Icons.camera_alt),
               onPressed: () => _pickImage(ImageSource.camera),
             ),
             IconButton(
-              tooltip: 'Pick image',
+              tooltip: AppLocalizations.of(context)!.pickImage,
               icon: const Icon(Icons.photo_library),
               onPressed: () => _pickImage(ImageSource.gallery),
             ),
             IconButton(
-              tooltip: 'Attach file',
+              tooltip: AppLocalizations.of(context)!.attachFile,
               icon: const Icon(Icons.attach_file),
               onPressed: _pickFiles,
             ),

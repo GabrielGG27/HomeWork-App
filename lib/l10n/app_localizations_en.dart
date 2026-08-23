@@ -223,6 +223,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose a different time for each reminder';
 
   @override
+  String get reminderMustBeFuture =>
+      'One or more reminders would occur in the past. Change the due date, due time, or reminder time.';
+
+  @override
   String get darkMode => 'Dark Mode';
 
   @override
@@ -482,4 +486,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get privacyOptionsError =>
       'Privacy options could not be opened. Please try again.';
+
+  @override
+  String get takePhoto => 'Take photo';
+
+  @override
+  String get pickImage => 'Choose image';
+
+  @override
+  String get attachFile => 'Attach file';
+
+  @override
+  String couldNotSaveImage(String error) {
+    return 'Could not save image: $error';
+  }
+
+  @override
+  String couldNotSaveFile(String error) {
+    return 'Could not save file: $error';
+  }
 }
